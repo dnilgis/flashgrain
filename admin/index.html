@@ -6,7 +6,7 @@
 <title>Flash Grain | Admin</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="../favicon.ico" sizes="32x32">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self' https://api.github.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <link rel="stylesheet" href="../assets/css/site.css">
 <link rel="stylesheet" href="../assets/css/admin.css">
@@ -45,6 +45,13 @@
   <div class="a-actions"><button class="a-btn" id="add-row" type="button">Add row</button><button class="a-btn" id="copy-dtn" type="button">Copy DTN basis into all rows</button></div>
   <p class="a-help" id="fut-asof"></p>
   <label class="wide a-solo">Footnote under the bid table<input id="footnote"></label>
+</section>
+
+<section class="a-sec">
+  <h2>Nearby bids</h2>
+  <hr class="rule">
+  <p class="a-help">Other elevators' own posted bids, shown under the cash bid table for comparison and labelled as theirs. They never change Flash Grain's prices. Untick to hide.</p>
+  <div id="refs-admin"></div>
 </section>
 
 <section class="a-sec">

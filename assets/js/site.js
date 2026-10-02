@@ -104,7 +104,7 @@
       .then(function (r) { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); });
   }
 
-  var SITE, BIDS, current, segIds = '';
+  var SITE, BIDS, REFS = {}, current, segIds = '';
 
   var FALLBACK_TEL = '715-653-6585';
   function phone() { return (SITE && SITE.business && SITE.business.phone) || FALLBACK_TEL; }
@@ -171,6 +171,24 @@
     $('bids-note').textContent = 'Cash = CBOT futures + basis, $/bu. ' + (months.length ? months.join(', ') + ' futures. ' : '') + (SITE.bids.footnote || '');
   }
 
+  // Other elevators' own posted bids, shown for comparison under Jeff's board. Hidden when stale.
+  function renderRefs() {
+    var box = $('refs'), list = (SITE.references || []).filter(function (r) { return r.show; }), html = '';
+    list.forEach(function (ref) {
+      var d = REFS[ref.id];
+      if (!d || !d.rows || !d.rows.length || ageMin(d.checked) > FEED_MAX_AGE_MIN) return;
+      html += '<h3 class="ref-h">' + esc(ref.name) + ' <span>' + esc(ref.place) + ' \u00b7 ' + esc(ref.commodity) + '</span></h3>'
+        + '<table class="board ref-board"><caption class="vh">' + esc(ref.name + ' ' + ref.commodity + ' bids') + '</caption>'
+        + '<thead><tr><th scope="col">Delivery</th><th scope="col">Cash $/bu</th><th scope="col">Basis</th></tr></thead><tbody>'
+        + d.rows.map(function (r) {
+          return '<tr><th scope="row" class="c sub">' + esc(r.label) + '</th><td class="cash">' + (num(r.cash) ? '$' + money(r.cash) : '\u2014') + '</td><td>' + (num(r.basis) ? basis(r.basis) : '\u2014') + '</td></tr>';
+        }).join('') + '</tbody></table>'
+        + '<p class="fine">' + esc(ref.name) + '\u2019s own posted bid at ' + esc(ref.place) + ', for comparison. Not a Flash Grain price. Checked ' + new Date(Date.parse(d.checked)).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }) + '.</p>';
+    });
+    box.innerHTML = html ? '<h2 class="refs-h">Nearby bids</h2>' + html : '';
+    box.hidden = !html;
+  }
+
   function render() {
     var biz = SITE.business, tel = (biz.phone || '').replace(/\D/g, '');
     safe(function () {
@@ -208,13 +226,20 @@
       paintSeg();
     });
     try { renderBoard(); } catch (e) { if (window.console) console.error(e); callMsg('Bids are not showing right now.'); }
+    safe(renderRefs);
   }
   function paintSeg() { $('seg').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x.getAttribute('data-id') === current)); }); }
 
   var failedAt = null;
   function load() {
     return Promise.all([getJSON('data/site.json'), getJSON('data/bids.json').catch(function () { return BIDS || null; })])
-      .then(function (r) { SITE = r[0]; BIDS = r[1]; failedAt = null; render(); })
+      .then(function (r) {
+        SITE = r[0]; BIDS = r[1]; failedAt = null;
+        return Promise.all((SITE.references || []).filter(function (x) { return x.show; }).map(function (x) {
+          return getJSON('data/refs/' + encodeURIComponent(x.id) + '.json').then(function (d) { REFS[x.id] = d; }, function () {});
+        }));
+      })
+      .then(function () { render(); })
       .catch(function () {
         if (SITE) { try { renderBoard(); } catch (e) { callMsg('Bids are not showing right now.'); } return; } // keep the last good board on a failed refresh
         callMsg('Bids are not loading.');

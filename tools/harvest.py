@@ -276,6 +276,86 @@ def build(src):
     return {"quote_time": max(times) if times else None, "dtn_as_of": as_of, "futures": futures, "dtn": dtn}
 
 
+ROOTS = {"@C": "ZC", "@S": "ZS", "@W": "ZW"}
+AGSIST = "https://raw.githubusercontent.com/dnilgis/agsist/main/data/prices.json"
+BACKUP_MAX_AGE = timedelta(hours=2)
+SANITY = 0.15  # a backup price more than 15% from the last DTN price for that contract is refused
+
+
+def yahoo_ticker(sym, today=None):
+    """@C6Z -> ZCZ26.CBT. The single year digit is resolved to the nearest year not in the past decade."""
+    m = re.match(r"^(@[A-Z])([0-9])([FGHJKMNQUVXZ])$", sym)
+    if not m or m.group(1) not in ROOTS:
+        return None
+    y = (today or datetime.now(timezone.utc)).year
+    year = y // 10 * 10 + int(m.group(2))
+    if year < y - 1:
+        year += 10
+    return "%s%s%02d.CBT" % (ROOTS[m.group(1)], m.group(3), year % 100)
+
+
+def _get(url, timeout=20):
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
+def _central_iso(epoch):
+    """Unix seconds -> Central wall time ISO, matching quote_time from DTN's cell titles."""
+    utc = datetime.fromtimestamp(epoch, timezone.utc)
+    # US Central: CDT (UTC-5) from 2nd Sun Mar 2:00 to 1st Sun Nov 2:00, else CST (UTC-6)
+    y = utc.year
+    mar = datetime(y, 3, 8, 8, tzinfo=timezone.utc)
+    mar += timedelta(days=(6 - mar.weekday()) % 7)
+    nov = datetime(y, 11, 1, 7, tzinfo=timezone.utc)
+    nov += timedelta(days=(6 - nov.weekday()) % 7)
+    off = -5 if mar <= utc < nov else -6
+    return (utc + timedelta(hours=off)).strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def backup_futures(symbols, last_dtn):
+    """Delayed CBOT futures when DTN is down: Yahoo Finance first, agsist's prices.json second.
+    Returns ({symbol: {price, change, time}}, source) for the symbols it could get and verify."""
+    got, source = {}, None
+    for sym in symbols:  # Yahoo, contract by contract
+        t = yahoo_ticker(sym)
+        if not t:
+            continue
+        try:
+            meta = _get("https://query1.finance.yahoo.com/v8/finance/chart/%s?range=1d&interval=1d" % t)["chart"]["result"][0]["meta"]
+            px, prev = meta.get("regularMarketPrice"), meta.get("chartPreviousClose") or meta.get("previousClose")
+            if px is None:
+                continue
+            got[sym] = {"price": round(px / 100, 5), "change": round((px - prev) / 100, 5) if prev is not None else None,
+                        "time": _central_iso(meta["regularMarketTime"]) if meta.get("regularMarketTime") else None}
+            source = "yahoo"
+        except Exception as e:
+            print("backup yahoo %s (%s): %s" % (sym, t, e), file=sys.stderr)
+    missing = [s for s in symbols if s not in got]
+    if missing:  # agsist's own Yahoo pull, if it is fresh
+        try:
+            d = _get(AGSIST)
+            fetched = datetime.strptime(d["fetched"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) - fetched > BACKUP_MAX_AGE:
+                raise ValueError("agsist prices.json is %s old" % (datetime.now(timezone.utc) - fetched))
+            by_ticker = {q.get("ticker"): q for q in d.get("quotes", {}).values() if isinstance(q, dict)}
+            for sym in missing:
+                q = by_ticker.get(yahoo_ticker(sym))
+                if q and q.get("close") is not None:
+                    got[sym] = {"price": round(q["close"] / 100, 5),
+                                "change": round(q["netChange"] / 100, 5) if q.get("netChange") is not None else None,
+                                "time": _central_iso(fetched.timestamp())}
+                    source = source and source + "+agsist" or "agsist"
+        except Exception as e:
+            print("backup agsist: %s" % e, file=sys.stderr)
+    for sym in list(got):  # refuse anything that disagrees wildly with the last DTN price (units, wrong contract)
+        ref = (last_dtn or {}).get(sym, {}).get("price")
+        if ref and abs(got[sym]["price"] - ref) / ref > SANITY:
+            print("backup %s refused: %.4f vs last DTN %.4f" % (sym, got[sym]["price"], ref), file=sys.stderr)
+            del got[sym]
+    return got, source
+
+
 def fetch():
     last = None
     for attempt in range(2):
@@ -292,11 +372,112 @@ def fetch():
     raise SystemExit("all fetches failed; bids.json left unchanged. last error: %s" % last)
 
 
+REFS_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "refs")
+
+
+def pick_ref(src, ref):
+    """Rows for one reference elevator from a DTN AgHost board: its location, its commodity, checked."""
+    cells, as_of = decode(src)
+    locs = sorted({k[0] for k in cells})
+    coms = sorted({k[1] for k in cells})
+    want, com = (ref.get("location") or "").lower(), ref["commodity"].upper()
+    if not want and len(locs) > 1:
+        raise ValueError("the page has %d locations (%s); set `location` for %s in site.json" % (len(locs), ", ".join(locs), ref["id"]))
+    rows, dropped = [], []
+    for (loc, c, _), d in sorted(cells.items(), key=lambda kv: kv[0][2]):
+        if (want and want not in loc.lower()) or com not in c.upper():
+            continue
+        if "symbol" not in d or "futures" not in d or "cash" not in d or "basis" not in d:
+            continue
+        if abs(d["cash"] - (d["futures"] + d["basis"])) > 0.0101:
+            dropped.append("%s: cash %.4f != futures %.4f + basis %.4f" % (d["label"], d["cash"], d["futures"], d["basis"]))
+            continue
+        rows.append({"label": d["label"], "cash": round(d["cash"], 4), "basis": round(d["basis"], 4),
+                     "futures_month": d["symbol"], "futures": d["futures"], "time": d.get("time")})
+    if not rows:
+        raise ValueError("no %s rows for %r. Locations: %s. Commodities: %s. %s" % (
+            ref["commodity"], ref.get("location"), ", ".join(locs) or "none", ", ".join(coms) or "none", "; ".join(dropped)))
+    times = [r["time"] for r in rows if r.get("time")]
+    return {"rows": rows, "quote_time": max(times) if times else None, "dtn_as_of": as_of, "dropped": dropped}
+
+
+def harvest_refs():
+    """Reference elevators on DTN AgHost (platform "aghost" in data/site.json `references`).
+    Never logs in: a page served without prices publishes nothing."""
+    site = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "site.json")))
+    failed = 0
+    for ref in [r for r in site.get("references", []) if r.get("platform") == "aghost"]:
+        path = os.path.join(REFS_DIR, ref["id"] + ".json")
+        try:
+            req = urllib.request.Request(ref["url"], headers={"User-Agent": UA, "Accept": "text/html"})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                src = r.read().decode("latin-1")
+            calls = len(re.findall(r"displayNumber\(\s*-?[\d.]+", src))
+            if calls <= 1:
+                raise ValueError("page served without prices (%d bytes, %d price calls); not logging in" % (len(src), calls))
+            got = pick_ref(src, ref)
+            for d in got.pop("dropped"):
+                print("%s dropped: %s" % (ref["id"], d), file=sys.stderr)
+            try:
+                old = json.load(open(path))
+            except Exception:
+                old = {}
+            now = datetime.now(timezone.utc)
+            same = old.get("rows") == got["rows"]
+            try:
+                fresh = now - datetime.strptime(old.get("checked", ""), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc) < HEARTBEAT
+            except (ValueError, TypeError):
+                fresh = False
+            if same and fresh:
+                print("%s: no change" % ref["id"])
+                continue
+            stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+            os.makedirs(REFS_DIR, exist_ok=True)
+            with open(path, "w") as f:
+                json.dump({"id": ref["id"], "checked": stamp, "updated": stamp if not same else old.get("updated", stamp),
+                           "source": ref["url"], **got}, f, indent=1)
+                f.write("\n")
+            print("%s: wrote %d rows" % (ref["id"], len(got["rows"])))
+        except Exception as e:
+            failed += 1
+            print("%s: %s; %s left unchanged" % (ref["id"], e, path), file=sys.stderr)
+    if failed:
+        raise SystemExit(1)
+
+
 def main():
+    if len(sys.argv) >= 2 and sys.argv[1] == "--refs":
+        harvest_refs()
+        return
+    if len(sys.argv) == 4 and sys.argv[1] == "--ref-file":
+        site = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "site.json")))
+        ref = [r for r in site["references"] if r["id"] == sys.argv[3]][0]
+        print(json.dumps(pick_ref(open(sys.argv[2], encoding="latin-1").read(), ref), indent=1))
+        return
     if len(sys.argv) == 3 and sys.argv[1] == "--file":
         print(json.dumps(build(open(sys.argv[2], encoding="latin-1").read()), indent=1))
         return
-    data, url = fetch()
+    try:
+        old = json.load(open(OUT))
+    except Exception:
+        old = {}
+    try:
+        data, url = fetch()
+    except SystemExit as dtn_down:
+        print(dtn_down, file=sys.stderr)
+        try:
+            site = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "site.json")))
+            wanted = sorted({r["symbol"] for r in site["bids"]["rows"] if r.get("show")})
+        except Exception:
+            wanted = sorted((old.get("futures") or {}).keys())
+        fut, src = backup_futures(wanted, old.get("dtn_futures") or old.get("futures"))
+        if not any(k.startswith("@C") for k in fut) or not any(k.startswith("@S") for k in fut):
+            raise SystemExit("DTN down and the backup feed did not cover corn and soybeans; bids.json left unchanged")
+        times = [f["time"] for f in fut.values() if f.get("time")]
+        data = {"quote_time": max(times) if times else None, "dtn_as_of": None, "futures": fut,
+                "dtn": old.get("dtn", {}), "futures_source": src}
+        url = "backup:" + src
+        print("DTN down; using backup futures from %s for %s" % (src, ", ".join(sorted(fut))))
     try:
         site = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "site.json")))
         for l in site.get("locations", []):
@@ -305,10 +486,6 @@ def main():
                       % (l.get("id"), ", ".join(sorted(data["dtn"]))), file=sys.stderr)
     except Exception as e:
         print("warning: could not compare with site.json:", e, file=sys.stderr)
-    try:
-        old = json.load(open(OUT))
-    except Exception:
-        old = {}
     now = datetime.now(timezone.utc)
     same = old.get("futures") == data["futures"] and old.get("dtn") == data["dtn"]
     try:
@@ -319,6 +496,11 @@ def main():
         print("no change", data["quote_time"])
         return
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    data.setdefault("futures_source", "dtn")
+    if data["futures_source"] == "dtn":
+        data["dtn_futures"] = data["futures"]
+    else:
+        data["dtn_futures"] = old.get("dtn_futures") or old.get("futures")
     out = {"checked": stamp, "updated": stamp if not same else old.get("updated", stamp), "source": url, **data}
     with open(OUT, "w") as f:
         json.dump(out, f, indent=1)

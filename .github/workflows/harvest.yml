@@ -26,12 +26,28 @@ jobs:
         with:
           python-version: "3.12"
       - name: Fetch and decode DTN bids
+        id: bids
         run: python tools/harvest.py
+      - name: Reference bids on DTN boards (Northside, Loyal)
+        id: refs_dtn
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: python tools/harvest.py --refs
+      - uses: actions/setup-node@v4
+        if: ${{ !cancelled() }}
+        with:
+          node-version: "22"
+      - name: Reference bids on Bushel boards (Ace Ethanol, Stanley)
+        id: refs_bushel
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: node tools/refs_bushel.mjs
       - name: Commit if changed
+        if: ${{ !cancelled() }}
         run: |
           git config user.name "flashgrain-harvest"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/bids.json
+          git add data/bids.json data/refs
           if git diff --cached --quiet; then echo "no change"; exit 0; fi
           git commit -m "bids $(date -u +%Y-%m-%dT%H:%MZ)"
           for i in 1 2 3; do git pull --rebase origin main && git push && exit 0; sleep 5; done

@@ -61,7 +61,8 @@
         SHA = r[0].sha; S = JSON.parse(b64dec(r[0].content)); ORIG = clone(S);
         BIDS = r[1] ? JSON.parse(b64dec(r[1].content)) : null;
         hoursCache = {}; draw(); $('editor').hidden = false; setDirty(false);
-        status('Loaded. Cash previews use futures from ' + (BIDS && BIDS.quote_time ? BIDS.quote_time.replace('T', ' ').slice(0, 16) + ' Central' : 'the last harvest') + '.');
+        status('Loaded. Cash previews use futures from ' + (BIDS && BIDS.quote_time ? BIDS.quote_time.replace('T', ' ').slice(0, 16) + ' Central' : 'the last harvest')
+          + (BIDS && BIDS.futures_source && BIDS.futures_source !== 'dtn' ? ' (backup feed: ' + BIDS.futures_source + ', because DTN was down)' : '') + '.');
       }).catch(function (e) {
         status(e.status === 401 ? 'Key rejected. Check it was copied whole and has not expired.'
           : e.status === 404 ? 'Repo or file not found, or the key has no access to this repo.'
@@ -121,8 +122,22 @@
     }).join('');
   }
 
+  function drawRefs() {
+    $('refs-admin').innerHTML = (S.references || []).map(function (r, i) {
+      return '<div class="a-loc" data-r="' + i + '"><label class="a-check"><input type="checkbox" data-f="show"' + (r.show ? ' checked' : '') + '> Show ' + esc(r.name) + ' (' + esc(r.place) + ') ' + esc(r.commodity.toLowerCase()) + '</label>'
+        + '<div class="a-grid"><label>Location name on their board<input data-f="location" value="' + esc(r.location || '') + '" placeholder="only needed if their board lists several"></label></div>'
+        + '<p class="a-help" data-st="' + esc(r.id) + '">Checking\u2026</p></div>';
+    }).join('');
+    (S.references || []).forEach(function (r) {
+      fetch('../data/refs/' + encodeURIComponent(r.id) + '.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(function (x) { if (!x.ok) throw 0; return x.json(); })
+        .then(function (d) { var el = document.querySelector('[data-st="' + r.id + '"]'); if (el) el.textContent = d.rows.length + ' rows, last read ' + new Date(d.checked).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) + '.'; })
+        .catch(function () { var el = document.querySelector('[data-st="' + r.id + '"]'); if (el) el.textContent = 'Not read yet. If this stays, check the harvester log in the Actions tab.'; });
+    });
+  }
+
   function draw() {
-    drawBids(); drawHours(); drawLocs();
+    drawBids(); drawHours(); drawLocs(); drawRefs();
     $('notices').value = (S.notices || []).join('\n');
     $('lime-open').checked = !!S.lime.taking_orders;
     $('lime-towns').value = (S.lime.towns || []).join(', ');
@@ -185,6 +200,11 @@
     });
     D.bids.rows = rows;
     D.bids.footnote = $('footnote').value.trim();
+    $('refs-admin').querySelectorAll('[data-r]').forEach(function (div) {
+      var r = D.references[+div.dataset.r];
+      r.show = div.querySelector('[data-f=show]').checked;
+      r.location = div.querySelector('[data-f=location]').value.trim() || null;
+    });
     D.notices = $('notices').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
     D.lime.taking_orders = $('lime-open').checked;
     D.lime.towns = $('lime-towns').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
