@@ -1,0 +1,7 @@
+{
+ "id": "northside",
+ "source": "http://grain.northsideelevator.com/index.cfm?show=11&mid=3",
+ "rows": [],
+ "error": "page served without prices (875 bytes, 0 price calls); not logging in",
+ "error_at": "2026-10-02T20:43:38Z"
+}
