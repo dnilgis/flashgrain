@@ -22,7 +22,8 @@
     "fri": "08:00-17:00",
     "sat": "08:00-17:00",
     "sun": "08:00-17:00"
-   }
+   },
+   "pin": ""
   },
   {
    "id": "granton",
@@ -38,7 +39,8 @@
     "fri": "call",
     "sat": "call",
     "sun": "closed"
-   }
+   },
+   "pin": ""
   },
   {
    "id": "hixwood",
@@ -46,7 +48,8 @@
    "address": "",
    "note": "Drop point for overflow and high oleic Plenish soybeans. Call ahead to be unloaded.",
    "bids": false,
-   "hours": null
+   "hours": null,
+   "pin": "44.944867,-90.835861"
   }
  ],
  "bids": {

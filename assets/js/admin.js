@@ -116,6 +116,7 @@
       return '<div class="a-loc" data-i="' + i + '"><div class="a-grid">'
         + '<label>Name<input data-f="name" value="' + esc(l.name) + '"></label>'
         + '<label>Address<input data-f="address" value="' + esc(l.address) + '"></label>'
+        + '<label>Map pin (lat, long)<input data-f="pin" value="' + esc(l.pin || '') + '" placeholder="optional, e.g. 44.944867,-90.835861" inputmode="decimal"></label>'
         + '<label class="wide">Note<input data-f="note" value="' + esc(l.note) + '"></label></div>'
         + '<label class="a-check"><input type="checkbox" data-f="bids"' + (l.bids ? ' checked' : '') + '> Posts bids (gets a tab and a basis column)</label>'
         + '<label class="a-check"><input type="checkbox" data-f="hashours"' + (l.hours ? ' checked' : '') + '> Has hours</label></div>';
@@ -173,7 +174,8 @@
     readHours(D, flag);
     $('locs').querySelectorAll('.a-loc').forEach(function (div) {
       var l = D.locations[+div.dataset.i];
-      ['name', 'address', 'note'].forEach(function (f) { l[f] = div.querySelector('[data-f=' + f + ']').value.trim(); });
+      ['name', 'address', 'note', 'pin'].forEach(function (f) { l[f] = div.querySelector('[data-f=' + f + ']').value.trim(); });
+      if (l.pin && !/^-?\d{1,3}\.\d+\s*,\s*-?\d{1,3}\.\d+$/.test(l.pin)) flag(div.querySelector('[data-f=pin]'), 'Map pin must look like 44.944867,-90.835861');
       if (!l.name) flag(div.querySelector('[data-f=name]'), 'A location has no name.');
       l.bids = div.querySelector('[data-f=bids]').checked;
       var wantH = div.querySelector('[data-f=hashours]').checked;
@@ -227,7 +229,9 @@
     var c = collect();
     if (c.bad.length) { status(c.bad[0] + (c.bad.length > 1 ? ' (+' + (c.bad.length - 1) + ' more)' : ''), true); return false; }
     S = c.draft; if (op) op(); setDirty(true);
-    if ($('status2').classList.contains('err')) status('');
+    // Clear an old error AFTER the current click lands: clearing it now shrinks the sticky save bar between
+    // mousedown and mouseup (blur fires 'change' first), the Save button moves, and the click is lost.
+    if ($('status2').classList.contains('err')) setTimeout(function () { if (!saving && $('status2').classList.contains('err') && !collect().bad.length) status(''); }, 300);
     return true;
   }
 

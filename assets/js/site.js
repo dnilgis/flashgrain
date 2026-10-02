@@ -85,7 +85,8 @@
   // Google Maps directions from wherever the farmer is. A street address (incl. Wisconsin rural W2306-style) goes in as-is; a town alone is
   // searched with the business name so Google can find the yard. No address, no link (never a guessed pin).
   function mapUrl(l) {
-    var a = (l.address || '').trim();
+    var pin = /^\s*(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)\s*$/.exec(l.pin || ''), a = (l.address || '').trim();
+    if (pin) return 'https://www.google.com/maps/dir/?api=1&destination=' + pin[1] + ',' + pin[2]; // exact pin beats an address
     if (!a) return '';
     var q = /^[NSEW]?\d/i.test(a) ? a : 'Flash Grain, ' + a;
     return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(q);
