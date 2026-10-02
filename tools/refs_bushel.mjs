@@ -36,11 +36,15 @@ export function pick(html, ref) {
   const out = [], dropped = [];
   for (const r of rows) {
     if (r.cash == null || r.basis == null) { dropped.push(`${r.delivery}: no cash or basis`); continue; }
-    if (r.futuresPrice != null && Math.abs((r.cash - r.basis) * 100 - r.futuresPrice) > 1.01) {
-      dropped.push(`${r.delivery}: cash ${r.cash} - basis ${r.basis} != futures ${r.futuresPrice}c`); continue;
+    // Units differ by board: Big River prints futures in cents (459-4 -> 459.5), Ace's Bushel page in
+    // dollars (4.9775). Grain futures are never under 50 cents or over $50, so under 50 means dollars.
+    const fc = r.futuresPrice == null ? null : r.futuresPrice < 50 ? r.futuresPrice * 100 : r.futuresPrice;
+    // 1.01c tolerance: boards round cash to the cent while futures trade in quarter cents.
+    if (fc != null && Math.abs((r.cash - r.basis) * 100 - fc) > 1.01) {
+      dropped.push(`${r.delivery}: cash ${r.cash} - basis ${r.basis} != futures ${fc.toFixed(2)}c`); continue;
     }
     out.push({ label: r.delivery, cash: r.cash, basis: r.basis, futures_month: r.futures,
-      futures: r.futuresPrice == null ? null : Math.round(r.futuresPrice * 100) / 10000 });
+      futures: fc == null ? null : Math.round(fc * 100) / 10000 });
   }
   if (!out.length) throw new Error(`every ${ref.commodity} row failed its check: ${dropped.join("; ")}`);
   return { rows: out, dropped };
