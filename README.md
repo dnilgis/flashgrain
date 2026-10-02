@@ -46,9 +46,9 @@ bids.json records `futures_source` (dtn, yahoo, agsist); /admin says so on load.
 has no quote for (often the far-out years) show a dash, not a guess.
 
 Nearby bids: site.json `references` lists other elevators' boards (Ace Ethanol Stanley corn, Northside
-Loyal soybeans). They print below Jeff's bids, labelled as that elevator's price, never mixed into his.
-Hidden on the page if not read in 2 hours. Show/hide and the location name are in /admin. If a board
-lists several locations and none matches, the Actions log prints the names it found.
+Loyal soybeans). Shown ONLY in /admin, as a reference while setting basis. Never on the public site,
+never mixed into Jeff's prices. The location name is set in /admin. If a board lists several locations
+and none matches, the error printed in /admin names the ones it found.
 
 ## Admin key (one time per person)
 
