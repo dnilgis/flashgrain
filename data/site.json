@@ -140,7 +140,7 @@
    "platform": "bushel",
    "url": "https://aceethanol.o.bushelsites.com/cashbidssingle-3578",
    "location": "",
-   "show": true
+   "show": false
   },
   {
    "id": "northside",
@@ -150,7 +150,7 @@
    "platform": "aghost",
    "url": "http://grain.northsideelevator.com/index.cfm?show=11&mid=3",
    "location": null,
-   "show": true
+   "show": false
   }
  ]
 }
