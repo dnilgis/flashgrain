@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flash Grain | Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../favicon.ico" sizes="32x32">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<link rel="stylesheet" href="../assets/css/site.css">
+<link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+<svg width="0" height="0" class="vh" aria-hidden="true" focusable="false"><defs><path id="boltp" d="M58 0 10 92h36L30 160 92 60H54L76 0Z"/></defs></svg>
+<div class="wrap">
+
+<header class="mast">
+  <h1 aria-label="Flash Grain">Flash<svg viewBox="0 0 100 160" aria-hidden="true" focusable="false"><use href="#boltp"/></svg>Grain</h1>
+  <a class="call" href="../" target="_blank" rel="noopener">View site<span>new tab</span></a>
+</header>
+<main>
+
+<section id="connect" class="a-sec">
+  <h2>Admin</h2>
+  <hr class="rule">
+  <p class="a-help">Changes save to the site's GitHub repo and show on the site in 1&ndash;3 minutes. You need a GitHub key with write access to this one repo (see README).</p>
+  <div class="a-grid">
+    <label>Repo<input id="repo" value="dnilgis/flashgrain" autocomplete="off"></label>
+    <label>Branch<input id="branch" value="main" autocomplete="off"></label>
+    <label class="wide">GitHub key<input id="token" type="password" autocomplete="off" placeholder="github_pat_..."></label>
+  </div>
+  <label class="a-check"><input type="checkbox" id="remember"> Remember key on this device</label>
+  <div class="a-actions"><button class="cta" id="load" type="button">Load</button><button class="a-btn" id="forget" type="button">Forget key</button></div>
+  <p class="a-status" id="status" role="status"></p>
+</section>
+
+<div id="editor" hidden>
+
+<section class="a-sec">
+  <h2>Cash bids</h2>
+  <hr class="rule">
+  <p class="a-help">Cash on the site = futures + your basis. Untick Show to hide a row. DTN basis is what DTN posts right now, for reference only; the site uses yours. Every save lists the price changes and asks first.</p>
+  <div class="a-scroll"><table class="a-bids" id="bids-t"></table></div>
+  <div class="a-actions"><button class="a-btn" id="add-row" type="button">Add row</button><button class="a-btn" id="copy-dtn" type="button">Copy DTN basis into all rows</button></div>
+  <p class="a-help" id="fut-asof"></p>
+  <label class="wide a-solo">Footnote under the bid table<input id="footnote"></label>
+</section>
+
+<section class="a-sec">
+  <h2>Hours</h2>
+  <hr class="rule">
+  <div id="hours"></div>
+</section>
+
+<section class="a-sec">
+  <h2>Notices</h2>
+  <hr class="rule">
+  <p class="a-help">One per line. Shown in a bar under the phone number. Leave empty to hide the bar.</p>
+  <textarea id="notices" rows="4" placeholder="Closed Friday at noon for harvest dinner"></textarea>
+</section>
+
+<section class="a-sec">
+  <h2>Locations</h2>
+  <hr class="rule">
+  <div id="locs"></div>
+</section>
+
+<section class="a-sec">
+  <h2>Lime</h2>
+  <hr class="rule">
+  <label class="a-check"><input type="checkbox" id="lime-open"> Taking lime orders</label>
+  <label class="wide a-solo">Towns, comma separated<input id="lime-towns"></label>
+</section>
+
+<section class="a-sec">
+  <h2>Contact</h2>
+  <hr class="rule">
+  <div class="a-grid">
+    <label>Phone<input id="phone"></label>
+    <label>Phone note<input id="phone-note"></label>
+    <label>Email<input id="email" type="email"></label>
+    <label class="wide">DTN portal link<input id="portal"></label>
+  </div>
+</section>
+
+<div class="a-bar">
+  <button class="cta" id="save" type="button">Save to site</button>
+  <button class="a-btn" id="download" type="button">Download</button>
+  <span class="a-dirty" id="dirty" aria-live="polite"></span>
+  <span class="a-status" id="status2" role="status"></span>
+</div>
+<datalist id="coms"><option value="Corn"><option value="Soybeans"></datalist>
+
+</div>
+</main>
+</div>
+<script src="../assets/js/site.js"></script>
+<script src="../assets/js/admin.js"></script>
+</body>
+</html>

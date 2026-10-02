@@ -1,0 +1,131 @@
+{
+  "business": {
+    "name": "Flash Grain LLC",
+    "phone": "715-653-6585",
+    "phone_note": "call or text",
+    "email": "office@flashgrain.com",
+    "town": "Thorp, WI 54771"
+  },
+  "notices": [],
+  "locations": [
+    {
+      "id": "thorp",
+      "name": "Thorp",
+      "address": "Hwy N, Thorp WI 54771",
+      "note": "Main office",
+      "bids": true,
+      "hours": {
+        "mon": "08:00-17:00",
+        "tue": "08:00-17:00",
+        "wed": "08:00-17:00",
+        "thu": "08:00-17:00",
+        "fri": "08:00-17:00",
+        "sat": "08:00-17:00",
+        "sun": "08:00-17:00"
+      }
+    },
+    {
+      "id": "granton",
+      "name": "Granton",
+      "address": "Granton WI",
+      "note": "",
+      "bids": true,
+      "hours": {
+        "mon": "call",
+        "tue": "call",
+        "wed": "call",
+        "thu": "call",
+        "fri": "call",
+        "sat": "call",
+        "sun": "closed"
+      }
+    },
+    {
+      "id": "hixwood",
+      "name": "Hixwood",
+      "address": "",
+      "note": "Drop point for overflow and high oleic Plenish soybeans. Call ahead to be unloaded.",
+      "bids": false,
+      "hours": null
+    }
+  ],
+  "bids": {
+    "rows": [
+      {
+        "commodity": "Corn",
+        "label": "Fall 26",
+        "symbol": "@C6Z",
+        "show": true,
+        "basis": {
+          "thorp": -0.6,
+          "granton": -0.6
+        }
+      },
+      {
+        "commodity": "Corn",
+        "label": "Fall 27",
+        "symbol": "@C7Z",
+        "show": true,
+        "basis": {
+          "thorp": -0.65,
+          "granton": -0.65
+        }
+      },
+      {
+        "commodity": "Corn",
+        "label": "Fall 28",
+        "symbol": "@C8Z",
+        "show": true,
+        "basis": {
+          "thorp": -0.7,
+          "granton": -0.7
+        }
+      },
+      {
+        "commodity": "Soybeans",
+        "label": "Fall 26",
+        "symbol": "@S6X",
+        "show": true,
+        "basis": {
+          "thorp": -0.75,
+          "granton": -0.75
+        }
+      },
+      {
+        "commodity": "Soybeans",
+        "label": "Fall 27",
+        "symbol": "@S7X",
+        "show": true,
+        "basis": {
+          "thorp": -0.85,
+          "granton": -0.85
+        }
+      },
+      {
+        "commodity": "Soybeans",
+        "label": "Fall 28",
+        "symbol": "@S8X",
+        "show": true,
+        "basis": {
+          "thorp": -0.95,
+          "granton": -0.95
+        }
+      }
+    ],
+    "footnote": "Subject to change without notice."
+  },
+  "lime": {
+    "taking_orders": true,
+    "towns": [
+      "Thorp",
+      "Stanley",
+      "Boyd",
+      "Owen",
+      "Withee",
+      "Greenwood",
+      "Gilman",
+      "Lublin"
+    ]
+  },
+  "portal_url": "https://www.flashgrains.com/index.cfm?show=11&mid=3"
+}
