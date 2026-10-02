@@ -316,7 +316,7 @@ def _central_iso(epoch):
 def backup_futures(symbols, last_dtn):
     """Delayed CBOT futures when DTN is down: Yahoo Finance first, agsist's prices.json second.
     Returns ({symbol: {price, change, time}}, source) for the symbols it could get and verify."""
-    got, source = {}, None
+    got, used, notes = {}, set(), []
     for sym in symbols:  # Yahoo, contract by contract
         t = yahoo_ticker(sym)
         if not t:
@@ -328,8 +328,9 @@ def backup_futures(symbols, last_dtn):
                 continue
             got[sym] = {"price": round(px / 100, 5), "change": round((px - prev) / 100, 5) if prev is not None else None,
                         "time": _central_iso(meta["regularMarketTime"]) if meta.get("regularMarketTime") else None}
-            source = "yahoo"
+            used.add("yahoo")
         except Exception as e:
+            notes.append("yahoo %s: %s" % (t, e))
             print("backup yahoo %s (%s): %s" % (sym, t, e), file=sys.stderr)
     missing = [s for s in symbols if s not in got]
     if missing:  # agsist's own Yahoo pull, if it is fresh
@@ -345,15 +346,17 @@ def backup_futures(symbols, last_dtn):
                     got[sym] = {"price": round(q["close"] / 100, 5),
                                 "change": round(q["netChange"] / 100, 5) if q.get("netChange") is not None else None,
                                 "time": _central_iso(fetched.timestamp())}
-                    source = source and source + "+agsist" or "agsist"
+                    used.add("agsist")
         except Exception as e:
+            notes.append("agsist: %s" % e)
             print("backup agsist: %s" % e, file=sys.stderr)
     for sym in list(got):  # refuse anything that disagrees wildly with the last DTN price (units, wrong contract)
         ref = (last_dtn or {}).get(sym, {}).get("price")
         if ref and abs(got[sym]["price"] - ref) / ref > SANITY:
+            notes.append("%s refused: %.4f vs last DTN %.4f" % (sym, got[sym]["price"], ref))
             print("backup %s refused: %.4f vs last DTN %.4f" % (sym, got[sym]["price"], ref), file=sys.stderr)
             del got[sym]
-    return got, source
+    return got, "+".join(sorted(used)) or None, notes
 
 
 def fetch():
@@ -401,6 +404,27 @@ def pick_ref(src, ref):
     return {"rows": rows, "quote_time": max(times) if times else None, "dtn_as_of": as_of, "dropped": dropped}
 
 
+def note_ref_error(path, ref, e):
+    """Write why a reference read failed into its file (rows untouched), so /admin and the repo
+    show the reason without opening the Actions log. Rewritten only when the reason changes or hourly."""
+    try:
+        old = json.load(open(path))
+    except Exception:
+        old = {"id": ref["id"], "source": ref["url"], "rows": []}
+    msg, now = str(e)[:400], datetime.now(timezone.utc)
+    try:
+        recent = now - datetime.strptime(old.get("error_at", ""), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc) < HEARTBEAT
+    except (ValueError, TypeError):
+        recent = False
+    if old.get("error") == msg and recent:
+        return
+    old.update(error=msg, error_at=now.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    os.makedirs(REFS_DIR, exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(old, f, indent=1)
+        f.write("\n")
+
+
 def harvest_refs():
     """Reference elevators on DTN AgHost (platform "aghost" in data/site.json `references`).
     Never logs in: a page served without prices publishes nothing."""
@@ -440,7 +464,8 @@ def harvest_refs():
             print("%s: wrote %d rows" % (ref["id"], len(got["rows"])))
         except Exception as e:
             failed += 1
-            print("%s: %s; %s left unchanged" % (ref["id"], e, path), file=sys.stderr)
+            print("%s: %s; rows left unchanged" % (ref["id"], e), file=sys.stderr)
+            note_ref_error(path, ref, e)
     if failed:
         raise SystemExit(1)
 
@@ -470,12 +495,13 @@ def main():
             wanted = sorted({r["symbol"] for r in site["bids"]["rows"] if r.get("show")})
         except Exception:
             wanted = sorted((old.get("futures") or {}).keys())
-        fut, src = backup_futures(wanted, old.get("dtn_futures") or old.get("futures"))
+        fut, src, notes = backup_futures(wanted, old.get("dtn_futures") or old.get("futures"))
         if not any(k.startswith("@C") for k in fut) or not any(k.startswith("@S") for k in fut):
             raise SystemExit("DTN down and the backup feed did not cover corn and soybeans; bids.json left unchanged")
         times = [f["time"] for f in fut.values() if f.get("time")]
         data = {"quote_time": max(times) if times else None, "dtn_as_of": None, "futures": fut,
-                "dtn": old.get("dtn", {}), "futures_source": src}
+                "dtn": old.get("dtn", {}), "futures_source": src,
+                "dtn_error": str(dtn_down)[:300], "backup_notes": [n[:200] for n in notes]}
         url = "backup:" + src
         print("DTN down; using backup futures from %s for %s" % (src, ", ".join(sorted(fut))))
     try:

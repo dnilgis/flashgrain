@@ -92,7 +92,6 @@
   // ---------- page ----------
   var strike = document.getElementById('strike');
   if (strike) {
-    try { if (localStorage.getItem('fg-struck')) strike.remove(); else localStorage.setItem('fg-struck', '1'); } catch (e) {}
     setTimeout(function () { if (strike.parentNode) strike.remove(); }, 1300);
   }
   var board = document.getElementById('board');

@@ -57,6 +57,16 @@ async function fetchPage(url) {
   throw new Error(`fetch failed: ${last && last.message}`);
 }
 
+// Why a read failed goes into the file (rows untouched): rewritten only when the reason changes, or hourly.
+function noteError(path, ref, e) {
+  const old = existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : { id: ref.id, source: ref.url, rows: [] };
+  const msg = String(e && e.message || e).slice(0, 400), now = new Date();
+  if (old.error === msg && now - new Date(old.error_at || 0) < HEARTBEAT_MS) return;
+  old.error = msg; old.error_at = now.toISOString().replace(/\.\d+Z$/, "Z");
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, JSON.stringify(old, null, 1) + "\n");
+}
+
 async function main() {
   const site = JSON.parse(readFileSync(join(ROOT, "data/site.json"), "utf8"));
   const refs = (site.references || []).filter((r) => r.platform === "bushel");
@@ -82,7 +92,8 @@ async function main() {
       console.log(`${ref.id}: wrote ${rows.length} rows${same ? " (heartbeat)" : ""}`);
     } catch (e) {
       failed++;
-      console.error(`${ref.id}: ${e.message}; ${path} left unchanged`);
+      console.error(`${ref.id}: ${e.message}; rows left unchanged`);
+      noteError(path, ref, e);
     }
   }
   if (failed) process.exit(1);

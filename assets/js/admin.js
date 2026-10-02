@@ -131,7 +131,13 @@
     (S.references || []).forEach(function (r) {
       fetch('../data/refs/' + encodeURIComponent(r.id) + '.json?t=' + Date.now(), { cache: 'no-store' })
         .then(function (x) { if (!x.ok) throw 0; return x.json(); })
-        .then(function (d) { var el = document.querySelector('[data-st="' + r.id + '"]'); if (el) el.textContent = d.rows.length + ' rows, last read ' + new Date(d.checked).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) + '.'; })
+        .then(function (d) {
+          var el = document.querySelector('[data-st="' + r.id + '"]'), when = function (t) { return new Date(t).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }); };
+          if (!el) return;
+          var ok = d.rows && d.rows.length && d.checked ? d.rows.length + ' rows, last read ' + when(d.checked) + '.' : 'Never read.';
+          var bad = d.error && (!d.checked || d.error_at > d.checked) ? ' Last try ' + when(d.error_at) + ' failed: ' + d.error : '';
+          el.textContent = ok + bad;
+        })
         .catch(function () { var el = document.querySelector('[data-st="' + r.id + '"]'); if (el) el.textContent = 'Not read yet. If this stays, check the harvester log in the Actions tab.'; });
     });
   }
