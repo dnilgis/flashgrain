@@ -66,7 +66,7 @@ Lost the device? Delete the token on that same GitHub page. The panel stops savi
 
 ## Harvester clock (cron-job.org)
 
-GitHub's own 10-minute schedule is in the workflow but GitHub runs it late or skips it under load.
+GitHub's own hourly schedule (minute 7) is only a backup: GitHub runs it late or skips it under load.
 cron-job.org is the real clock, same as the Emmert sites.
 
 1. Make a second fine-grained token: `flashgrain harvest trigger`, only the `flashgrain` repo, permission Actions: Read and write. Nothing else.
