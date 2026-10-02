@@ -19,11 +19,12 @@ h1,h2{font-family:var(--cond);font-weight:800;text-transform:uppercase;line-heig
 /* type scale: 13 / 15 / 18 text; 24 / 32 / 44 / 64 display */
 
 /* strike */
-#strike{position:fixed;inset:0;z-index:99;background:#0b0b0b;display:grid;place-items:center;pointer-events:none;animation:out .18s ease-in .3s forwards}
+#strike{position:fixed;inset:0;z-index:99;background:#0b0b0b;display:grid;place-items:center;pointer-events:none;animation:out .3s ease-in .9s forwards}
 #strike svg{width:min(34vw,180px);height:auto;overflow:visible}
-#strike .bolt{fill:none;stroke:var(--flash);stroke-width:5;stroke-dasharray:620;stroke-dashoffset:620;animation:draw .12s linear forwards}
-#strike .fill{fill:#fff;opacity:0;animation:flash .1s steps(1) .1s forwards,fade .18s ease-out .2s forwards}
-#strike .glow{fill:var(--flash);opacity:0;filter:blur(18px);animation:flash .1s steps(1) .1s forwards,fade .26s ease-out .2s forwards}
+#strike .bolt{fill:none;stroke:var(--flash);stroke-width:5;stroke-dasharray:620;stroke-dashoffset:620;animation:draw .22s linear forwards}
+#strike .fill{fill:#fff;opacity:0;animation:settle .75s linear forwards}
+#strike .glow{fill:var(--flash);opacity:0;filter:blur(18px);animation:flash .1s steps(1) .22s forwards,fade .6s ease-out .32s forwards}
+@keyframes settle{0%,29%{opacity:0;fill:#fff}30%{opacity:1;fill:#fff}55%,100%{opacity:1;fill:#f5c400}}
 @keyframes draw{to{stroke-dashoffset:0}}@keyframes flash{to{opacity:1}}@keyframes fade{to{opacity:0}}@keyframes out{to{opacity:0;visibility:hidden}}
 
 /* masthead */
