@@ -193,7 +193,7 @@ abbr[title]{text-decoration:none}
 /* 404 */
 .nf{padding:60px 0}
 
-@media(prefers-reduced-motion:reduce){#strike{display:none}.stamp.live i{animation:none}}
+@media(prefers-reduced-motion:reduce){.stamp.live i{animation:none}}
 
 @media print{
   :root{--bg:#fff;--ink:#000;--ink2:#111;--mute:#111;--line:#000;--flash:#000;--down:#111}
