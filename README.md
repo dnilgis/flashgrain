@@ -19,7 +19,10 @@ assets/fonts/          self-hosted Barlow, Barlow Condensed, JetBrains Mono (OFL
 favicon.ico
 data/site.json        everything Jeff can change. Edited by /admin. Do not hand-edit unless you mean it.
 data/bids.json        futures, trade time, heartbeat, DTN reference. Written by the harvester. Never hand-edit.
-tools/harvest.py      reads DTN, decodes, checks, writes data/bids.json
+data/refs/<id>.json   nearby elevators' own posted bids (Ace Ethanol, Northside). Written by the harvester.
+tools/harvest.py      reads DTN, decodes, checks, writes data/bids.json; --refs reads DTN reference boards
+tools/refs_bushel.mjs reads Bushel reference boards (Ace Ethanol)
+tools/vendor/parse.mjs  board parser copied from dnilgis/bids (header says which commit)
 .github/workflows/harvest.yml   runs the harvester
 CNAME                 flshgrn.com
 robots.txt            staging: blocks search engines
@@ -36,6 +39,16 @@ What the public page does when data is old:
 - Harvester heartbeat (`checked`) older than 2 hours: cash column hidden, "Bids not updating" shown, call prompt.
 - CBOT closed (weekends, 1:20 PM to 7 PM, 7:45 to 8:30 AM): stamp says "CBOT closed", the live dot stops. Exchange holidays are not modelled.
 - The basis date ("Basis set ...") is written by the admin on any save that changes a price.
+
+When DTN is down: the harvester falls back to Yahoo Finance futures, then to agsist's data/prices.json
+(only if under 2 hours old). A backup price more than 15% from DTN's last price is refused.
+bids.json records `futures_source` (dtn, yahoo, agsist); /admin says so on load. Contracts the backup
+has no quote for (often the far-out years) show a dash, not a guess.
+
+Nearby bids: site.json `references` lists other elevators' boards (Ace Ethanol Stanley corn, Northside
+Loyal soybeans). They print below Jeff's bids, labelled as that elevator's price, never mixed into his.
+Hidden on the page if not read in 2 hours. Show/hide and the location name are in /admin. If a board
+lists several locations and none matches, the Actions log prints the names it found.
 
 ## Admin key (one time per person)
 
