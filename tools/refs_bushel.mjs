@@ -30,6 +30,7 @@ export function pick(html, ref) {
   const com = (ref.commodity || "").toLowerCase();
   const rows = all.filter((r) => (!want || String(r.location).toLowerCase().includes(want))
     && String(r.commodity).toLowerCase().includes(com));
+  if (!want && locs.length > 1) throw new Error(`the page has ${locs.length} locations (${locs.join(", ")}); set the location name for ${ref.id} in /admin`);
   if (!all.length) throw new Error(`no bids on the page (${html.length} bytes); served a shell or the layout changed`);
   if (!rows.length) throw new Error(`no ${ref.commodity} rows for location "${ref.location}". Locations on the page: ${locs.join(", ")}. Commodities: ${coms.join(", ")}`);
   const out = [], dropped = [];

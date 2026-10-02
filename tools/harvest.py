@@ -438,7 +438,10 @@ def harvest_refs():
                 src = r.read().decode("latin-1")
             calls = len(re.findall(r"displayNumber\(\s*-?[\d.]+", src))
             if calls <= 1:
-                raise ValueError("page served without prices (%d bytes, %d price calls); not logging in" % (len(src), calls))
+                txt = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", src)).strip()[:160]
+                where = r.geturl() if r.geturl() != ref["url"] else ""
+                raise ValueError("page served without prices (%d bytes, %d price calls%s); not logging in. Page says: %s"
+                                 % (len(src), calls, ", redirected to " + where if where else "", txt or "(nothing)"))
             got = pick_ref(src, ref)
             for d in got.pop("dropped"):
                 print("%s dropped: %s" % (ref["id"], d), file=sys.stderr)
