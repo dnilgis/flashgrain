@@ -11,18 +11,19 @@
 <link rel="stylesheet" href="../assets/css/site.css">
 <link rel="stylesheet" href="../assets/css/admin.css">
 </head>
-<body>
+<body class="admin">
 <svg width="0" height="0" class="vh" aria-hidden="true" focusable="false"><defs><path id="boltp" d="M58 0 10 92h36L30 160 92 60H54L76 0Z"/></defs></svg>
 <div class="wrap">
 
-<header class="mast">
-  <h1 aria-label="Flash Grain">Flash<svg viewBox="0 0 100 160" aria-hidden="true" focusable="false"><use href="#boltp"/></svg>Grain</h1>
-  <a class="call" href="../" target="_blank" rel="noopener">View site<span>new tab</span></a>
+<header class="c-top">
+  <h1 class="c-logo" aria-label="Flash Grain admin">Flash<svg viewBox="0 0 100 160" aria-hidden="true" focusable="false"><use href="#boltp"/></svg>Grain <span>Admin</span></h1>
+  <ul class="chips" id="chips" aria-label="Status"></ul>
+  <div class="c-links"><button class="a-btn sm" id="change-key" type="button" hidden>Change key</button><a class="a-btn sm" href="../" target="_blank" rel="noopener">View site<span class="vh"> (new tab)</span></a></div>
 </header>
 <main>
 
 <section id="connect" class="a-sec">
-  <h2>Admin</h2>
+  <h2>Connect</h2>
   <hr class="rule">
   <p class="a-help">Changes save to the site's GitHub repo and show on the site in 1&ndash;3 minutes. You need a GitHub key with write access to this one repo (see README).</p>
   <div class="a-grid">
@@ -35,12 +36,13 @@
   <p class="a-status" id="status" role="status"></p>
 </section>
 
-<div id="editor" hidden>
+<div id="editor" class="c-grid" hidden>
+<div class="c-main">
 
 <section class="a-sec">
   <h2>Cash bids</h2>
   <hr class="rule">
-  <p class="a-help">Cash on the site = futures + your basis. Untick Show to hide a row. DTN basis is what DTN posts right now, for reference only; the site uses yours. Every save lists the price changes and asks first.</p>
+  <p class="a-help">Site cash = futures + your basis. DTN basis is for reference only. Every save lists price changes and asks first.</p>
   <div class="a-scroll"><table class="a-bids" id="bids-t"></table></div>
   <div class="a-actions"><button class="a-btn" id="add-row" type="button">Add row</button><button class="a-btn" id="copy-dtn" type="button">Copy DTN basis into all rows</button></div>
   <p class="a-help" id="fut-asof"></p>
@@ -50,8 +52,19 @@
 <section class="a-sec">
   <h2>Nearby bids</h2>
   <hr class="rule">
-  <p class="a-help">Other elevators' own posted bids, for reference while you set basis. Only shown here, never on the public site, and they never change Flash Grain's prices.</p>
+  <p class="a-help">Their own posted bids, for reference. Admin only; never on the public site.</p>
   <div id="refs-admin"></div>
+</section>
+
+</div>
+<div class="c-side">
+
+<section class="a-sec">
+  <h2>Alert bar</h2>
+  <hr class="rule">
+  <p class="a-help">Yellow bar at the top of the site. One message per line; empty hides it.</p>
+  <textarea id="notices" rows="4" placeholder="Closed Friday at noon for harvest dinner"></textarea>
+  <div class="a-grid"><label>Hide after (optional)<input type="date" id="notice-until" aria-describedby="nu-h"></label><p class="a-help" id="nu-h">Bar hides itself after this day.</p></div>
 </section>
 
 <section class="a-sec">
@@ -60,14 +73,6 @@
   <div id="hours"></div>
 </section>
 
-<section class="a-sec">
-  <h2>Alert bar</h2>
-  <hr class="rule">
-  <p class="a-help">Yellow bar across the very top of the site. One message per line. Empty hides the bar.</p>
-  <textarea id="notices" rows="4" placeholder="Closed Friday at noon for harvest dinner"></textarea>
-  <div class="a-grid"><label>Hide after (optional)<input type="date" id="notice-until"></label></div>
-  <p class="a-help">With a date, the bar hides itself after that day. Without one, it stays until you clear it.</p>
-</section>
 
 <section class="a-sec">
   <h2>Locations</h2>
@@ -79,7 +84,7 @@
   <h2>Lime</h2>
   <hr class="rule">
   <label class="a-check"><input type="checkbox" id="lime-open"> Taking lime orders</label>
-  <label class="wide a-solo">Towns, comma separated<input id="lime-towns"></label>
+  <label class="wide a-solo">Towns, comma separated<textarea class="a-short" rows="2" id="lime-towns"></textarea></label>
 </section>
 
 <section class="a-sec">
@@ -89,9 +94,11 @@
     <label>Phone<input id="phone"></label>
     <label>Phone note<input id="phone-note"></label>
     <label>Email<input id="email" type="email"></label>
-    <label class="wide">DTN portal link<input id="portal"></label>
+    <label class="wide">DTN portal link<textarea class="a-short" rows="2" id="portal" spellcheck="false"></textarea></label>
   </div>
 </section>
+
+</div>
 
 <div class="a-bar">
   <button class="cta" id="save" type="button">Save to site</button>

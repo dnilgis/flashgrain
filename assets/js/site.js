@@ -110,7 +110,7 @@
   }
   function ageMin(isoZ) { var t = Date.parse(isoZ || ''); return isNaN(t) ? Infinity : (Date.now() - t) / 60000; }
 
-  window.FG = { DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, num: num };
+  window.FG = { cbotOpen: cbotOpen, ageMin: ageMin, closeLabel: closeLabel, DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, num: num };
 
   // ---------- page ----------
   var strike = document.getElementById('strike');

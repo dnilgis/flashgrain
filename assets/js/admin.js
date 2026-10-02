@@ -61,6 +61,7 @@
         SHA = r[0].sha; S = JSON.parse(b64dec(r[0].content)); ORIG = clone(S);
         BIDS = r[1] ? JSON.parse(b64dec(r[1].content)) : null;
         hoursCache = {}; draw(); $('editor').hidden = false; setDirty(false);
+        $('connect').hidden = true; $('change-key').hidden = false; drawChips();
         status('Loaded. Cash previews use futures from ' + (BIDS && BIDS.quote_time ? BIDS.quote_time.replace('T', ' ').slice(0, 16) + ' Central' : 'the last harvest')
           + (BIDS && BIDS.futures_source && BIDS.futures_source !== 'dtn' ? ' (backup feed: ' + BIDS.futures_source + ', because DTN was down)' : '') + '.');
       }).catch(function (e) {
@@ -69,6 +70,28 @@
           : 'Load failed: ' + e.message, true);
       });
   };
+
+  $('change-key').onclick = function () { $('connect').hidden = !$('connect').hidden; if (!$('connect').hidden) $('token').focus(); };
+
+  // ---------- status strip ----------
+  var REFST = {};
+  function chip(cls, html) { return '<li class="' + cls + '">' + html + '</li>'; }
+  function drawChips() {
+    var out = [], b = BIDS;
+    if (b) {
+      var src = b.futures_source || 'dtn', age = FG.ageMin(b.checked || b.updated);
+      out.push(src === 'dtn' ? chip('ok', 'Feed <b>DTN live</b>') : chip('bad', 'DTN <b>down</b> · backup ' + esc(src)));
+      var t = new Date(Date.parse(b.checked || b.updated)).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      out.push(chip(age > 25 ? 'bad' : 'ok', 'Checked <b>' + esc(t) + '</b> · ' + (isFinite(age) ? Math.max(0, Math.round(age)) + ' min ago' : '?')));
+    } else out.push(chip('bad', 'Feed <b>no data</b>'));
+    out.push(FG.cbotOpen() ? chip('ok', 'CBOT <b>open</b>') : chip('', 'CBOT <b>closed</b>'));
+    (S && S.references || []).forEach(function (r) {
+      var st = REFST[r.id];
+      out.push(st === true ? chip('ok', esc(r.name) + ' <b>read</b>') : st === false ? chip('bad', esc(r.name) + ' <b>failing</b>') : chip('', esc(r.name) + ' <b>…</b>'));
+    });
+    $('chips').innerHTML = out.join('');
+  }
+  setInterval(function () { if (S) drawChips(); }, 60000);
 
   // ---------- draw ----------
   function drawBids() {
@@ -117,7 +140,7 @@
         + '<label>Name<input data-f="name" value="' + esc(l.name) + '"></label>'
         + '<label>Address<input data-f="address" value="' + esc(l.address) + '"></label>'
         + '<label>Map pin (lat, long)<input data-f="pin" value="' + esc(l.pin || '') + '" placeholder="optional, e.g. 44.944867,-90.835861" inputmode="decimal"></label>'
-        + '<label class="wide">Note<input data-f="note" value="' + esc(l.note) + '"></label></div>'
+        + '<label class="wide">Note<textarea class="a-short" rows="2" data-f="note">' + esc(l.note) + '</textarea></label></div>'
         + '<label class="a-check"><input type="checkbox" data-f="bids"' + (l.bids ? ' checked' : '') + '> Posts bids (gets a tab and a basis column)</label>'
         + '<label class="a-check"><input type="checkbox" data-f="hashours"' + (l.hours ? ' checked' : '') + '> Has hours</label></div>';
     }).join('');
@@ -139,13 +162,14 @@
           var rows = d.rows || [], ok = rows.length && d.checked ? 'Their board, read ' + when(d.checked) + '.' : 'Never read.';
           var bad = d.error && (!d.checked || d.error_at > d.checked) ? ' Last try ' + when(d.error_at) + ' failed: ' + d.error : '';
           if (el()) el().textContent = ok + bad;
+          REFST[r.id] = !!(rows.length && !bad); drawChips();
           var t = document.querySelector('[data-rt="' + r.id + '"]');
           if (t && rows.length) t.innerHTML = '<thead><tr><th>Delivery</th><th>Cash</th><th>Basis</th><th>Futures</th></tr></thead><tbody>'
             + rows.map(function (x) {
               return '<tr><td>' + esc(x.label) + '</td><td class="prev">' + (FG.num(x.cash) ? '$' + FG.money(x.cash) : '\u2014') + '</td><td>' + (FG.num(x.basis) ? FG.basis(x.basis) : '\u2014') + '</td><td class="ref">' + esc(x.futures_month || '') + '</td></tr>';
             }).join('') + '</tbody>';
         })
-        .catch(function () { if (el()) el().textContent = 'Not read yet. If this stays, check the harvester log in the Actions tab.'; });
+        .catch(function () { REFST[r.id] = false; drawChips(); if (el()) el().textContent = 'Not read yet. If this stays, check the harvester log in the Actions tab.'; });
     });
   }
 
@@ -218,10 +242,10 @@
     D.bids.footnote = $('footnote').value.trim();
     $('refs-admin').querySelectorAll('[data-r]').forEach(function (div) {
       var r = D.references[+div.dataset.r];
-      r.location = div.querySelector('[data-f=location]').value.trim() || null;
+      var lv = div.querySelector('[data-f=location]').value.trim(); r.location = lv || (r.location === null ? null : ''); // blank stays as loaded
     });
     D.notices = $('notices').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
-    D.notice_until = $('notice-until').value || '';
+    var nu = $('notice-until').value; if (nu) D.notice_until = nu; else if ('notice_until' in D) D.notice_until = ''; // blank stays as loaded
     D.lime.taking_orders = $('lime-open').checked;
     D.lime.towns = $('lime-towns').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
     D.business.phone = $('phone').value.trim(); D.business.phone_note = $('phone-note').value.trim(); D.business.email = $('email').value.trim();
@@ -309,7 +333,9 @@
     if (saving) return;
     var c = collect();
     if (c.bad.length) return status(c.bad[0] + (c.bad.length > 1 ? ' (+' + (c.bad.length - 1) + ' more)' : ''), true);
-    var D = c.draft, rv = priceReview(D);
+    var D = c.draft;
+    if (JSON.stringify(D) === JSON.stringify(ORIG)) { setDirty(false); return status('Nothing to save. The site already has this version.'); }
+    var rv = priceReview(D);
     if (rv.warn.length || rv.lines.length) {
       var msg = (rv.warn.length ? 'CHECK THESE FIRST:\n' + rv.warn.join('\n') + '\n\n' : '') + (rv.lines.length ? 'Price changes going live:\n' + rv.lines.join('\n') + '\n\n' : '') + 'Save to the site?';
       if (!confirm(msg)) return status('Not saved.');
