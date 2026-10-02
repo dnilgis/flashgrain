@@ -82,12 +82,12 @@
     }
     return '<b>' + name + 'closed</b>';
   }
-  // Google Maps directions from wherever the farmer is. A street address goes in as-is; a town alone is
+  // Google Maps directions from wherever the farmer is. A street address (incl. Wisconsin rural W2306-style) goes in as-is; a town alone is
   // searched with the business name so Google can find the yard. No address, no link (never a guessed pin).
   function mapUrl(l) {
     var a = (l.address || '').trim();
     if (!a) return '';
-    var q = /^\d/.test(a) ? a : 'Flash Grain, ' + a;
+    var q = /^[NSEW]?\d/i.test(a) ? a : 'Flash Grain, ' + a;
     return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(q);
   }
   // "2026-09-30T19:33:00" (Central wall time) -> "Wed 7:33 PM"
