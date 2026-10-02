@@ -105,12 +105,6 @@ td.cash.tick{animation:tick 2.6s ease-out}
 @media(max-width:559px){.board td.fut{font-size:1.0625rem}}
 
 /* reference bids from nearby elevators */
-.refs{margin-top:32px;border-top:3px solid var(--ink);max-width:860px}
-.refs-h{font-size:clamp(1.75rem,3.6vw,2.25rem);margin:16px 0 0}
-.ref-h{font-family:var(--cond);font-size:1.5rem;font-weight:800;text-transform:uppercase;margin:22px 0 4px}
-.ref-h span{font-family:var(--mono);font-size:1rem;font-weight:500;color:var(--ink2);text-transform:none;margin-left:8px;white-space:nowrap;display:inline-block}
-.ref-board td.cash{font-size:clamp(1.5rem,4.5vw,2rem)}
-.ref-board colgroup{display:none}
 
 /* lower sections */
 section{padding:48px 0 0}

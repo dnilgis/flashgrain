@@ -125,23 +125,30 @@
 
   function drawRefs() {
     $('refs-admin').innerHTML = (S.references || []).map(function (r, i) {
-      return '<div class="a-loc" data-r="' + i + '"><label class="a-check"><input type="checkbox" data-f="show"' + (r.show ? ' checked' : '') + '> Show ' + esc(r.name) + ' (' + esc(r.place) + ') ' + esc(r.commodity.toLowerCase()) + '</label>'
-        + '<div class="a-grid"><label>Location name on their board<input data-f="location" value="' + esc(r.location || '') + '" placeholder="only needed if their board lists several"></label></div>'
-        + '<p class="a-help" data-st="' + esc(r.id) + '">Checking\u2026</p></div>';
+      return '<div class="a-loc" data-r="' + i + '"><h3 class="a-ref-h">' + esc(r.name) + ' <span>' + esc(r.place) + ' \u00b7 ' + esc(r.commodity) + '</span></h3>'
+        + '<p class="a-help" data-st="' + esc(r.id) + '">Checking\u2026</p>'
+        + '<div class="a-scroll"><table class="a-bids a-ref" data-rt="' + esc(r.id) + '"></table></div>'
+        + '<div class="a-grid"><label>Location name on their board<input data-f="location" value="' + esc(r.location || '') + '" placeholder="only needed if their board lists several"></label></div></div>';
     }).join('');
     (S.references || []).forEach(function (r) {
+      var el = function () { return document.querySelector('[data-st="' + r.id + '"]'); };
       fetch('../data/refs/' + encodeURIComponent(r.id) + '.json?t=' + Date.now(), { cache: 'no-store' })
         .then(function (x) { if (!x.ok) throw 0; return x.json(); })
         .then(function (d) {
-          var el = document.querySelector('[data-st="' + r.id + '"]'), when = function (t) { return new Date(t).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }); };
-          if (!el) return;
-          var ok = d.rows && d.rows.length && d.checked ? d.rows.length + ' rows, last read ' + when(d.checked) + '.' : 'Never read.';
+          var when = function (t) { return new Date(t).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }); };
+          var rows = d.rows || [], ok = rows.length && d.checked ? 'Their board, read ' + when(d.checked) + '.' : 'Never read.';
           var bad = d.error && (!d.checked || d.error_at > d.checked) ? ' Last try ' + when(d.error_at) + ' failed: ' + d.error : '';
-          el.textContent = ok + bad;
+          if (el()) el().textContent = ok + bad;
+          var t = document.querySelector('[data-rt="' + r.id + '"]');
+          if (t && rows.length) t.innerHTML = '<thead><tr><th>Delivery</th><th>Cash</th><th>Basis</th><th>Futures</th></tr></thead><tbody>'
+            + rows.map(function (x) {
+              return '<tr><td>' + esc(x.label) + '</td><td class="prev">' + (FG.num(x.cash) ? '$' + FG.money(x.cash) : '\u2014') + '</td><td>' + (FG.num(x.basis) ? FG.basis(x.basis) : '\u2014') + '</td><td class="ref">' + esc(x.futures_month || '') + '</td></tr>';
+            }).join('') + '</tbody>';
         })
-        .catch(function () { var el = document.querySelector('[data-st="' + r.id + '"]'); if (el) el.textContent = 'Not read yet. If this stays, check the harvester log in the Actions tab.'; });
+        .catch(function () { if (el()) el().textContent = 'Not read yet. If this stays, check the harvester log in the Actions tab.'; });
     });
   }
+
 
   function draw() {
     drawBids(); drawHours(); drawLocs(); drawRefs();
@@ -211,7 +218,6 @@
     D.bids.footnote = $('footnote').value.trim();
     $('refs-admin').querySelectorAll('[data-r]').forEach(function (div) {
       var r = D.references[+div.dataset.r];
-      r.show = div.querySelector('[data-f=show]').checked;
       r.location = div.querySelector('[data-f=location]').value.trim() || null;
     });
     D.notices = $('notices').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);

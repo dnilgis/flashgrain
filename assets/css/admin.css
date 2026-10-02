@@ -51,3 +51,7 @@ textarea{font-family:var(--sans);font-size:1.125rem;resize:vertical}
 .a-bar .cta{font-size:1.25rem;padding:10px 18px}
 .a-bar .a-status{flex-basis:100%;margin:0}
 .bad{outline:2px solid var(--flash)!important}
+.a-ref-h{font-family:var(--cond);font-size:1.5rem;font-weight:800;text-transform:uppercase;margin:0}
+.a-ref-h span{font-family:var(--mono);font-size:1rem;font-weight:500;color:var(--ink2);text-transform:none;margin-left:6px}
+.a-bids.a-ref{min-width:0;width:100%;max-width:640px}
+.a-bids.a-ref td{padding:6px 8px 6px 0}

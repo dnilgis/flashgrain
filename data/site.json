@@ -139,8 +139,7 @@
    "commodity": "Corn",
    "platform": "bushel",
    "url": "https://aceethanol.o.bushelsites.com/cashbidssingle-3578",
-   "location": "",
-   "show": false
+   "location": ""
   },
   {
    "id": "northside",
@@ -149,8 +148,7 @@
    "commodity": "Soybeans",
    "platform": "aghost",
    "url": "http://grain.northsideelevator.com/index.cfm?show=11&mid=3",
-   "location": null,
-   "show": false
+   "location": null
   }
  ]
 }
