@@ -2,6 +2,6 @@
  "id": "ace",
  "source": "https://aceethanol.o.bushelsites.com/cashbidssingle-3578",
  "rows": [],
- "error": "no Corn rows for location \"Stanley\". Locations on the page: Cash Bids. Commodities: Corn",
- "error_at": "2026-10-02T20:43:39Z"
+ "error": "every Corn row failed its check: Oct 2026: cash 4.38 - basis -0.6 != futures 4.9775c; Nov 2026: cash 4.48 - basis -0.5 != futures 4.9775c; Dec 2026: cash 4.48 - basis -0.5 != futures 4.9775c; Jan 2027: cash 4.55 - basis -0.57 != futures 5.115c; Feb 2027: cash 4.58 - basis -0.54 != futures 5.115c; Mar 2027: cash 4.62 - basis -0.5 != futures 5.115c; Apr 2027: cash 4.65 - basis -0.54 != futures 5.185",
+ "error_at": "2026-10-02T21:12:21Z"
 }

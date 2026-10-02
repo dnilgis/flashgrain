@@ -1,29 +1,29 @@
 {
- "checked": "2026-10-02T20:37:38Z",
- "updated": "2026-10-02T20:37:38Z",
- "source": "backup:agsist+agsist+agsist+agsist",
- "quote_time": "2026-10-02T15:24:33",
+ "checked": "2026-10-02T21:12:19Z",
+ "updated": "2026-10-02T21:12:19Z",
+ "source": "backup:agsist",
+ "quote_time": "2026-10-02T15:54:58",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
    "price": 4.9725,
    "change": -0.02,
-   "time": "2026-10-02T15:24:33"
+   "time": "2026-10-02T15:54:58"
   },
   "@C7Z": {
    "price": 5.1625,
    "change": 0.015,
-   "time": "2026-10-02T15:24:33"
+   "time": "2026-10-02T15:54:58"
   },
   "@S6X": {
    "price": 12.7725,
    "change": 0.0075,
-   "time": "2026-10-02T15:24:33"
+   "time": "2026-10-02T15:54:58"
   },
   "@S7X": {
    "price": 12.52,
    "change": 0.0225,
-   "time": "2026-10-02T15:24:33"
+   "time": "2026-10-02T15:54:58"
   }
  },
  "dtn": {
@@ -116,7 +116,16 @@
    }
   ]
  },
- "futures_source": "agsist+agsist+agsist+agsist",
+ "futures_source": "agsist",
+ "dtn_error": "all fetches failed; bids.json left unchanged. last error: https://flashgrains.com/index.cfm?show=11&mid=3: <urlopen error timed out>",
+ "backup_notes": [
+  "yahoo ZCZ26.CBT: HTTP Error 429: Too Many Requests",
+  "yahoo ZCZ27.CBT: HTTP Error 429: Too Many Requests",
+  "yahoo ZCZ28.CBT: HTTP Error 429: Too Many Requests",
+  "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests",
+  "yahoo ZSX27.CBT: HTTP Error 429: Too Many Requests",
+  "yahoo ZSX28.CBT: HTTP Error 429: Too Many Requests"
+ ],
  "dtn_futures": {
   "@C6Z": {
    "price": 5.0175,
