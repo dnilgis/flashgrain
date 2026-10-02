@@ -25,6 +25,7 @@
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><path id="boltp" d="M58 0 10 92h36L30 160 92 60H54L76 0Z"/></defs></svg>
 <div id="strike" aria-hidden="true"><svg viewBox="0 0 100 160" focusable="false"><use href="#boltp" class="glow"/><use href="#boltp" class="fill"/><use href="#boltp" class="bolt"/></svg></div>
+<div class="alert" id="alert" role="region" aria-label="Notice" hidden><div class="wrap"><ul id="notices"></ul></div></div>
 <div class="wrap">
 
 <header class="mast">
@@ -33,15 +34,14 @@
 </header>
 
 <main>
-<ul class="notices" id="notices" aria-label="Notices"></ul>
 
 <section class="bids" id="bids" aria-labelledby="bids-h">
   <div class="bids-head">
-    <h2 id="bids-h">Cash bids</h2>
+    <h2 id="bids-h"><span id="bids-loc"></span> Cash bids</h2>
     <p class="bids-meta"><span class="stamp" id="stamp"><i aria-hidden="true"></i><span id="asof">Loading</span></span><span class="open" id="open"></span><span id="basis-set"></span></p>
   </div>
   <p class="feed-msg" id="feed-msg" role="status" hidden></p>
-  <div class="seg" role="group" aria-label="Location" id="seg"></div>
+  <div class="seg" role="group" aria-label="Choose location" id="seg"></div>
   <table class="board">
     <caption class="vh">Cash bids by delivery period</caption>
     <colgroup><col style="width:30%"><col style="width:28%"><col style="width:20%"><col class="fut" style="width:22%"></colgroup>

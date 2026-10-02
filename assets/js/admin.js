@@ -146,6 +146,7 @@
   function draw() {
     drawBids(); drawHours(); drawLocs(); drawRefs();
     $('notices').value = (S.notices || []).join('\n');
+    $('notice-until').value = S.notice_until || '';
     $('lime-open').checked = !!S.lime.taking_orders;
     $('lime-towns').value = (S.lime.towns || []).join(', ');
     $('phone').value = S.business.phone; $('phone-note').value = S.business.phone_note; $('email').value = S.business.email;
@@ -214,6 +215,7 @@
       r.location = div.querySelector('[data-f=location]').value.trim() || null;
     });
     D.notices = $('notices').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    D.notice_until = $('notice-until').value || '';
     D.lime.taking_orders = $('lime-open').checked;
     D.lime.towns = $('lime-towns').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
     D.business.phone = $('phone').value.trim(); D.business.phone_note = $('phone-note').value.trim(); D.business.email = $('email').value.trim();

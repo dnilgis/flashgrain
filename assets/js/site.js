@@ -117,6 +117,9 @@
   }
 
   var SITE, BIDS, REFS = {}, current, segIds = '';
+  // Flash what changed when a refresh brings new prices (not on first load, not on a location switch).
+  var lastCash = {}, lastQuote = null, flashNext = false;
+  try { current = localStorage.getItem('fg-loc') || undefined; } catch (e) {}
 
   var FALLBACK_TEL = '715-653-6585';
   function phone() { return (SITE && SITE.business && SITE.business.phone) || FALLBACK_TEL; }
@@ -136,6 +139,8 @@
     if (!bidLocs.some(function (l) { return l.id === current; })) current = bidLocs.length ? bidLocs[0].id : null;
     var loc = bidLocs.filter(function (l) { return l.id === current; })[0];
     $('open').innerHTML = openState(loc);
+    $('bids-loc').textContent = loc ? loc.name : '';
+    var cap = board.parentNode.querySelector('caption'); if (cap) cap.textContent = (loc ? loc.name + ' ' : '') + 'cash bids by delivery period';
     var feed = feedState(), market = cbotOpen();
 
     // stamp
@@ -164,8 +169,9 @@
         var m = monthOf(r.symbol); if (m && months.indexOf(c + ': ' + m) < 0) months.push(c + ': ' + m);
         var ch = hasF && num(f.change) ? '<span class="' + (f.change > 0 ? 'up' : f.change < 0 ? 'dn' : 'fl') + '" aria-hidden="true">' + cents8(f.change, true) + '</span>' : '';
         var dash = '<span class="pend" aria-label="not available">—</span>';
+        var k = current + '|' + r.commodity + '|' + r.label, val = show ? '$' + money(f.price + b) : '';
         html += '<tr><th scope="row" class="c sub">' + esc(r.label) + '</th>'
-          + '<td class="cash">' + (show ? '$' + money(f.price + b) : dash) + '</td>'
+          + '<td class="cash" data-k="' + esc(k) + '" data-v="' + esc(val) + '">' + (show ? val : dash) + '</td>'
           + '<td>' + (hasB ? basis(b) : dash) + '</td>'
           + '<td class="fut"' + (hasF ? ' aria-label="' + esc(m + ' futures ' + cents8Words(f.price) + (num(f.change) ? ', ' + cents8Words(f.change, true) : '')) + '"' : '') + '>'
           + (hasF ? '<span aria-hidden="true">' + cents8(f.price) + '</span>' + ch : dash) + '</td></tr>';
@@ -177,6 +183,17 @@
     if (!html) html = '<tbody><tr><td colspan="4" class="pend">No bids posted. Call ' + esc(phone()) + '.</td></tr></tbody>';
     table.insertAdjacentHTML('beforeend', html);
     board = table.querySelector('tbody');
+
+    // flash: cash cells whose value moved since the last refresh, and the stamp when the quote time moved
+    var flash = flashNext; flashNext = false;
+    table.querySelectorAll('td.cash[data-k]').forEach(function (td) {
+      var k = td.getAttribute('data-k'), v = td.getAttribute('data-v');
+      if (flash && v && lastCash[k] && lastCash[k] !== v) td.classList.add('tick');
+      if (v) lastCash[k] = v;
+    });
+    var q = BIDS && (BIDS.quote_time || BIDS.updated) || null;
+    if (flash && q && lastQuote && q !== lastQuote) { st.classList.remove('tick'); void st.offsetWidth; st.classList.add('tick'); }
+    if (q) lastQuote = q;
 
     if (feed === 'ok') { $('feed-msg').hidden = true; $('feed-msg').innerHTML = ''; }
     else callMsg('Cash prices are hidden until the futures feed is back.');
@@ -208,7 +225,13 @@
       var call = document.querySelector('.call');
       if (call) call.innerHTML = esc(biz.phone) + '<span><span class="vh">, </span>' + esc(biz.phone_note) + '</span>';
     });
-    safe(function () { $('notices').innerHTML = (SITE.notices || []).filter(Boolean).map(function (n) { return '<li>' + esc(n) + '</li>'; }).join(''); });
+    safe(function () {
+      // Alert bar. notice_until (YYYY-MM-DD, Central) hides it after that day without anyone remembering to.
+      var until = SITE.notice_until || '', today = new Date().toLocaleDateString('en-CA', { timeZone: TZ });
+      var list = (until && today > until) ? [] : (SITE.notices || []).filter(Boolean);
+      $('notices').innerHTML = list.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('');
+      $('alert').hidden = !list.length;
+    });
     safe(function () {
       var biz = SITE.business || {}, tel = String(biz.phone || '715-653-6585').replace(/\D/g, '');
       $('loc-list').innerHTML = SITE.locations.map(function (l) {
@@ -234,7 +257,10 @@
       if (ids !== segIds) { // rebuild only when the location list changes, so keyboard focus survives refreshes
         segIds = ids;
         seg.innerHTML = bidLocs.map(function (l) { return '<button type="button" data-id="' + esc(l.id) + '">' + esc(l.name) + '</button>'; }).join('');
-        seg.querySelectorAll('button').forEach(function (b) { b.onclick = function () { current = b.getAttribute('data-id'); renderBoard(); paintSeg(); }; });
+        seg.querySelectorAll('button').forEach(function (b) { b.onclick = function () {
+          current = b.getAttribute('data-id'); try { localStorage.setItem('fg-loc', current); } catch (e) {}
+          renderBoard(); paintSeg();
+        }; });
       }
       paintSeg();
     });
@@ -247,6 +273,7 @@
   function load() {
     return Promise.all([getJSON('data/site.json'), getJSON('data/bids.json').catch(function () { return BIDS || null; })])
       .then(function (r) {
+        if (SITE && BIDS && r[1] && JSON.stringify(r[1].futures) !== JSON.stringify(BIDS.futures)) flashNext = true;
         SITE = r[0]; BIDS = r[1]; failedAt = null;
         return Promise.all((SITE.references || []).filter(function (x) { return x.show; }).map(function (x) {
           return getJSON('data/refs/' + encodeURIComponent(x.id) + '.json').then(function (d) { REFS[x.id] = d; }, function () {});
@@ -259,7 +286,7 @@
       });
   }
   load();
-  setInterval(function () { if (!document.hidden) load(); }, 5 * 60 * 1000);
+  setInterval(function () { if (!document.hidden) load(); }, 2 * 60 * 1000); // two small files; new prices show within 2 minutes of a harvest
   document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
 
   // ---------- weather (National Weather Service, no key) ----------
