@@ -1,0 +1,38 @@
+name: harvest bids
+
+# Reads DTN, writes data/bids.json when prices change, plus an hourly heartbeat
+# so the site can tell "quiet market" from "harvester down".
+# cron-job.org triggers workflow_dispatch every 10 minutes as the main clock (see README).
+# GitHub's own schedule below is an hourly backup only; GitHub runs it late or skips it under load.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: harvest
+  cancel-in-progress: false
+
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch and decode DTN bids
+        run: python tools/harvest.py
+      - name: Commit if changed
+        run: |
+          git config user.name "flashgrain-harvest"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/bids.json
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
+          git commit -m "bids $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do git pull --rebase origin main && git push && exit 0; sleep 5; done
+          exit 1
