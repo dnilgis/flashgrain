@@ -66,17 +66,29 @@
     if ((n.day === 'sun' || i <= 3) && n.min >= 1140) return true;
     return false;
   }
-  function openState(loc) {
+  function openState(loc, bare) {
     if (!loc || !loc.hours) return '';
-    var n = central(), i = DAYS.indexOf(n.day), today = parseH(loc.hours[n.day]), name = esc(loc.name);
-    if (today === 'call') return '<b>' + name + '</b> call ahead to deliver';
-    if (today.o != null && n.min >= today.o && n.min < today.c) return '<b class="on">' + name + ' open now</b> until ' + clock(today.c);
+    var n = central(), i = DAYS.indexOf(n.day), today = parseH(loc.hours[n.day]), name = bare ? '' : esc(loc.name) + ' ';
+    if (bare) {
+      if (today === 'call') return '<b>Call ahead</b> today';
+      if (today.o != null && n.min >= today.o && n.min < today.c) return '<b class="on">Open now</b> until ' + clock(today.c);
+    }
+    if (today === 'call') return '<b>' + name + '</b>call ahead to deliver';
+    if (today.o != null && n.min >= today.o && n.min < today.c) return '<b class="on">' + name + 'open now</b> until ' + clock(today.c);
     for (var k = 0; k < 7; k++) {
       var d = DAYS[(i + k) % 7], p = parseH(loc.hours[d]), when = k === 0 ? 'today' : k === 1 ? 'tomorrow' : DAYN[d];
-      if (p.o != null && (k > 0 || n.min < p.o)) return '<b>' + name + ' closed</b> · opens ' + when + ' ' + clock(p.o);
-      if (p === 'call' && k > 0) return '<b>' + name + ' closed today</b> · call ahead ' + when;
+      if (p.o != null && (k > 0 || n.min < p.o)) return '<b>' + name + 'closed</b> · opens ' + when + ' ' + clock(p.o);
+      if (p === 'call' && k > 0) return '<b>' + name + 'closed today</b> · call ahead ' + when;
     }
-    return '<b>' + name + ' closed</b>';
+    return '<b>' + name + 'closed</b>';
+  }
+  // Google Maps directions from wherever the farmer is. A street address goes in as-is; a town alone is
+  // searched with the business name so Google can find the yard. No address, no link (never a guessed pin).
+  function mapUrl(l) {
+    var a = (l.address || '').trim();
+    if (!a) return '';
+    var q = /^\d/.test(a) ? a : 'Flash Grain, ' + a;
+    return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(q);
   }
   // "2026-09-30T19:33:00" (Central wall time) -> "Wed 7:33 PM"
   function wall(iso) {
@@ -197,14 +209,15 @@
     });
     safe(function () { $('notices').innerHTML = (SITE.notices || []).filter(Boolean).map(function (n) { return '<li>' + esc(n) + '</li>'; }).join(''); });
     safe(function () {
-      var withH = SITE.locations.filter(function (l) { return l.hours; }), main = withH[0];
-      if (!main) return;
-      $('when').innerHTML = esc(summary(main.hours)) + '<small>' + esc(main.name) + '. ' + withH.slice(1).map(function (l) { return esc(l.name) + ' ' + esc(summary(l.hours, ', ')); }).join('. ') + '.</small>';
-    });
-    safe(function () {
+      var biz = SITE.business || {}, tel = String(biz.phone || '715-653-6585').replace(/\D/g, '');
       $('loc-list').innerHTML = SITE.locations.map(function (l) {
-        var s = l.hours ? summary(l.hours) : '', note = l.note && s.toLowerCase().indexOf(l.note.toLowerCase()) < 0 ? l.note : '';
-        return '<li><b>' + esc(l.name) + '</b><span>' + [l.address, s, note].filter(Boolean).map(esc).join(' · ') + '</span></li>';
+        var s = l.hours ? summary(l.hours) : '', now = l.hours ? openState(l, true) : '';
+        var url = mapUrl(l), note = l.note && s.toLowerCase().indexOf(l.note.toLowerCase()) < 0 ? l.note : '';
+        return '<li class="loc"><div class="loc-top"><b>' + esc(l.name) + '</b>' + (now ? '<span class="loc-now">' + now + '</span>' : '') + '</div>'
+          + (l.address || s ? '<p class="loc-info">' + [l.address, s].filter(Boolean).map(esc).join(' · ') + '</p>' : '')
+          + (note ? '<p class="loc-note">' + esc(note) + '</p>' : '')
+          + '<p class="loc-acts">' + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">Directions<span class="vh"> to ' + esc(l.name) + ', opens Google Maps</span></a>' : '')
+          + '<a href="tel:' + tel + '">Call<span class="vh"> about ' + esc(l.name) + '</span></a></p></li>';
       }).join('');
     });
     safe(function () {
