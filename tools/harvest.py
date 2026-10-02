@@ -54,20 +54,74 @@ def eighths(tok):
     return round(-v if neg else v, 5)
 
 
+ARITH = re.compile(r"^[0-9.+\-*/()=;<>!x]*$")
+
+
+def _strip_if(st):
+    """Split `if(cond)assign` into (cond, assign); (None, st) when there is no condition."""
+    if not st.startswith("if("):
+        return None, st
+    depth = 0
+    for i in range(2, len(st)):
+        if st[i] == "(":
+            depth += 1
+        elif st[i] == ")":
+            depth -= 1
+            if depth == 0:
+                return st[3:i], st[i + 1:]
+    raise ValueError("unbalanced if( in displayNumber")
+
+
+def _body_offset(body):
+    """Run displayNumber's body at x = 0, the way the browser would.
+
+    The body may only contain digits, `. + - * / ( ) = ; < > !` and the letter x
+    (plus `if(`), so it can compute a number and nothing else; anything outside
+    that is refused, never evaluated. Running it, rather than pattern-matching the
+    terms, is what keeps us right when DTN changes `<=` to `>=` or nests its signs:
+    a regex that misses a term shifts cash and basis together, which our
+    cash == futures + basis check cannot see."""
+    if not ARITH.match(body.replace("if(", "(")):
+        bad = sorted(set(re.sub(r"[0-9.+\-*/()=;<>!x]", "", body.replace("if(", "("))))
+        raise ValueError("displayNumber body is not plain arithmetic (found %s)" % "".join(bad))
+    x = 0.0
+    for st in [t for t in body.split(";") if t]:
+        cond, assign = _strip_if(st)
+        if not re.match(r"^x=[^=]", assign):
+            raise ValueError("displayNumber statement does not assign x: %r" % st[:60])
+        if cond is not None:
+            c = cond.replace("!==", "!=").replace("===", "==")
+            if not eval(c, {"__builtins__": {}}, {"x": x}):  # whitelisted arithmetic only, see ARITH
+                continue
+        x = float(eval(assign[2:], {"__builtins__": {}}, {"x": x}))
+    return x
+
+
 def offset(src):
-    i = src.find("function displayNumber")
-    j = src.find("function getRoundedString", i)
-    if i < 0 or j < 0:
+    """The hidden constant: real value = printed number - offset.
+
+    Every definition of displayNumber on the page is evaluated and they must
+    agree. The page also prints the same constant in a `NoScrapeOffset` comment;
+    when it is there, ours must match it exactly or nothing is published."""
+    ats = [m.start() for m in re.finditer(r"function\s+displayNumber\s*\(", src)]
+    if not ats:
         raise ValueError("displayNumber function not found")
-    conds = re.findall(
-        r"if\(\s*([+-]\s*[\d.]+)\s*<=\s*([+-]\s*[\d.]+)\s*\)\s*x = x -\(([+-]) \(\s*([\d.]+)\s*\)",
-        src[i:j])
-    if not conds:
-        raise ValueError("no offset terms found")
-    off = 0.0
-    for a, b, sg, v in conds:
-        if float(a.replace(" ", "")) <= float(b.replace(" ", "")):
-            off += float(v) * (1 if sg == "+" else -1)
+    found = set()
+    for at in ats:
+        o, e = src.find("{", at), src.find("document.write", at)
+        if o < 0 or e < 0 or o > e:
+            continue
+        body = re.sub(r"\s+", "", src[o + 1:e])
+        if body:
+            found.add(round(-_body_offset(body), 4))
+    if len(found) != 1:
+        raise ValueError("displayNumber offsets disagree or none decoded: %s" % sorted(found))
+    off = found.pop()
+    if off == 0:
+        raise ValueError("displayNumber offset is 0, which DTN has never served; refusing")
+    stated = re.search(r"NoScrapeOffset:\s*(-?[\d.]+)", src)
+    if stated and abs(float(stated.group(1)) - off) > 1e-4:
+        raise ValueError("decoded offset %s does not match the page's own NoScrapeOffset %s; refusing" % (off, stated.group(1)))
     return off
 
 
