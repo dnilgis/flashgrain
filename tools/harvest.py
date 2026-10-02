@@ -521,9 +521,8 @@ def main():
         fresh = now - datetime.strptime(old.get("checked", ""), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc) < HEARTBEAT
     except (ValueError, TypeError):
         fresh = False
-    if same and fresh:
-        print("no change", data["quote_time"])
-        return
+    # bids.json is written on EVERY run, so `checked` (the time the site shows) moves every 10 minutes even
+    # when prices do not. The site's own "not updating" warning reads the same field.
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     data.setdefault("futures_source", "dtn")
     if data["futures_source"] == "dtn":
@@ -534,7 +533,7 @@ def main():
     with open(OUT, "w") as f:
         json.dump(out, f, indent=1)
         f.write("\n")
-    print("wrote", "heartbeat" if same else "new prices", data["quote_time"])
+    print("wrote", "check (no price change)" if same else "new prices", data["quote_time"])
 
 
 if __name__ == "__main__":

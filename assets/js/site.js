@@ -98,6 +98,16 @@
     var wd = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
     return wd + ' ' + clock(+m[4] * 60 + +m[5]);
   }
+  // With CBOT shut, a stamp read after the 1:20 PM close (or over the weekend) is the day's close, not a
+  // trade at that minute: the backup feed stamps when it READ the price. Say "Fri close" instead of "Fri 4:25 PM".
+  function closeLabel(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || '');
+    if (!m) return '';
+    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)), dow = d.getUTCDay(), min = +m[4] * 60 + +m[5];
+    if (dow === 6 || (dow === 0 && min < 1140)) { d.setUTCDate(d.getUTCDate() - (dow === 6 ? 1 : 2)); return d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) + ' close'; }
+    if (dow >= 1 && dow <= 5 && min >= 800 && min < 1140) return d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) + ' close';
+    return wall(iso);
+  }
   function ageMin(isoZ) { var t = Date.parse(isoZ || ''); return isNaN(t) ? Infinity : (Date.now() - t) / 60000; }
 
   window.FG = { DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, num: num };
@@ -147,7 +157,12 @@
     var st = $('stamp'), txt;
     if (feed === 'none') txt = 'Futures unavailable';
     else if (feed === 'down') txt = 'Bids not updating since ' + new Date(Date.parse(BIDS.checked || BIDS.updated)).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' });
-    else txt = 'Futures ' + (BIDS.quote_time ? wall(BIDS.quote_time) : BIDS.dtn_as_of || '') + (market ? '' : ' · CBOT closed');
+    else {
+      // Lead with when the harvester last checked (every 10 minutes). Closed market: say whose close the prices are.
+      var chk = new Date(Date.parse(BIDS.checked || BIDS.updated)).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' });
+      var cl = !market && BIDS.quote_time ? closeLabel(BIDS.quote_time) : '';
+      txt = 'Checked ' + chk + (market ? '' : ' · CBOT closed' + (/close$/.test(cl) ? ', prices at ' + cl : ''));
+    }
     $('asof').textContent = txt;
     st.className = 'stamp' + (feed === 'ok' && market ? ' live' : '') + (feed !== 'ok' ? ' warn' : '');
     var bset = SITE.bids.basis_set ? new Date(SITE.bids.basis_set) : null;
@@ -191,7 +206,7 @@
       if (flash && v && lastCash[k] && lastCash[k] !== v) td.classList.add('tick');
       if (v) lastCash[k] = v;
     });
-    var q = BIDS && (BIDS.quote_time || BIDS.updated) || null;
+    var q = BIDS && (BIDS.checked || BIDS.updated) || null;
     if (flash && q && lastQuote && q !== lastQuote) { st.classList.remove('tick'); void st.offsetWidth; st.classList.add('tick'); }
     if (q) lastQuote = q;
 
@@ -254,7 +269,7 @@
   function load() {
     return Promise.all([getJSON('data/site.json'), getJSON('data/bids.json').catch(function () { return BIDS || null; })])
       .then(function (r) {
-        if (SITE && BIDS && r[1] && JSON.stringify(r[1].futures) !== JSON.stringify(BIDS.futures)) flashNext = true;
+        if (SITE && BIDS && r[1] && (r[1].checked !== BIDS.checked || JSON.stringify(r[1].futures) !== JSON.stringify(BIDS.futures))) flashNext = true;
         SITE = r[0]; BIDS = r[1]; failedAt = null;
       })
       .then(function () { render(); })
