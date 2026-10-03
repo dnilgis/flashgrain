@@ -279,6 +279,31 @@ def build(src):
 ROOTS = {"@C": "ZC", "@S": "ZS", "@W": "ZW"}
 AGSIST = "https://raw.githubusercontent.com/dnilgis/agsist/main/data/prices.json"
 BACKUP_MAX_AGE = timedelta(hours=2)
+
+
+def _ct(utc):
+    """UTC datetime -> naive US Central wall time (same DST rule as _central_iso)."""
+    return datetime.strptime(_central_iso(utc.timestamp()), "%Y-%m-%dT%H:%M:%S")
+
+
+def closed_since(now_utc=None):
+    """If CBOT corn/soy is closed right now, the Central wall time its last session ended; else None.
+    Sessions: Sun-Fri 7:00 PM - 7:45 AM and Mon-Fri 8:30 AM - 1:20 PM Central. Holidays not modelled.
+    While closed, a price read after this moment IS the close and stays right until the market reopens."""
+    n = _ct(now_utc or datetime.now(timezone.utc))
+    d, m = n.weekday(), n.hour * 60 + n.minute  # Mon=0 .. Sun=6
+    day = lambda back, hh, mm: (n - timedelta(days=back)).replace(hour=hh, minute=mm, second=0, microsecond=0)
+    if d <= 4 and 465 <= m < 510:
+        return day(0, 7, 45)                     # morning break between overnight and day session
+    if d <= 4 and 800 <= m < 1140 and d != 4:
+        return day(0, 13, 20)                    # Mon-Thu afternoon, reopens 7 PM
+    if d == 4 and m >= 800:
+        return day(0, 13, 20)                    # Friday after the close
+    if d == 5:
+        return day(1, 13, 20)                    # Saturday
+    if d == 6 and m < 1140:
+        return day(2, 13, 20)                    # Sunday before 7 PM
+    return None
 SANITY = 0.15  # a backup price more than 15% from the last DTN price for that contract is refused
 
 
@@ -337,7 +362,8 @@ def backup_futures(symbols, last_dtn):
         try:
             d = _get(AGSIST)
             fetched = datetime.strptime(d["fetched"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            if datetime.now(timezone.utc) - fetched > BACKUP_MAX_AGE:
+            since = closed_since()
+            if datetime.now(timezone.utc) - fetched > BACKUP_MAX_AGE and not (since and _ct(fetched) >= since):
                 raise ValueError("agsist prices.json is %s old" % (datetime.now(timezone.utc) - fetched))
             by_ticker = {q.get("ticker"): q for q in d.get("quotes", {}).values() if isinstance(q, dict)}
             for sym in missing:
@@ -500,7 +526,15 @@ def main():
             wanted = sorted((old.get("futures") or {}).keys())
         fut, src, notes = backup_futures(wanted, old.get("dtn_futures") or old.get("futures"))
         if not any(k.startswith("@C") for k in fut) or not any(k.startswith("@S") for k in fut):
-            raise SystemExit("DTN down and the backup feed did not cover corn and soybeans; bids.json left unchanged")
+            # Market closed and the stored prices were read after the last session ended: they ARE the close
+            # and cannot have moved. Keep them and record the check, so the site does not go dark all weekend.
+            since, qt = closed_since(), old.get("quote_time")
+            if since and qt and old.get("futures") and datetime.strptime(qt[:19], "%Y-%m-%dT%H:%M:%S") >= since:
+                print("DTN and backups unavailable; CBOT closed since %s and stored prices (%s) are that close; keeping them" % (since, qt))
+                fut, src = old["futures"], old.get("futures_source", "dtn")
+                notes = notes + ["kept the close: CBOT closed since %s" % since.strftime("%a %H:%M")]
+            else:
+                raise SystemExit("DTN down and the backup feed did not cover corn and soybeans; bids.json left unchanged")
         times = [f["time"] for f in fut.values() if f.get("time")]
         data = {"quote_time": max(times) if times else None, "dtn_as_of": None, "futures": fut,
                 "dtn": old.get("dtn", {}), "futures_source": src,
