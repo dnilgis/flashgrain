@@ -232,3 +232,6 @@ body.admin .a-week input{min-height:38px;padding:4px 6px;font-size:1rem}
   .c-links{margin-left:0}
   body.admin .a-bar .a-status{font-size:.9375rem}
 }
+
+/* the hidden attribute must win over any display rule above (editor before load, Change key before load) */
+body.admin [hidden]{display:none!important}
