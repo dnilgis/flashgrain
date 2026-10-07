@@ -60,7 +60,8 @@ soybeans. "Edit contracts" overrides the symbol per month.
 
 The harvester fetches futures for every month that is on. DTN's board only posts Jeff's own Fall rows,
 so other contracts come from agsist's prices.json, then (corn) Ace Ethanol's board. A contract none of
-them carries (today: May/Aug soybeans, the 2028 contracts) shows a dash and the save warns first.
+them carries shows a dash and the save warns first. Since 2026-10-07 agsist fetches every corn and soybean
+contract through Dec 28 corn and Nov 28 soybeans, so a dash today means the feed is down, not missing.
 
 ## Admin key (one time per person)
 
