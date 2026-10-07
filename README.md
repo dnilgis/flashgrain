@@ -20,6 +20,8 @@ favicon.ico
 data/site.json        everything Jeff can change. Edited by /admin. Do not hand-edit unless you mean it.
 data/bids.json        futures, trade time, heartbeat, DTN reference. Written by the harvester. Never hand-edit.
 data/refs/<id>.json   nearby elevators' own posted bids (Ace Ethanol, Northside). Written by the harvester.
+feed/<yard>.json      posted cash bids as a feed (emmert-cash-bids/2) for dnilgis/bids. Written by tools/feed.mjs every harvest.
+tools/feed.mjs        builds feed/*.json with site.js's own money(), so it matches the page to the cent; --selftest
 tools/harvest.py      reads DTN, decodes, checks, writes data/bids.json; --refs reads DTN reference boards
 tools/refs_bushel.mjs reads Bushel reference boards (Ace Ethanol)
 tools/vendor/parse.mjs  board parser copied from dnilgis/bids (header says which commit)
@@ -106,4 +108,6 @@ confirm harvester commits rebuild the site.
 - Delete `<meta name="robots" content="noindex, nofollow">` from index.html and discounts.html (keep it on admin and 404).
 - Change CNAME to the new domain; repoint DNS (Jeff's login).
 - Change `flshgrn.com` in the canonical and og: tags of index.html and discounts.html.
+- In dnilgis/bids, change `url` in sources/flashgrain-thorp.json and flashgrain-granton.json from
+  flshgrn.com/feed/... to the new domain (the old address stops answering when DNS moves).
 - flashgrains.com stays on DTN for the bid portal only. Swap the portal link for DTN's widget once DTN is back.
