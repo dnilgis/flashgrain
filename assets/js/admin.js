@@ -317,8 +317,8 @@
           var box = document.querySelector('[data-rt="' + r.id + '"]'), row = function (x) {
             return '<tr><td>' + esc(x.label) + '</td><td class="prev">' + (FG.num(x.cash) ? '$' + FG.money(x.cash) : '—') + '</td><td>' + (FG.num(x.basis) ? FG.basis(x.basis) : '—') + '</td><td class="ref">' + esc(x.futures_month || '') + '</td></tr>';
           };
-          if (box && rows.length) box.innerHTML = '<table class="a-bids a-reft"><thead><tr><th>Delivery</th><th>Cash</th><th>Basis</th><th>Futures</th></tr></thead><tbody>' + rows.slice(0, 4).map(row).join('') + '</tbody></table>'
-            + (rows.length > 4 ? '<details class="a-mini"><summary>' + (rows.length - 4) + ' more months</summary><table class="a-bids a-reft"><tbody>' + rows.slice(4).map(row).join('') + '</tbody></table></details>' : '');
+          if (box && rows.length) box.innerHTML = '<table class="a-bids a-reft" tabindex="0" aria-label="' + esc(r.name) + ' bids"><thead><tr><th>Delivery</th><th>Cash</th><th>Basis</th><th>Futures</th></tr></thead><tbody>' + rows.slice(0, 4).map(row).join('') + '</tbody></table>'
+            + (rows.length > 4 ? '<details class="a-mini"><summary>' + (rows.length - 4) + ' more months</summary><table class="a-bids a-reft" tabindex="0" aria-label="More months"><tbody>' + rows.slice(4).map(row).join('') + '</tbody></table></details>' : '');
         })
         .catch(function () { REFST[r.id] = false; drawChips(); if (el()) el().textContent = 'Not read yet.'; });
     });

@@ -543,7 +543,8 @@ def harvest_refs():
                 src = r.read().decode("latin-1")
             calls = len(re.findall(r"displayNumber\(\s*-?[\d.]+", src))
             if calls <= 1:
-                txt = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", src)).strip()[:160]
+                body = re.sub(r"(?is)<(style|script)\b.*?</\1>", " ", src)  # the page's CSS is not what it says
+                txt = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", body)).strip()[:160]
                 where = r.geturl() if r.geturl() != ref["url"] else ""
                 raise ValueError("page served without prices (%d bytes, %d price calls%s); not logging in. Page says: %s"
                                  % (len(src), calls, ", redirected to " + where if where else "", txt or "(nothing)"))

@@ -63,7 +63,7 @@ body.admin .wrap{max-width:1500px}
 .c-logo svg{width:.58em;height:.9em;vertical-align:-.08em;margin:0 -.04em;fill:var(--flash)}
 .c-logo span{font-family:var(--mono);font-size:1rem;font-weight:500;color:var(--ink2);letter-spacing:.08em;margin-left:6px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none;flex:1 1 420px}
-.chips li{font-family:var(--mono);font-size:1rem;padding:4px 10px;border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
+.chips li{font-family:var(--mono);font-size:1rem;padding:4px 10px;border:1px solid var(--line);color:var(--ink2);overflow-wrap:anywhere}
 .chips li b{color:var(--ink);font-weight:700}
 .chips li.ok b{color:var(--flash)}
 .chips li.bad{border-color:var(--flash);color:var(--ink)}
@@ -75,7 +75,7 @@ body.admin .a-sec h2{font-size:1.375rem;margin-bottom:4px;letter-spacing:.02em}
 body.admin .rule{border-top-width:2px}
 body.admin .a-help{font-size:1rem;margin:6px 0 8px;line-height:1.4}
 body.admin .a-grid{gap:8px 12px;margin:8px 0}
-body.admin label{font-size:.9375rem}
+body.admin label{font-size:1rem}
 body.admin input,body.admin select,body.admin textarea{margin-top:4px;padding:8px 10px;min-height:40px;font-size:1rem}
 body.admin .a-check{margin:6px 0;min-height:40px}
 body.admin .a-loc{padding:10px 0}
@@ -83,14 +83,14 @@ body.admin .a-bar{margin-top:24px;padding:8px 0 10px}
 .a-ref-h{font-size:1.25rem}
 /* compact bid table */
 body.admin .a-bids{min-width:0}
-body.admin .a-bids th{white-space:normal;font-size:.875rem;letter-spacing:.04em;line-height:1.2;padding:6px 3px 6px 0;vertical-align:bottom}
+body.admin .a-bids th{white-space:normal;font-size:1rem;letter-spacing:.04em;line-height:1.2;padding:6px 3px 6px 0;vertical-align:bottom}
 body.admin .a-bids td{padding:5px 3px 5px 0}
 body.admin .a-bids input,body.admin .a-bids select{min-height:38px;padding:6px 5px}
 body.admin .a-bids .num{width:4rem}
 body.admin .a-bids .lab{width:5.4rem}
 body.admin .a-bids .sym{width:5rem}
 body.admin .a-bids .prev{padding-top:14px}
-body.admin .a-bids .ref{font-size:.9375rem}
+body.admin .a-bids .ref{font-size:1rem}
 body.admin .a-bids .a-btn.sm{min-width:38px;min-height:38px;padding:2px 8px}
 body.admin .a-bids [data-f=commodity]{width:7.6rem}
 body.admin textarea.a-short{font-family:var(--mono);font-size:1rem;min-height:0;resize:vertical}
@@ -117,7 +117,7 @@ body.admin .a-bids .fq{white-space:nowrap}
 body.admin .a-bids td input[type=checkbox]{margin:0}
 /* hours week grid */
 .a-week{border-collapse:collapse;width:100%;min-width:640px}
-.a-week th{font-family:var(--mono);font-size:.9375rem;font-weight:500;color:var(--ink2);text-align:left;padding:4px 4px 4px 0;letter-spacing:.04em;text-transform:uppercase}
+.a-week th{font-family:var(--mono);font-size:1rem;font-weight:500;color:var(--ink2);text-align:left;padding:4px 4px 4px 0;letter-spacing:.04em;text-transform:uppercase}
 .a-week tbody th{font-family:var(--cond);font-size:1.25rem;font-weight:800;color:var(--ink);padding-right:10px;white-space:nowrap}
 .a-week td{padding:3px 4px 3px 0}
 body.admin .a-week input{margin:0;min-height:38px;padding:6px 6px;font-size:1rem;text-align:center}
@@ -128,9 +128,9 @@ body.admin .a-week input{margin:0;min-height:38px;padding:6px 6px;font-size:1rem
 .a-ref+.a-ref{border-top:1px solid var(--line)}
 .a-ref .a-help{margin:2px 0 4px}
 .a-reft{width:100%;min-width:0}
-body.admin .a-reft td,body.admin .a-reft th{padding:3px 6px 3px 0;font-size:.9375rem}
+body.admin .a-reft td,body.admin .a-reft th{padding:3px 6px 3px 0;font-size:1rem}
 .a-mini{margin:4px 0 0}
-.a-mini summary{cursor:pointer;font-family:var(--mono);font-size:.9375rem;color:var(--ink2);min-height:32px;display:flex;align-items:center}
+.a-mini summary{cursor:pointer;font-family:var(--mono);font-size:1rem;color:var(--ink2);min-height:32px;display:flex;align-items:center}
 .a-mini summary:hover,.a-mini summary:focus-visible{color:var(--ink)}
 /* setup drawer */
 .a-setup{margin-top:18px;border-top:2px solid var(--ink)}
@@ -161,18 +161,18 @@ body.admin .a-reft td,body.admin .a-reft th{padding:3px 6px 3px 0;font-size:.937
 .bl-rows:has(.bl-row.on) .bl-none{display:none}
 .bl-none{margin:6px 0;font-size:1rem;color:var(--ink2)}
 .bl-name{grid-area:name;font-family:var(--cond);font-size:1.375rem;font-weight:800;text-transform:uppercase}
-.bl-fut{grid-area:fut;font-family:var(--mono);font-size:.9375rem;color:var(--ink2);white-space:nowrap;text-align:right}
+.bl-fut{grid-area:fut;font-family:var(--mono);font-size:1rem;color:var(--ink2);white-space:nowrap;text-align:right}
 .bl-fut b{color:var(--ink);font-weight:500}
 .bl-fut .sym{display:none}
-.bl.editing .bl-fut .sym{display:inline-block;width:5.2rem;margin:0 0 0 6px;min-height:36px;padding:4px 6px;font-size:.9375rem}
+.bl.editing .bl-fut .sym{display:inline-block;width:5.2rem;margin:0 0 0 6px;min-height:36px;padding:4px 6px;font-size:1rem}
 .bl-locs{grid-area:locs;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px}
-.bl-loc{display:inline-flex;align-items:center;gap:8px}
-.bl-ln{font-family:var(--mono);font-size:.9375rem;color:var(--ink2)}
+.bl-loc{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px}
+.bl-ln{font-family:var(--mono);font-size:1rem;color:var(--ink2)}
 body.admin .bl-loc .num{width:5.4rem;margin:0;min-height:44px;padding:6px 8px;font-size:1.125rem;text-align:right}
 .bl-cash{font-family:var(--mono);font-weight:700;font-size:1.125rem;min-width:4.2rem;color:var(--ink)}
 .bl.same .bl-loc.follow .num{display:none}
 .bl.same .bl-loc.follow .bl-ln::after{content:" same"}
-.bl-dtn{font-family:var(--mono);font-size:.9375rem;color:var(--mute)}
+.bl-dtn{font-family:var(--mono);font-size:1rem;color:var(--mute)}
 @media(min-width:760px){
   .bl-row{grid-template-columns:7rem 9.5rem minmax(0,1fr);grid-template-areas:"name fut locs";gap:0 16px;padding:3px 0}
   .bl-fut{text-align:left}
@@ -198,9 +198,9 @@ body.admin .p-head .bl-same{margin:0;min-height:36px;font-size:1rem}
   .p-side .a-week{min-width:0;table-layout:fixed}
   .p-side .a-week th:first-child{width:4.6rem}
   .p-side .a-week tbody th{font-size:1.0625rem;padding-right:4px}
-  body.admin .p-side .a-week input{font-size:.875rem;padding:4px 1px;min-height:34px}
+  body.admin .p-side .a-week input{font-size:1rem;padding:4px 1px;min-height:34px}
   .p-side .a-week td{padding:2px 2px 2px 0}
-  .p-side .a-week thead th{font-size:.8125rem;text-align:center;padding:2px 0}
+  .p-side .a-week thead th{font-size:1rem;text-align:center;padding:2px 0}
   body.admin .a-bar{flex-wrap:nowrap;padding:8px 0}
   body.admin .a-bar .a-status{flex:1 1 auto;flex-basis:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .c-top{padding:8px 0 6px}
@@ -213,13 +213,13 @@ body.admin .a-week input{font-family:var(--sans);font-weight:600}
 .a-week{min-width:0;table-layout:fixed;width:100%;max-width:520px}
 .a-week thead th{text-align:center}
 .a-week thead th:first-child,.a-week tbody th{width:3.4rem}
-.a-week tbody th{font-family:var(--mono);font-size:.9375rem;font-weight:700;color:var(--ink2);padding-right:6px}
+.a-week tbody th{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--ink2);padding-right:6px}
 body.admin .a-week input{min-height:38px;padding:4px 6px;font-size:1rem}
 @media(min-width:1200px){
   .ops{grid-template-columns:minmax(0,1fr) 23rem}
-  body.admin .p-side .a-week input{font-size:.9375rem;min-height:32px;padding:2px 4px}
+  body.admin .p-side .a-week input{font-size:1rem;min-height:32px;padding:2px 4px}
   .p-side .a-week thead th:first-child,.p-side .a-week tbody th{width:3rem}
-  .p-side .a-week thead th{font-size:.875rem;text-transform:none;letter-spacing:0;font-family:var(--cond);font-weight:800}
+  .p-side .a-week thead th{font-size:1rem;text-transform:none;letter-spacing:0;font-family:var(--cond);font-weight:800}
 }
 @media(min-width:1000px) and (max-width:1399px){.a-locs{grid-template-columns:1fr}.a-locs .a-grid{grid-template-columns:1fr 1fr}}
 
@@ -228,10 +228,13 @@ body.admin .a-week input{min-height:38px;padding:4px 6px;font-size:1rem}
   .c-top{gap:6px 10px}
   .c-logo{font-size:1.375rem}
   .chips{flex:1 1 100%;gap:4px}
-  .chips li{font-size:.875rem;padding:2px 6px}
+  .chips li{font-size:1rem;padding:2px 6px}
   .c-links{margin-left:0}
-  body.admin .a-bar .a-status{font-size:.9375rem}
+  body.admin .a-bar .a-status{font-size:1rem}
 }
 
 /* the hidden attribute must win over any display rule above (editor before load, Change key before load) */
 body.admin [hidden]{display:none!important}
+/* A data table may scroll inside its own box at 200% text (WCAG 1.4.10); the page itself never scrolls sideways. */
+body.admin .a-reft{display:block;max-width:100%;overflow-x:auto}
+body.admin .a-reft .ref{white-space:normal}
