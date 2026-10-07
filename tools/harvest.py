@@ -440,6 +440,21 @@ def backup_futures(symbols, last_dtn):
         except Exception as e:
             notes.append("ace: %s" % e)
             print("backup ace: %s" % e, file=sys.stderr)
+    if any(v.get("change") is None for v in got.values()):
+        # Boards carry price but not the day's move. agsist's close minus its net change is the prior settle,
+        # which does not change during the session, so change = live price - prior settle.
+        try:
+            d = _get(AGSIST)
+            settle = {}
+            for q in d.get("quotes", {}).values():
+                if isinstance(q, dict) and q.get("close") is not None and q.get("netChange") is not None:
+                    settle[q.get("ticker")] = (q["close"] - q["netChange"]) / 100
+            for sym, v in got.items():
+                ps = settle.get(yahoo_ticker(sym))
+                if v.get("change") is None and ps:
+                    v["change"] = round(v["price"] - ps, 5)
+        except Exception as e:
+            notes.append("change from agsist: %s" % e)
     for sym in list(got):  # refuse anything that disagrees wildly with the last DTN price (units, wrong contract)
         ref = (last_dtn or {}).get(sym, {}).get("price")
         if ref and abs(got[sym]["price"] - ref) / ref > SANITY:
