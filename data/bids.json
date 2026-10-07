@@ -1,8 +1,8 @@
 {
- "checked": "2026-10-07T17:31:14Z",
- "updated": "2026-10-07T17:31:14Z",
- "source": "backup:boards",
- "quote_time": "2026-10-07T12:21:42",
+ "checked": "2026-10-07T17:41:13Z",
+ "updated": "2026-10-07T17:41:13Z",
+ "source": "backup:agsist+boards",
+ "quote_time": "2026-10-07T12:36:49",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
@@ -24,6 +24,16 @@
    "price": 12.645,
    "change": -0.045,
    "time": "2026-10-07T12:21:42"
+  },
+  "@C8Z": {
+   "price": 5.11,
+   "change": -0.0375,
+   "time": "2026-10-07T12:36:49"
+  },
+  "@S8X": {
+   "price": 12.245,
+   "change": 0.0975,
+   "time": "2026-10-07T12:36:49"
   }
  },
  "dtn": {
@@ -116,7 +126,7 @@
    }
   ]
  },
- "futures_source": "boards",
+ "futures_source": "agsist+boards",
  "dtn_error": "all fetches failed; bids.json left unchanged. last error: https://flashgrains.com/index.cfm?show=11&mid=3: <urlopen error timed out>",
  "backup_notes": [
   "yahoo ZCZ28.CBT: HTTP Error 429: Too Many Requests",
