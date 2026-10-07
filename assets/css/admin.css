@@ -172,7 +172,6 @@ body.admin .bl-loc .num{width:5.4rem;margin:0;min-height:44px;padding:6px 8px;fo
 .bl-cash{font-family:var(--mono);font-weight:700;font-size:1.125rem;min-width:4.2rem;color:var(--ink)}
 .bl.same .bl-loc.follow .num{display:none}
 .bl.same .bl-loc.follow .bl-ln::after{content:" same"}
-.bl-dtn{font-family:var(--mono);font-size:1rem;color:var(--mute)}
 @media(min-width:760px){
   .bl-row{grid-template-columns:7rem 9.5rem minmax(0,1fr);grid-template-areas:"name fut locs";gap:0 16px;padding:3px 0}
   .bl-fut{text-align:left}

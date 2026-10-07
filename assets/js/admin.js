@@ -37,14 +37,6 @@
     v = String(v).replace(/[−–—]/g, '-').replace(/,/g, '.').replace(/\s+/g, '');
     return /^[+-]?(\d+\.?\d*|\.\d+)$/.test(v) ? Math.round(Number(v) * 100) / 100 : NaN;
   }
-  function dtnFor(locId, row) {
-    var list = BIDS && BIDS.dtn && BIDS.dtn[locId];
-    if (!Array.isArray(list)) return null;
-    var hits = list.filter(function (d) { return d.symbol === row.symbol; });
-    return hits.filter(function (d) { return d.label === row.label; })[0] || (hits.length === 1 ? hits[0] : null);
-  }
-  // Same delivery label AND contract: never borrow Fall 26's DTN basis for an Oct 26 row.
-  function dtnExact(locId, p) { var list = BIDS && BIDS.dtn && BIDS.dtn[locId]; return Array.isArray(list) ? list.filter(function (d) { return d.symbol === p.symbol && d.label === p.label; })[0] || null : null; }
   function bidLocs(s) { return (s || S).locations.filter(function (l) { return l.bids; }); }
 
   // ---------- connect ----------
@@ -80,7 +72,7 @@
         return loadFutures().then(function () { draw(); $('editor').hidden = false; setDirty(false); });
       }).then(function () {
         $('connect').hidden = true; $('change-key').hidden = false; drawChips();
-        status('Loaded.' + (BIDS && BIDS.futures_source && BIDS.futures_source !== 'dtn' ? ' DTN is down; cash previews use the backup futures.' : ''));
+        status('Loaded.');
       }).catch(function (e) {
         status(e.status === 401 ? 'Key rejected. Check it was copied whole and has not expired.'
           : e.status === 404 ? 'Repo or file not found, or the key has no access to this repo.'
@@ -92,12 +84,13 @@
 
   // ---------- status strip ----------
   var REFST = {};
+  var SRC = { dtn: 'DTN', boards: 'elevator boards', agsist: 'AGSIST', yahoo: 'Yahoo', ace: 'Ace' };
   function chip(cls, html) { return '<li class="' + cls + '">' + html + '</li>'; }
   function drawChips() {
     var out = [], b = BIDS;
     if (b) {
       var src = b.futures_source || 'dtn', age = FG.ageMin(b.checked || b.updated);
-      out.push(src === 'dtn' ? chip('ok', 'Feed <b>DTN live</b>') : chip('bad', 'DTN <b>down</b> · backup ' + esc(src)));
+      out.push(chip('ok', 'Futures <b>' + esc(src.split('+').map(function (x) { return SRC[x] || x; }).join(' + ')) + '</b>'));
       var t = new Date(Date.parse(b.checked || b.updated)).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       out.push(chip(age > 25 ? 'bad' : 'ok', 'Checked <b>' + esc(t) + '</b> · ' + (isFinite(age) ? Math.max(0, Math.round(age)) + ' min ago' : '?')));
     } else out.push(chip('bad', 'Feed <b>no data</b>'));
@@ -171,7 +164,7 @@
               return '<span class="bl-loc' + (li ? ' follow' : '') + '"><span class="bl-ln">' + esc(l.name) + '</span>'
                 + '<input class="num" data-b="' + esc(l.id) + '" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="-0.60" value="' + (FG.num(b) ? b.toFixed(2) : '') + '" aria-label="' + esc(l.name + ' basis, ' + c + ' ' + p.label) + '">'
                 + '<span class="bl-cash" data-p="' + esc(l.id) + '"></span></span>';
-            }).join('') + '<span class="bl-dtn">' + (function () { var d = locs.map(function (l) { return dtnExact(l.id, p); }).filter(Boolean)[0]; return d ? 'DTN ' + FG.basis(d.basis) : ''; })() + '</span></span></div>';
+            }).join('') + '</span></div>';
         }).join('') + '<p class="bl-none">Nothing on. Tap a month above to post it.</p></div></div>';
     });
     $('bids-list').innerHTML = h;
@@ -191,9 +184,8 @@
   $('bids-list').addEventListener('change', function (e) {
     if (e.target.dataset.f !== 'show') return;
     var row = $('bids-list').querySelector('.bl-row[data-c="' + e.target.dataset.c + '"]'), on = e.target.checked; row.classList.toggle('on', on);
-    if (on) { // fill an empty basis from DTN when DTN posts this contract; then put the cursor in it
-      var p = CAT[+row.dataset.c], inp = row.querySelector('[data-b]');
-      if (!inp.value) { var d = dtnExact(inp.dataset.b, p); if (d) inp.value = d.basis.toFixed(2); }
+    if (on) { // put the cursor in an empty basis box
+      var inp = row.querySelector('[data-b]');
       previewRow(row); if (!inp.value) inp.focus();
     }
   });
@@ -203,16 +195,6 @@
     var on = !$('bids-list').classList.contains('editing');
     $('bids-list').classList.toggle('editing', on); document.querySelector('.p-bids').classList.toggle('editing', on);
     this.setAttribute('aria-pressed', String(on)); this.textContent = on ? 'Done' : 'Edit contracts';
-  };
-  $('copy-dtn').onclick = function () {
-    if (!BIDS || !BIDS.dtn) return status('No DTN basis to copy.', true);
-    var n = 0;
-    $('bids-list').querySelectorAll('.bl-row.on').forEach(function (row) {
-      var p = CAT[+row.dataset.c];
-      row.querySelectorAll('[data-b]').forEach(function (inp) { var d = dtnExact(inp.dataset.b, p); if (d) { inp.value = d.basis.toFixed(2); n++; } });
-      previewRow(row);
-    });
-    setDirty(true); status('Copied ' + n + ' basis values from DTN into the months that are on. Not saved yet.');
   };
   function readBids(D, flag) {
     var locIds = bidLocs(D).map(function (l) { return l.id; }), rows = [], order = {};
@@ -409,9 +391,10 @@
       var f = futFor(r.symbol);
       if (r.show && !f) warn.push(r.commodity + ' ' + r.label + ': no futures quote for ' + r.symbol + ' yet. The site shows a dash until the next check finds one.');
       bidLocs(D).forEach(function (l) {
-        var b = r.basis[l.id], ob = o && o.basis ? o.basis[l.id] : undefined, d = dtnFor(l.id, r);
+        var b = r.basis[l.id], ob = o && o.basis ? o.basis[l.id] : undefined;
         if (r.show && FG.num(b) && b > 0) warn.push(l.name + ' ' + r.commodity + ' ' + r.label + ': basis is POSITIVE (' + FG.basis(b) + ').');
-        if (r.show && FG.num(b) && d && Math.abs(b - d.basis) > 0.25) warn.push(l.name + ' ' + r.commodity + ' ' + r.label + ': ' + FG.basis(b) + ' is ' + FG.money(Math.abs(b - d.basis)) + ' away from DTN (' + FG.basis(d.basis) + ').');
+        // typo guard: a basis that jumps more than 25 cents from what was saved
+        if (r.show && FG.num(b) && FG.num(ob) && Math.abs(b - ob) > 0.25) warn.push(l.name + ' ' + r.commodity + ' ' + r.label + ': ' + FG.basis(b) + ' is ' + FG.money(Math.abs(b - ob)) + ' away from the saved ' + FG.basis(ob) + '.');
         if (FG.num(b) && b !== ob && f) lines.push(l.name + ' ' + r.commodity + ' ' + r.label + ': cash ' + (FG.num(ob) ? FG.money(f.price + ob) : '—') + ' → ' + FG.money(f.price + b) + ' (basis ' + FG.basis(b) + ')');
       });
     });

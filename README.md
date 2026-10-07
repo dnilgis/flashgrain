@@ -30,20 +30,21 @@ robots.txt            staging: blocks search engines
 
 ## How a bid gets on the page
 
-Cash = futures (data/bids.json, from DTN) + basis (data/site.json, from /admin), per location.
-DTN's own basis is shown in /admin next to each row for reference; it does not reach the site.
+Cash = futures (data/bids.json) + basis (data/site.json, from /admin), per location.
+Jeff sets basis only here. Since 2026-10-07 he no longer posts bids to DTN; DTN is kept for the
+target-offer bid portal alone (its widget goes on the site once DTN is back up).
 Every admin save lists the cash prices it will change and warns on a positive basis, a basis more
-than 25 cents from DTN's, or a shown row with no futures quote.
+than 25 cents from the last saved value (typo guard), or a shown row with no futures quote.
 
 What the public page does when data is old:
 - Harvester heartbeat (`checked`) older than 2 hours: cash column hidden, "Bids not updating" shown, call prompt.
 - CBOT closed (weekends, 1:20 PM to 7 PM, 7:45 to 8:30 AM): stamp says "CBOT closed", the live dot stops. Exchange holidays are not modelled.
 - The basis date ("Basis set ...") is written by the admin on any save that changes a price.
 
-When DTN is down: the harvester falls back to Yahoo Finance futures, then to agsist's data/prices.json
-(only if under 2 hours old). A backup price more than 15% from DTN's last price is refused.
-bids.json records `futures_source` (dtn, yahoo, agsist); /admin says so on load. Contracts the backup
-has no quote for (often the far-out years) show a dash, not a guess.
+Futures: DTN's board first if it answers (it has been down since early October), then live elevator
+boards (via dnilgis/bids), Yahoo, agsist's data/prices.json (under 2 hours old), Ace's board (corn).
+A backup price more than 15% from DTN's last price is refused. bids.json records `futures_source`;
+/admin shows it in the status strip. A contract no source has shows a dash, not a guess.
 
 Nearby bids: site.json `references` lists other elevators' boards (Ace Ethanol Stanley corn, Northside
 Loyal soybeans). Shown ONLY in /admin, as a reference while setting basis. Never on the public site,
@@ -105,4 +106,4 @@ confirm harvester commits rebuild the site.
 - Delete `<meta name="robots" content="noindex, nofollow">` from index.html and discounts.html (keep it on admin and 404).
 - Change CNAME to the new domain; repoint DNS (Jeff's login).
 - Change `flshgrn.com` in the canonical and og: tags of index.html and discounts.html.
-- Decide whether flashgrains.com stays on DTN: the harvester reads it and the portal button links to it.
+- flashgrains.com stays on DTN for the bid portal only. Swap the portal link for DTN's widget once DTN is back.
