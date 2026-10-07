@@ -108,9 +108,18 @@
     if (dow >= 1 && dow <= 5 && min >= 800 && min < 1140) return d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) + ' close';
     return wall(iso);
   }
+  // "Oct 26" -> "2026-10"; "Fall 26" -> "2026-12" (harvest runs to year end). Unknown labels never expire.
+  function labelUntil(label) {
+    var M = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+    var m = /^\s*([a-z]{3})[a-z]*\.?\s+'?(\d{2}|\d{4})\s*$/i.exec(label || ''), y, mo;
+    if (!m) return '';
+    y = m[2].length === 2 ? 2000 + +m[2] : +m[2];
+    mo = m[1].toLowerCase() === 'fal' ? 12 : M[m[1].toLowerCase()];
+    return mo ? y + '-' + ('0' + mo).slice(-2) : '';
+  }
   function ageMin(isoZ) { var t = Date.parse(isoZ || ''); return isNaN(t) ? Infinity : (Date.now() - t) / 60000; }
 
-  window.FG = { cbotOpen: cbotOpen, ageMin: ageMin, closeLabel: closeLabel, DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, num: num };
+  window.FG = { labelUntil: labelUntil, cbotOpen: cbotOpen, ageMin: ageMin, closeLabel: closeLabel, DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, num: num };
 
   // ---------- page ----------
   var strike = document.getElementById('strike');
@@ -170,8 +179,10 @@
 
     // rows grouped by commodity in first-appearance order
     var groups = [], by = {};
+    var ymNow = new Date().toLocaleDateString('en-CA', { timeZone: TZ }).slice(0, 7);
     SITE.bids.rows.forEach(function (r) {
       if (!r.show) return;
+      var u = labelUntil(r.label); if (u && u < ymNow) return; // a delivery month that has passed drops off by itself
       if (!by[r.commodity]) { by[r.commodity] = []; groups.push(r.commodity); }
       by[r.commodity].push(r);
     });

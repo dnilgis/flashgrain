@@ -81,16 +81,6 @@ body.admin .a-check{margin:6px 0;min-height:40px}
 body.admin .a-loc{padding:10px 0}
 body.admin .a-bar{margin-top:24px;padding:8px 0 10px}
 .a-ref-h{font-size:1.25rem}
-@media(min-width:1360px){
-  .c-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:0 36px;align-items:start}
-  .c-grid>.a-bar{grid-column:1/-1}
-  .c-side{border-left:1px solid var(--line);padding-left:36px}
-  .c-side .a-grid{grid-template-columns:1fr}
-  .c-side .a-day{grid-template-columns:44px minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr)}
-  .c-side .a-day select{grid-column:2}.c-side .a-day input{grid-row:1}
-  .c-side .a-day input[aria-label=opens]{grid-column:3}.c-side .a-day input[aria-label=closes]{grid-column:4}
-  .c-side textarea{min-height:0}
-}
 /* compact bid table */
 body.admin .a-bids{min-width:0}
 body.admin .a-bids th{white-space:normal;font-size:.875rem;letter-spacing:.04em;line-height:1.2;padding:6px 3px 6px 0;vertical-align:bottom}
@@ -102,10 +92,143 @@ body.admin .a-bids .sym{width:5rem}
 body.admin .a-bids .prev{padding-top:14px}
 body.admin .a-bids .ref{font-size:.9375rem}
 body.admin .a-bids .a-btn.sm{min-width:38px;min-height:38px;padding:2px 8px}
-@media(min-width:1360px){
-  .c-grid{grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:0 28px}
-  .c-side{padding-left:28px}
-  .c-side .a-day{grid-template-columns:40px minmax(0,1fr) minmax(8.25rem,1fr) minmax(8.25rem,1fr)}
-}
 body.admin .a-bids [data-f=commodity]{width:7.6rem}
 body.admin textarea.a-short{font-family:var(--mono);font-size:1rem;min-height:0;resize:vertical}
+
+/* ---------- one-screen ops center ---------- */
+.p-head{display:flex;align-items:baseline;gap:4px 14px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:4px;margin-bottom:6px}
+body.admin .p-head h2{margin:0;font-size:1.375rem}
+.p-note{font-size:1rem;color:var(--ink2)}
+.p-note b{color:var(--ink);font-family:var(--mono);font-weight:700}
+.p-tools{margin-left:auto;display:flex;gap:6px}
+body.admin .p-head .a-check{margin:0;min-height:0}
+.a-inline{display:flex;align-items:center;gap:8px;margin:6px 0 0;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:1rem;color:var(--ink2)}
+.a-inline input[type=date]{width:auto;margin:0;min-height:36px;padding:4px 8px}
+/* bid table: one line per row, crop as a group header, row-editing columns hidden until asked */
+.a-bids .x,.x-only{display:none}
+.a-bids.editing .x{display:table-cell}
+.p-bids.editing .x-only{display:flex}
+.a-bids tr.grp th{font-family:var(--cond);font-size:1.125rem;font-weight:800;letter-spacing:.04em;color:var(--flash);padding:8px 0 2px;border-bottom:1px solid var(--line)}
+body.admin .a-bids td{vertical-align:middle}
+body.admin .a-bids .prev{padding-top:5px}
+body.admin .a-bids .lab{width:6rem}
+body.admin .a-bids .com{width:7.6rem}
+body.admin .a-bids .fq{white-space:nowrap}
+body.admin .a-bids td input[type=checkbox]{margin:0}
+/* hours week grid */
+.a-week{border-collapse:collapse;width:100%;min-width:640px}
+.a-week th{font-family:var(--mono);font-size:.9375rem;font-weight:500;color:var(--ink2);text-align:left;padding:4px 4px 4px 0;letter-spacing:.04em;text-transform:uppercase}
+.a-week tbody th{font-family:var(--cond);font-size:1.25rem;font-weight:800;color:var(--ink);padding-right:10px;white-space:nowrap}
+.a-week td{padding:3px 4px 3px 0}
+body.admin .a-week input{margin:0;min-height:38px;padding:6px 6px;font-size:1rem;text-align:center}
+/* side panels */
+.p-side .a-sec{padding-top:12px}
+.p-side textarea{min-height:0}
+.a-ref{padding:4px 0 8px}
+.a-ref+.a-ref{border-top:1px solid var(--line)}
+.a-ref .a-help{margin:2px 0 4px}
+.a-reft{width:100%;min-width:0}
+body.admin .a-reft td,body.admin .a-reft th{padding:3px 6px 3px 0;font-size:.9375rem}
+.a-mini{margin:4px 0 0}
+.a-mini summary{cursor:pointer;font-family:var(--mono);font-size:.9375rem;color:var(--ink2);min-height:32px;display:flex;align-items:center}
+.a-mini summary:hover,.a-mini summary:focus-visible{color:var(--ink)}
+/* setup drawer */
+.a-setup{margin-top:18px;border-top:2px solid var(--ink)}
+.a-setup>summary{cursor:pointer;padding:12px 0;font-family:var(--cond);font-size:1.375rem;font-weight:800;text-transform:uppercase;min-height:44px}
+.a-setup>summary span{font-family:var(--sans);font-size:1rem;font-weight:400;text-transform:none;color:var(--ink2);margin-left:8px}
+.a-locs{display:grid;gap:0 24px}
+@media(min-width:1000px){.a-locs{grid-template-columns:repeat(3,minmax(0,1fr))}.a-locs .a-grid{grid-template-columns:1fr}}
+@media(min-width:1200px){
+  body.admin .wrap{max-width:1560px}
+  .ops{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(320px,1fr);grid-template-areas:"bids side" "hours side" "setup setup" "bar bar";gap:0 28px;align-items:start}
+  .p-bids{grid-area:bids}.p-hours{grid-area:hours}.p-side{grid-area:side}.a-setup{grid-area:setup}.ops>.a-bar{grid-area:bar}
+  .p-side{border-left:1px solid var(--line);padding-left:28px}
+  body.admin .ops>.a-sec{padding-top:12px}
+}
+/* ---------- delivery list: month chips per crop, rows only for months that are on ---------- */
+.bl-same{margin:8px 0 2px}
+.bl-crop{margin-top:10px}
+.bl-grp{font-family:var(--cond);font-size:1.25rem;font-weight:800;text-transform:uppercase;color:var(--flash);margin:0 0 6px}
+.bl-chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:4.6rem;padding:6px 10px;border:2px solid var(--mute);cursor:pointer;font-family:var(--cond);font-size:1.125rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;color:var(--ink2);user-select:none}
+.chip input{position:absolute;opacity:0;width:1px;height:1px}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.chip:has(input:checked){background:var(--flash);border-color:var(--flash);color:#0b0b0b}
+.chip:has(input:focus-visible){outline:3px solid var(--ink);outline-offset:2px}
+.bl-rows{margin-top:6px;border-top:1px solid var(--line)}
+.bl-row{display:none;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name fut" "locs locs";align-items:center;gap:2px 12px;padding:6px 0;border-bottom:1px solid var(--line)}
+.bl-row.on{display:grid}
+.bl-rows:has(.bl-row.on) .bl-none{display:none}
+.bl-none{margin:6px 0;font-size:1rem;color:var(--ink2)}
+.bl-name{grid-area:name;font-family:var(--cond);font-size:1.375rem;font-weight:800;text-transform:uppercase}
+.bl-fut{grid-area:fut;font-family:var(--mono);font-size:.9375rem;color:var(--ink2);white-space:nowrap;text-align:right}
+.bl-fut b{color:var(--ink);font-weight:500}
+.bl-fut .sym{display:none}
+.bl.editing .bl-fut .sym{display:inline-block;width:5.2rem;margin:0 0 0 6px;min-height:36px;padding:4px 6px;font-size:.9375rem}
+.bl-locs{grid-area:locs;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px}
+.bl-loc{display:inline-flex;align-items:center;gap:8px}
+.bl-ln{font-family:var(--mono);font-size:.9375rem;color:var(--ink2)}
+body.admin .bl-loc .num{width:5.4rem;margin:0;min-height:44px;padding:6px 8px;font-size:1.125rem;text-align:right}
+.bl-cash{font-family:var(--mono);font-weight:700;font-size:1.125rem;min-width:4.2rem;color:var(--ink)}
+.bl.same .bl-loc.follow .num{display:none}
+.bl.same .bl-loc.follow .bl-ln::after{content:" same"}
+.bl-dtn{font-family:var(--mono);font-size:.9375rem;color:var(--mute)}
+@media(min-width:760px){
+  .bl-row{grid-template-columns:7rem 9.5rem minmax(0,1fr);grid-template-areas:"name fut locs";gap:0 16px;padding:3px 0}
+  .bl-fut{text-align:left}
+}
+
+.p-head{align-items:center}
+body.admin .p-head .bl-same{margin:0;min-height:36px;font-size:1rem}
+@media(min-width:1200px){
+  .chip{min-height:36px;min-width:4.2rem;padding:3px 8px;font-size:1rem}
+  .bl-chips{gap:5px}
+  .bl-crop{margin-top:6px}
+  .bl-grp{margin-bottom:4px;font-size:1.125rem}
+  .bl-row{padding:0}
+  body.admin .bl-loc .num{min-height:36px;padding:4px 8px;font-size:1.0625rem}
+  .bl-name{font-size:1.25rem}
+  body.admin .p-head h2{font-size:1.25rem}
+  body.admin .a-week input{min-height:34px;padding:4px}
+}
+
+/* hours grid in the side column; one-line save bar */
+@media(min-width:1200px){
+  .ops{grid-template-areas:"bids side" "setup setup" "bar bar"}
+  .p-side .a-week{min-width:0;table-layout:fixed}
+  .p-side .a-week th:first-child{width:4.6rem}
+  .p-side .a-week tbody th{font-size:1.0625rem;padding-right:4px}
+  body.admin .p-side .a-week input{font-size:.875rem;padding:4px 1px;min-height:34px}
+  .p-side .a-week td{padding:2px 2px 2px 0}
+  .p-side .a-week thead th{font-size:.8125rem;text-align:center;padding:2px 0}
+  body.admin .a-bar{flex-wrap:nowrap;padding:8px 0}
+  body.admin .a-bar .a-status{flex:1 1 auto;flex-basis:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .c-top{padding:8px 0 6px}
+  .chips li{padding:2px 8px}
+}
+body.admin .a-week input{font-family:var(--sans);font-weight:600}
+@media(min-width:1200px){.ops{grid-template-columns:minmax(0,1fr) 26rem}}
+
+/* hours: days down, one column per yard */
+.a-week{min-width:0;table-layout:fixed;width:100%;max-width:520px}
+.a-week thead th{text-align:center}
+.a-week thead th:first-child,.a-week tbody th{width:3.4rem}
+.a-week tbody th{font-family:var(--mono);font-size:.9375rem;font-weight:700;color:var(--ink2);padding-right:6px}
+body.admin .a-week input{min-height:38px;padding:4px 6px;font-size:1rem}
+@media(min-width:1200px){
+  .ops{grid-template-columns:minmax(0,1fr) 23rem}
+  body.admin .p-side .a-week input{font-size:.9375rem;min-height:32px;padding:2px 4px}
+  .p-side .a-week thead th:first-child,.p-side .a-week tbody th{width:3rem}
+  .p-side .a-week thead th{font-size:.875rem;text-transform:none;letter-spacing:0;font-family:var(--cond);font-weight:800}
+}
+@media(min-width:1000px) and (max-width:1399px){.a-locs{grid-template-columns:1fr}.a-locs .a-grid{grid-template-columns:1fr 1fr}}
+
+@media(max-width:1199px){body.admin .a-week input{min-height:44px}}
+@media(max-width:759px){
+  .c-top{gap:6px 10px}
+  .c-logo{font-size:1.375rem}
+  .chips{flex:1 1 100%;gap:4px}
+  .chips li{font-size:.875rem;padding:2px 6px}
+  .c-links{margin-left:0}
+  body.admin .a-bar .a-status{font-size:.9375rem}
+}

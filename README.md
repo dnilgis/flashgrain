@@ -50,6 +50,18 @@ Loyal soybeans). Shown ONLY in /admin, as a reference while setting basis. Never
 never mixed into Jeff's prices. The location name is set in /admin. If a board lists several locations
 and none matches, the error printed in /admin names the ones it found.
 
+## Delivery months
+
+/admin lists every delivery period per crop: the next 12 months plus Fall of this year and the next two.
+Tap a month on, type its basis; months already past drop off the site by themselves ("Oct 26" runs to
+the end of October, "Fall 26" to the end of December). Futures by the usual rule: the nearest listed
+contract at or after the delivery month (corn H K N U Z, soybeans F H K N Q U X); Fall = Dec corn / Nov
+soybeans. "Edit contracts" overrides the symbol per month.
+
+The harvester fetches futures for every month that is on. DTN's board only posts Jeff's own Fall rows,
+so other contracts come from agsist's prices.json, then (corn) Ace Ethanol's board. A contract none of
+them carries (today: May/Aug soybeans, the 2028 contracts) shows a dash and the save warns first.
+
 ## Admin key (one time per person)
 
 Works for the repo owner. A fine-grained key cannot reach a personal repo for a collaborator

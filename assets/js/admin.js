@@ -43,12 +43,28 @@
     var hits = list.filter(function (d) { return d.symbol === row.symbol; });
     return hits.filter(function (d) { return d.label === row.label; })[0] || (hits.length === 1 ? hits[0] : null);
   }
+  // Same delivery label AND contract: never borrow Fall 26's DTN basis for an Oct 26 row.
+  function dtnExact(locId, p) { var list = BIDS && BIDS.dtn && BIDS.dtn[locId]; return Array.isArray(list) ? list.filter(function (d) { return d.symbol === p.symbol && d.label === p.label; })[0] || null : null; }
   function bidLocs(s) { return (s || S).locations.filter(function (l) { return l.bids; }); }
 
   // ---------- connect ----------
   ['repo', 'branch'].forEach(function (k) { var v = stored('fg-' + k); if (v) $(k).value = v; });
   var t = stored('fg-token'); if (t) { $('token').value = t; $('remember').checked = true; }
   $('forget').onclick = function () { store('fg-token', null); $('token').value = ''; $('remember').checked = false; status('Key removed from this device.'); };
+
+  // Futures for previews: the harvester's file first, then agsist's price file, then Ace's board (corn).
+  // The site itself only ever uses what the harvester writes; this is so Jeff sees a cash number before saving.
+  function loadFutures() {
+    FUT = {};
+    var MC = { Jan: 'F', Mar: 'H', May: 'K', Jul: 'N', Aug: 'Q', Sep: 'U', Nov: 'X', Dec: 'Z' };
+    var ace = fetch('../data/refs/ace.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      (d && d.rows || []).forEach(function (x) { var m = /^(\w{3}) (\d\d) Corn$/.exec(x.futures_month || ''); if (m && MC[m[1]] && FG.num(x.futures)) FUT['@C' + m[2].slice(-1) + MC[m[1]]] = { price: x.futures, from: 'Ace' }; });
+    }, function () {});
+    var ags = fetch('https://raw.githubusercontent.com/dnilgis/agsist/main/data/prices.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      Object.keys(d && d.quotes || {}).forEach(function (k) { var q = d.quotes[k], m = /^Z([CS])([FHKNQUXZ])(\d\d)\.CBT$/.exec(q && q.ticker || ''); if (m && FG.num(q.close)) FUT['@' + m[1] + m[3].slice(-1) + m[2]] = { price: q.close / 100, from: 'agsist' }; });
+    }, function () {});
+    return Promise.all([ace, ags]).then(function () { Object.keys(BIDS && BIDS.futures || {}).forEach(function (k) { FUT[k] = BIDS.futures[k]; }); });
+  }
 
   $('load').onclick = function () {
     if (!$('token').value.trim()) return status('Paste your GitHub key first.', true);
@@ -60,10 +76,11 @@
       .then(function (r) {
         SHA = r[0].sha; S = JSON.parse(b64dec(r[0].content)); ORIG = clone(S);
         BIDS = r[1] ? JSON.parse(b64dec(r[1].content)) : null;
-        hoursCache = {}; draw(); $('editor').hidden = false; setDirty(false);
+        hoursCache = {};
+        return loadFutures().then(function () { draw(); $('editor').hidden = false; setDirty(false); });
+      }).then(function () {
         $('connect').hidden = true; $('change-key').hidden = false; drawChips();
-        status('Loaded. Cash previews use futures from ' + (BIDS && BIDS.quote_time ? BIDS.quote_time.replace('T', ' ').slice(0, 16) + ' Central' : 'the last harvest')
-          + (BIDS && BIDS.futures_source && BIDS.futures_source !== 'dtn' ? ' (backup feed: ' + BIDS.futures_source + ', because DTN was down)' : '') + '.');
+        status('Loaded.' + (BIDS && BIDS.futures_source && BIDS.futures_source !== 'dtn' ? ' DTN is down; cash previews use the backup futures.' : ''));
       }).catch(function (e) {
         status(e.status === 401 ? 'Key rejected. Check it was copied whole and has not expired.'
           : e.status === 404 ? 'Repo or file not found, or the key has no access to this repo.'
@@ -87,56 +104,190 @@
     out.push(FG.cbotOpen() ? chip('ok', 'CBOT <b>open</b>') : chip('', 'CBOT <b>closed</b>'));
     (S && S.references || []).forEach(function (r) {
       var st = REFST[r.id];
-      out.push(st === true ? chip('ok', esc(r.name) + ' <b>read</b>') : st === false ? chip('bad', esc(r.name) + ' <b>failing</b>') : chip('', esc(r.name) + ' <b>…</b>'));
+      var nm = esc(r.name.split(' ')[0]);
+      out.push(st === true ? chip('ok', nm + ' <b>read</b>') : st === false ? chip('bad', nm + ' <b>failing</b>') : chip('', nm + ' <b>…</b>'));
     });
     $('chips').innerHTML = out.join('');
   }
   setInterval(function () { if (S) drawChips(); }, 60000);
 
   // ---------- draw ----------
-  function drawBids() {
-    var locs = bidLocs();
-    var h = '<thead><tr><th>Show</th><th>Delivery</th>'
-      + locs.map(function (l) { return '<th>' + esc(l.name) + ' basis</th>'; }).join('')
-      + locs.map(function (l) { return '<th>' + esc(l.name) + ' cash</th>'; }).join('')
-      + '<th>DTN basis</th><th>Commodity</th><th>Futures</th><th><span class="vh">Move or remove</span></th></tr></thead><tbody>';
-    S.bids.rows.forEach(function (r, i) {
-      var f = BIDS && BIDS.futures && BIDS.futures[r.symbol];
-      h += '<tr data-i="' + i + '"><td><input type="checkbox" data-f="show" aria-label="Show ' + esc(r.commodity + ' ' + r.label) + '"' + (r.show ? ' checked' : '') + '></td>'
-        + '<td><input class="lab" data-f="label" value="' + esc(r.label) + '" aria-label="Delivery label"><span class="ref com">' + esc(r.commodity) + '</span></td>'
-        + locs.map(function (l) { var b = r.basis && r.basis[l.id]; return '<td><input class="num" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="-0.60" data-b="' + esc(l.id) + '" aria-label="' + esc(l.name + ' basis, ' + r.commodity + ' ' + r.label) + '" value="' + (FG.num(b) ? b.toFixed(2) : '') + '"></td>'; }).join('')
-        + locs.map(function (l) { var b = r.basis && r.basis[l.id]; return '<td class="prev" data-p="' + esc(l.id) + '">' + (f && FG.num(b) ? FG.money(f.price + b) : '—') + '</td>'; }).join('')
-        + '<td class="ref">' + locs.map(function (l) { var d = dtnFor(l.id, r); return d ? FG.basis(d.basis) : '—'; }).join(' / ') + '</td>'
-        + '<td><input class="lab" data-f="commodity" value="' + esc(r.commodity) + '" list="coms" aria-label="Commodity"></td>'
-        + '<td><input class="sym" data-f="symbol" value="' + esc(r.symbol) + '" aria-label="Futures symbol"><span class="ref">' + (f ? FG.cents8(f.price) : 'no quote') + '</span></td>'
-        + '<td class="acts"><button class="a-btn sm" data-a="up" type="button" aria-label="Move up">↑</button><button class="a-btn sm" data-a="dn" type="button" aria-label="Move down">↓</button><button class="a-btn sm" data-a="rm" type="button" aria-label="Remove row">✕</button></td></tr>';
+  // ---------- delivery list: every period, a switch each, basis when on ----------
+  // Periods: the next 12 calendar months plus Fall of this year and the next two. Futures by the usual rule:
+  // the nearest listed contract at or after the delivery month (corn H K N U Z, soybeans F H K N Q U X);
+  // Fall = Dec corn / Nov soybeans. Overridable per row under "Edit rows".
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var LISTED = { '@C': { 3: 'H', 5: 'K', 7: 'N', 9: 'U', 12: 'Z' }, '@S': { 1: 'F', 3: 'H', 5: 'K', 7: 'N', 8: 'Q', 9: 'U', 11: 'X' } };
+  var CODEMON = { F: 1, G: 2, H: 3, J: 4, K: 5, M: 6, N: 7, Q: 8, U: 9, V: 10, X: 11, Z: 12 };
+  var FUT = {}, CAT = [], SAME = true;
+  function contractFor(pfx, y, m) {
+    var ms = Object.keys(LISTED[pfx]).map(Number);
+    for (var k = 0; k < 2; k++) { var hit = ms.filter(function (x) { return k || x >= m; })[0]; if (hit) return pfx + ((y + k) % 10) + LISTED[pfx][hit]; }
+  }
+  function nowYM() { var p = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' }); return p.slice(0, 7); }
+  function symName(sym) { var m = /^@[A-Z]+(\d)([A-Z])$/.exec(sym || ''); return m ? MON[CODEMON[m[2]] - 1] + ' ' + (20 + +m[1]) : esc(sym || ''); }
+  function buildCatalog() {
+    var now = nowYM(), y0 = +now.slice(0, 4), m0 = +now.slice(5, 7), coms = [];
+    S.bids.rows.concat([{ commodity: 'Corn' }, { commodity: 'Soybeans' }]).forEach(function (r) { if (coms.indexOf(r.commodity) < 0 && PREFIX[(r.commodity || '').toLowerCase()]) coms.push(r.commodity); });
+    var have = {}; S.bids.rows.forEach(function (r) { have[r.commodity + '|' + r.label] = r; });
+    var out = [];
+    coms.forEach(function (c) {
+      var pfx = PREFIX[c.toLowerCase()], list = [];
+      for (var k = 0; k < 3; k++) { var y = y0 + k; list.push({ label: 'Fall ' + (y % 100), until: y + '-12', sort: y + '-11b', symbol: pfx + (y % 10) + (pfx === '@C' ? 'Z' : 'X') }); }
+      for (var j = 0; j < 12; j++) { var mm = (m0 - 1 + j) % 12 + 1, yy = y0 + Math.floor((m0 - 1 + j) / 12), u = yy + '-' + ('0' + mm).slice(-2); list.push({ label: MON[mm - 1] + ' ' + (yy % 100), until: u, sort: u, symbol: contractFor(pfx, yy, mm) }); }
+      list.forEach(function (p) { p.commodity = c; p.key = c + '|' + p.label; p.row = have[p.key] || null; if (p.row) { p.symbol = p.row.symbol || p.symbol; delete have[p.key]; } });
+      S.bids.rows.forEach(function (r) { // kept rows with labels the catalog does not generate (custom, or not yet expired)
+        var k = r.commodity + '|' + r.label; if (r.commodity !== c || !have[k]) return;
+        var u = FG.labelUntil(r.label); if (u && u < now) return; // past: dropped
+        list.push({ commodity: c, label: r.label, until: u, sort: u || '9999', symbol: r.symbol, key: k, row: r }); delete have[k];
+      });
+      list.sort(function (a, b) { return a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0; });
+      out = out.concat(list);
     });
-    $('bids-t').innerHTML = h + '</tbody>';
-    $('fut-asof').textContent = 'Basis is almost always negative: type the minus. Futures symbols: @C corn, @S soybeans; month letter Z Dec, X Nov, H Mar, K May, N Jul, U Sep; the digit is the year (6 = 2026).';
+    return out;
+  }
+  function futFor(sym) { return FUT[sym] || null; }
+  function drawBids() {
+    var locs = bidLocs(); CAT = buildCatalog();
+    SAME = locs.length > 1 && S.bids.rows.every(function (r) { var b = r.basis || {}; return locs.every(function (l) { return b[l.id] === b[locs[0].id]; }); });
+    $('same-wrap').hidden = locs.length < 2;
+    $('same').checked = SAME; $('same-lab').textContent = locs.slice(1).map(function (l) { return l.name; }).join(', ') + ' uses ' + (locs[0] ? locs[0].name : '') + ' basis';
+    var h = '', coms = [];
+    CAT.forEach(function (p) { if (coms.indexOf(p.commodity) < 0) coms.push(p.commodity); });
+    coms.forEach(function (c) {
+      var items = CAT.map(function (p, i) { return { p: p, i: i }; }).filter(function (x) { return x.p.commodity === c; });
+      h += '<div class="bl-crop"><h3 class="bl-grp" id="g-' + esc(c) + '">' + esc(c) + '</h3>'
+        + '<div class="bl-chips" role="group" aria-labelledby="g-' + esc(c) + '">' + items.map(function (x) {
+          var on = !!(x.p.row && x.p.row.show);
+          return '<label class="chip"><input type="checkbox" id="bl' + x.i + '" data-f="show" data-c="' + x.i + '"' + (on ? ' checked' : '') + '><span>' + esc(x.p.label) + '</span><span class="vh"> ' + esc(c) + ', show on site</span></label>';
+        }).join('') + '</div>'
+        + '<div class="bl-rows">' + items.map(function (x) {
+          var p = x.p, r = p.row || {}, f = futFor(p.symbol);
+          return '<div class="bl-row' + (r.show ? ' on' : '') + '" data-c="' + x.i + '">'
+            + '<span class="bl-name">' + esc(p.label) + '</span>'
+            + '<span class="bl-fut">' + symName(p.symbol) + ' <b>' + (f ? FG.cents8(f.price) : 'no quote') + '</b><input class="sym" data-f="symbol" value="' + esc(p.symbol) + '" aria-label="Futures symbol, ' + esc(c + ' ' + p.label) + '"></span>'
+            + '<span class="bl-locs">' + locs.map(function (l, li) {
+              var b = r.basis && r.basis[l.id];
+              return '<span class="bl-loc' + (li ? ' follow' : '') + '"><span class="bl-ln">' + esc(l.name) + '</span>'
+                + '<input class="num" data-b="' + esc(l.id) + '" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="-0.60" value="' + (FG.num(b) ? b.toFixed(2) : '') + '" aria-label="' + esc(l.name + ' basis, ' + c + ' ' + p.label) + '">'
+                + '<span class="bl-cash" data-p="' + esc(l.id) + '"></span></span>';
+            }).join('') + '<span class="bl-dtn">' + (function () { var d = locs.map(function (l) { return dtnExact(l.id, p); }).filter(Boolean)[0]; return d ? 'DTN ' + FG.basis(d.basis) : ''; })() + '</span></span></div>';
+        }).join('') + '<p class="bl-none">Nothing on. Tap a month above to post it.</p></div></div>';
+    });
+    $('bids-list').innerHTML = h;
+    $('bids-list').classList.toggle('same', SAME);
+    $('bids-list').querySelectorAll('.bl-row').forEach(previewRow);
+    $('fut-asof').textContent = 'Symbol: @C corn, @S soybeans, the year digit (6 = 2026), then the month letter: F Jan, H Mar, K May, N Jul, Q Aug, U Sep, X Nov, Z Dec.';
+  }
+  function previewRow(row) {
+    var p = CAT[+row.dataset.c], sym = (row.querySelector('[data-f=symbol]').value || '').trim().toUpperCase(), f = futFor(sym);
+    var first = row.querySelector('[data-b]');
+    row.querySelectorAll('.bl-loc').forEach(function (box, li) {
+      var inp = box.querySelector('[data-b]'), n = parseBasis(SAME && li ? first.value : inp.value), cell = box.querySelector('.bl-cash');
+      cell.textContent = f && FG.num(n) ? '$' + FG.money(f.price + n) : '';
+    });
+    row.querySelector('.bl-fut b').textContent = f ? FG.cents8(f.price) : 'no quote';
+  }
+  $('bids-list').addEventListener('change', function (e) {
+    if (e.target.dataset.f !== 'show') return;
+    var row = $('bids-list').querySelector('.bl-row[data-c="' + e.target.dataset.c + '"]'), on = e.target.checked; row.classList.toggle('on', on);
+    if (on) { // fill an empty basis from DTN when DTN posts this contract; then put the cursor in it
+      var p = CAT[+row.dataset.c], inp = row.querySelector('[data-b]');
+      if (!inp.value) { var d = dtnExact(inp.dataset.b, p); if (d) inp.value = d.basis.toFixed(2); }
+      previewRow(row); if (!inp.value) inp.focus();
+    }
+  });
+  $('bids-list').addEventListener('input', function (e) { var row = e.target.closest('.bl-row'); if (row) previewRow(row); });
+  $('same').onchange = function () { SAME = this.checked; $('bids-list').classList.toggle('same', SAME); $('bids-list').querySelectorAll('.bl-row').forEach(previewRow); setDirty(true); };
+  $('edit-rows').onclick = function () {
+    var on = !$('bids-list').classList.contains('editing');
+    $('bids-list').classList.toggle('editing', on); document.querySelector('.p-bids').classList.toggle('editing', on);
+    this.setAttribute('aria-pressed', String(on)); this.textContent = on ? 'Done' : 'Edit contracts';
+  };
+  $('copy-dtn').onclick = function () {
+    if (!BIDS || !BIDS.dtn) return status('No DTN basis to copy.', true);
+    var n = 0;
+    $('bids-list').querySelectorAll('.bl-row.on').forEach(function (row) {
+      var p = CAT[+row.dataset.c];
+      row.querySelectorAll('[data-b]').forEach(function (inp) { var d = dtnExact(inp.dataset.b, p); if (d) { inp.value = d.basis.toFixed(2); n++; } });
+      previewRow(row);
+    });
+    setDirty(true); status('Copied ' + n + ' basis values from DTN into the months that are on. Not saved yet.');
+  };
+  function readBids(D, flag) {
+    var locIds = bidLocs(D).map(function (l) { return l.id; }), rows = [], order = {};
+    $('bids-list').querySelectorAll('.bl-row').forEach(function (row) {
+      var p = CAT[+row.dataset.c], show = $('bl' + row.dataset.c).checked;
+      var sym = row.querySelector('[data-f=symbol]'), symbol = sym.value.trim().toUpperCase(), want = PREFIX[p.commodity.toLowerCase()];
+      var r = p.row ? clone(p.row) : { commodity: p.commodity, label: p.label };
+      r.symbol = symbol; r.show = show; r.basis = clone(r.basis || {});
+      var ins = row.querySelectorAll('[data-b]'), firstV = ins[0] ? ins[0].value.trim() : '';
+      ins.forEach(function (inp, li) {
+        var v = SAME && li ? firstV : inp.value.trim(), id = inp.dataset.b;
+        if (v === '') { delete r.basis[id]; if (show && locIds.indexOf(id) >= 0) flag(inp, p.commodity + ' ' + p.label + ': turned on but no basis.'); return; }
+        var n = parseBasis(v);
+        if (!FG.num(n)) { flag(inp, 'Basis "' + v + '" is not a number.'); return; }
+        if (Math.abs(n) > 3) { flag(inp, 'Basis "' + v + '" is outside -3.00 to +3.00.'); return; }
+        r.basis[id] = n;
+      });
+      if (show || p.row) {
+        if (!/^@[A-Z]{1,3}\d[FGHJKMNQUVXZ]$/.test(symbol)) flag(sym, p.commodity + ' ' + p.label + ': futures symbol "' + symbol + '" is not in the form @C6Z.');
+        else if (want && symbol.indexOf(want) !== 0) flag(sym, p.commodity + ' ' + p.label + ': ' + symbol + ' is not a ' + p.commodity.toLowerCase() + ' contract.');
+      }
+      // keep a row that is on, or one already on file; a period never turned on is not written
+      if (show || p.row) { order[p.commodity + '|' + p.label] = p.sort + '|' + (rows.length + 1000); rows.push(r); }
+    });
+    var cOrder = []; rows.forEach(function (r) { if (cOrder.indexOf(r.commodity) < 0) cOrder.push(r.commodity); });
+    rows.sort(function (a, b) {
+      var ca = cOrder.indexOf(a.commodity), cb = cOrder.indexOf(b.commodity); if (ca !== cb) return ca - cb;
+      var ka = order[a.commodity + '|' + a.label], kb = order[b.commodity + '|' + b.label]; return ka < kb ? -1 : ka > kb ? 1 : 0;
+    });
+    D.bids.rows = rows;
+    return locIds;
   }
 
+  // Hours as typed text: "8-5", "7:30-4:30", "8a-12p", "call", "closed". Shown back as "8a–5p" so the reading is visible.
+  function hoursToText(v) {
+    var p = FG.parseH(v);
+    if (p === 'call') return 'Call'; if (p === 'closed') return 'Closed';
+    var t = function (m) { var h = Math.floor(m / 60) % 24, mm = m % 60; return (h % 12 || 12) + (mm ? ':' + ('0' + mm).slice(-2) : '') + (h < 12 ? 'a' : 'p'); };
+    return t(p.o) + '–' + t(p.c);
+  }
+  function textToHours(t) {
+    t = String(t || '').toLowerCase().replace(/[–—]/g, '-').replace(/\s+/g, '').replace(/to/g, '-');
+    if (/^(call|callahead|c)$/.test(t)) return 'call';
+    if (/^(closed|close|x)$/.test(t)) return 'closed';
+    var m = /^(\d{1,2})(?::(\d{2}))?(a|am|p|pm)?-(\d{1,2})(?::(\d{2}))?(a|am|p|pm)?$/.exec(t);
+    if (!m) return null;
+    var mins = function (h, mm, suf) {
+      h = +h; mm = +(mm || 0); if (mm > 59 || h > 24) return NaN;
+      if (suf) { if (h > 12 || h === 0) return NaN; return (suf[0] === 'p' ? (h % 12) + 12 : h % 12) * 60 + mm; }
+      return h * 60 + mm;
+    };
+    var o = mins(m[1], m[2], m[3]), c = mins(m[4], m[5], m[6]);
+    // bare closing hour at or before the opening hour is afternoon: 8-5 is 8 AM to 5 PM; 8-12 is 8 to noon
+    if (!m[6] && +m[4] > 0 && +m[4] < 12 && c <= o) c += 12 * 60;
+    if (!(o >= 0 && c > o && c <= 1440)) return null;
+    var hh = function (x) { return ('0' + Math.floor(x / 60)).slice(-2) + ':' + ('0' + x % 60).slice(-2); };
+    return hh(o) + '-' + hh(c);
+  }
   function drawHours() {
-    $('hours').innerHTML = S.locations.filter(function (l) { return l.hours; }).map(function (l) {
-      return '<div class="a-hrs" data-loc="' + esc(l.id) + '"><h3>' + esc(l.name) + '</h3>' + FG.DAYS.map(function (d) {
-        var p = FG.parseH(l.hours[d]), mode = p.o != null ? 'open' : p;
-        var tm = function (m) { return m == null ? '' : ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + m % 60).slice(-2); };
-        return '<div class="a-day" data-d="' + d + '"><b>' + FG.DAYN[d] + '</b><select aria-label="' + esc(l.name + ' ' + FG.DAYN[d]) + '">'
-          + ['open', 'call', 'closed'].map(function (m) { return '<option value="' + m + '"' + (m === mode ? ' selected' : '') + '>' + { open: 'Open', call: 'Call ahead', closed: 'Closed' }[m] + '</option>'; }).join('')
-          + '</select><input type="time" aria-label="opens" value="' + tm(p.o) + '"' + (mode === 'open' ? '' : ' disabled') + '><input type="time" aria-label="closes" value="' + tm(p.c) + '"' + (mode === 'open' ? '' : ' disabled') + '></div>';
-      }).join('') + '</div>';
-    }).join('');
-    $('hours').querySelectorAll('select').forEach(function (sel) {
-      sel.onchange = function () {
-        var ins = sel.parentNode.querySelectorAll('input');
-        ins.forEach(function (i) { i.disabled = sel.value !== 'open'; });
-        if (sel.value === 'open' && !ins[0].value) { ins[0].value = '08:00'; ins[1].value = '17:00'; }
-      };
+    var locs = S.locations.filter(function (l) { return l.hours; });
+    $('hours').innerHTML = '<thead><tr><th><span class="vh">Day</span></th>' + locs.map(function (l) { return '<th scope="col">' + esc(l.name) + '</th>'; }).join('') + '</tr></thead><tbody>'
+      + FG.DAYS.map(function (d) {
+        return '<tr><th scope="row">' + FG.DAYN[d] + '</th>' + locs.map(function (l) {
+          return '<td><input data-loc="' + esc(l.id) + '" data-d="' + d + '" value="' + esc(hoursToText(l.hours[d])) + '" aria-label="' + esc(l.name + ' ' + FG.DAYN[d] + ' hours') + '" autocomplete="off" spellcheck="false"></td>';
+        }).join('') + '</tr>';
+      }).join('') + '</tbody>';
+    $('hours').querySelectorAll('input').forEach(function (inp) {
+      inp.addEventListener('blur', function () { var v = textToHours(inp.value); if (v) inp.value = hoursToText(v); });
     });
   }
+
 
   function drawLocs() {
     $('locs').innerHTML = S.locations.map(function (l, i) {
-      return '<div class="a-loc" data-i="' + i + '"><div class="a-grid">'
+      return '<div class="a-loc" data-i="' + i + '"><h3 class="a-ref-h">' + esc(l.name) + '</h3><div class="a-grid">'
         + '<label>Name<input data-f="name" value="' + esc(l.name) + '"></label>'
         + '<label>Address<input data-f="address" value="' + esc(l.address) + '"></label>'
         + '<label>Map pin (lat, long)<input data-f="pin" value="' + esc(l.pin || '') + '" placeholder="optional, e.g. 44.944867,-90.835861" inputmode="decimal"></label>'
@@ -148,10 +299,10 @@
 
   function drawRefs() {
     $('refs-admin').innerHTML = (S.references || []).map(function (r, i) {
-      return '<div class="a-loc" data-r="' + i + '"><h3 class="a-ref-h">' + esc(r.name) + ' <span>' + esc(r.place) + ' \u00b7 ' + esc(r.commodity) + '</span></h3>'
-        + '<p class="a-help" data-st="' + esc(r.id) + '">Checking\u2026</p>'
-        + '<div class="a-scroll"><table class="a-bids a-ref" data-rt="' + esc(r.id) + '"></table></div>'
-        + '<div class="a-grid"><label>Location name on their board<input data-f="location" value="' + esc(r.location || '') + '" placeholder="only needed if their board lists several"></label></div></div>';
+      return '<div class="a-ref" data-r="' + i + '"><h3 class="a-ref-h">' + esc(r.name) + ' <span>' + esc(r.place) + ' · ' + esc(r.commodity) + '</span></h3>'
+        + '<p class="a-help" data-st="' + esc(r.id) + '">Checking…</p>'
+        + '<div data-rt="' + esc(r.id) + '"></div>'
+        + '<details class="a-mini"><summary>Board setting</summary><label>Location name on their board<input data-f="location" value="' + esc(r.location || '') + '" placeholder="only if their board lists several"></label></details></div>';
     }).join('');
     (S.references || []).forEach(function (r) {
       var el = function () { return document.querySelector('[data-st="' + r.id + '"]'); };
@@ -159,20 +310,19 @@
         .then(function (x) { if (!x.ok) throw 0; return x.json(); })
         .then(function (d) {
           var when = function (t) { return new Date(t).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }); };
-          var rows = d.rows || [], ok = rows.length && d.checked ? 'Their board, read ' + when(d.checked) + '.' : 'Never read.';
+          var rows = d.rows || [], ok = rows.length && d.checked ? 'Read ' + when(d.checked) + '.' : 'Never read.';
           var bad = d.error && (!d.checked || d.error_at > d.checked) ? ' Last try ' + when(d.error_at) + ' failed: ' + d.error : '';
           if (el()) el().textContent = ok + bad;
           REFST[r.id] = !!(rows.length && !bad); drawChips();
-          var t = document.querySelector('[data-rt="' + r.id + '"]');
-          if (t && rows.length) t.innerHTML = '<thead><tr><th>Delivery</th><th>Cash</th><th>Basis</th><th>Futures</th></tr></thead><tbody>'
-            + rows.map(function (x) {
-              return '<tr><td>' + esc(x.label) + '</td><td class="prev">' + (FG.num(x.cash) ? '$' + FG.money(x.cash) : '\u2014') + '</td><td>' + (FG.num(x.basis) ? FG.basis(x.basis) : '\u2014') + '</td><td class="ref">' + esc(x.futures_month || '') + '</td></tr>';
-            }).join('') + '</tbody>';
+          var box = document.querySelector('[data-rt="' + r.id + '"]'), row = function (x) {
+            return '<tr><td>' + esc(x.label) + '</td><td class="prev">' + (FG.num(x.cash) ? '$' + FG.money(x.cash) : '—') + '</td><td>' + (FG.num(x.basis) ? FG.basis(x.basis) : '—') + '</td><td class="ref">' + esc(x.futures_month || '') + '</td></tr>';
+          };
+          if (box && rows.length) box.innerHTML = '<table class="a-bids a-reft"><thead><tr><th>Delivery</th><th>Cash</th><th>Basis</th><th>Futures</th></tr></thead><tbody>' + rows.slice(0, 4).map(row).join('') + '</tbody></table>'
+            + (rows.length > 4 ? '<details class="a-mini"><summary>' + (rows.length - 4) + ' more months</summary><table class="a-bids a-reft"><tbody>' + rows.slice(4).map(row).join('') + '</tbody></table></details>' : '');
         })
-        .catch(function () { REFST[r.id] = false; drawChips(); if (el()) el().textContent = 'Not read yet. If this stays, check the harvester log in the Actions tab.'; });
+        .catch(function () { REFST[r.id] = false; drawChips(); if (el()) el().textContent = 'Not read yet.'; });
     });
   }
-
 
   function draw() {
     drawBids(); drawHours(); drawLocs(); drawRefs();
@@ -185,17 +335,15 @@
   }
 
   function readHours(D, flag) {
-    $('hours').querySelectorAll('.a-hrs').forEach(function (div) {
-      var l = D.locations.filter(function (x) { return x.id === div.dataset.loc; })[0];
+    $('hours').querySelectorAll('input[data-loc]').forEach(function (inp) {
+      var l = D.locations.filter(function (x) { return x.id === inp.dataset.loc; })[0];
       if (!l || !l.hours) return;
-      div.querySelectorAll('.a-day').forEach(function (row) {
-        var sel = row.querySelector('select'), ins = row.querySelectorAll('input');
-        if (sel.value !== 'open') { l.hours[row.dataset.d] = sel.value; return; }
-        if (!ins[0].value || !ins[1].value || ins[0].value >= ins[1].value) { flag(row, l.name + ' ' + FG.DAYN[row.dataset.d] + ': opening time must be before closing time.'); return; }
-        l.hours[row.dataset.d] = ins[0].value + '-' + ins[1].value;
-      });
+      var v = textToHours(inp.value);
+      if (!v) { flag(inp, l.name + ' ' + FG.DAYN[inp.dataset.d] + ': "' + inp.value + '" is not hours. Type 8-5, call or closed.'); return; }
+      l.hours[inp.dataset.d] = v;
     });
   }
+
 
   // ---------- read the form into a draft; S is only replaced when the draft is valid ----------
   function collect() {
@@ -215,30 +363,7 @@
       else if (wantH && !l.hours) { l.hours = hoursCache[l.id] || (function () { var h = {}; FG.DAYS.forEach(function (d) { h[d] = 'call'; }); return h; })(); }
     });
 
-    var locIds = bidLocs(D).map(function (l) { return l.id; }), rows = [];
-    $('bids-t').querySelectorAll('tbody tr').forEach(function (tr) {
-      var r = clone(S.bids.rows[+tr.dataset.i]);
-      r.show = tr.querySelector('[data-f=show]').checked;
-      r.commodity = tr.querySelector('[data-f=commodity]').value.trim();
-      r.label = tr.querySelector('[data-f=label]').value.trim();
-      var sym = tr.querySelector('[data-f=symbol]'); r.symbol = sym.value.trim().toUpperCase();
-      var want = PREFIX[r.commodity.toLowerCase()];
-      if (!/^@[A-Z]{1,3}\d[FGHJKMNQUVXZ]$/.test(r.symbol)) flag(sym, 'Futures symbol "' + r.symbol + '" is not in the form @C6Z.');
-      else if (want && r.symbol.indexOf(want) !== 0) flag(sym, r.commodity + ' ' + r.label + ': symbol ' + r.symbol + ' is not a ' + r.commodity.toLowerCase() + ' contract (' + want + '...).');
-      if (!r.commodity) flag(tr.querySelector('[data-f=commodity]'), 'A bid row has no commodity.');
-      if (!r.label) flag(tr.querySelector('[data-f=label]'), 'A bid row has no delivery label.');
-      r.basis = r.basis || {};
-      tr.querySelectorAll('[data-b]').forEach(function (inp) {
-        var v = inp.value.trim(), id = inp.dataset.b;
-        if (v === '') { delete r.basis[id]; if (r.show && locIds.indexOf(id) >= 0) flag(inp, r.commodity + ' ' + r.label + ': basis is empty but the row is shown.'); return; }
-        var n = parseBasis(v);
-        if (!FG.num(n)) { flag(inp, 'Basis "' + v + '" is not a number.'); return; }
-        if (Math.abs(n) > 3) { flag(inp, 'Basis "' + v + '" is outside -3.00 to +3.00.'); return; }
-        r.basis[id] = n;
-      });
-      rows.push(r);
-    });
-    D.bids.rows = rows;
+    var locIds = readBids(D, flag);
     D.bids.footnote = $('footnote').value.trim();
     $('refs-admin').querySelectorAll('[data-r]').forEach(function (div) {
       var r = D.references[+div.dataset.r];
@@ -268,45 +393,9 @@
   }
 
   // ---------- row buttons, live preview, dirty tracking ----------
-  $('bids-t').addEventListener('click', function (e) {
-    var a = e.target.dataset && e.target.dataset.a; if (!a) return;
-    var i = +e.target.closest('tr').dataset.i;
-    if (a === 'rm' && !confirm('Remove ' + S.bids.rows[i].commodity + ' ' + S.bids.rows[i].label + '?')) return;
-    apply(function () {
-      var R = S.bids.rows;
-      if (a === 'rm') R.splice(i, 1);
-      if (a === 'up' && i > 0) R.splice(i - 1, 0, R.splice(i, 1)[0]);
-      if (a === 'dn' && i < R.length - 1) R.splice(i + 1, 0, R.splice(i, 1)[0]);
-      drawBids();
-    });
-  });
-  $('bids-t').addEventListener('input', function (e) {
-    if (!e.target.dataset.b && e.target.dataset.f !== 'symbol') return;
-    var tr = e.target.closest('tr'), sym = tr.querySelector('[data-f=symbol]').value.trim().toUpperCase(), f = BIDS && BIDS.futures && BIDS.futures[sym];
-    tr.querySelectorAll('[data-b]').forEach(function (inp) {
-      var n = parseBasis(inp.value), cell = tr.querySelector('[data-p="' + inp.dataset.b + '"]');
-      if (cell) cell.textContent = f && FG.num(n) ? FG.money(f.price + n) : '—';
-    });
-  });
   $('editor').addEventListener('input', function () { setDirty(true); });
   $('editor').addEventListener('change', function () { setDirty(true); });
   window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
-  $('add-row').onclick = function () {
-    apply(function () {
-      var last = S.bids.rows[S.bids.rows.length - 1] || { commodity: 'Corn' };
-      S.bids.rows.push({ commodity: last.commodity, label: '', symbol: '', show: false, basis: {} }); drawBids();
-    });
-  };
-  $('copy-dtn').onclick = function () {
-    if (!BIDS || !BIDS.dtn) return status('No DTN basis to copy.', true);
-    var n = 0;
-    $('bids-t').querySelectorAll('tbody tr').forEach(function (tr) {
-      var r = S.bids.rows[+tr.dataset.i];
-      tr.querySelectorAll('[data-b]').forEach(function (inp) { var d = dtnFor(inp.dataset.b, r); if (d) { inp.value = d.basis.toFixed(2); n++; } });
-      tr.querySelector('[data-b]') && tr.querySelector('[data-b]').dispatchEvent(new Event('input', { bubbles: true }));
-    });
-    setDirty(true); status('Copied ' + n + ' basis values from DTN. Not saved yet.');
-  };
   $('locs').addEventListener('change', function (e) {
     if (apply()) { drawBids(); drawHours(); }
     else if (e.target.type === 'checkbox') e.target.checked = !e.target.checked; // fix the other field first
@@ -317,8 +406,8 @@
     var lines = [], warn = [];
     D.bids.rows.forEach(function (r) {
       var o = ORIG.bids.rows.filter(function (x) { return x.symbol === r.symbol && x.label === r.label && x.commodity === r.commodity; })[0];
-      var f = BIDS && BIDS.futures && BIDS.futures[r.symbol];
-      if (r.show && !f) warn.push(r.commodity + ' ' + r.label + ': no futures quote for ' + r.symbol + ', the site will show a dash.');
+      var f = futFor(r.symbol);
+      if (r.show && !f) warn.push(r.commodity + ' ' + r.label + ': no futures quote for ' + r.symbol + ' yet. The site shows a dash until the next check finds one.');
       bidLocs(D).forEach(function (l) {
         var b = r.basis[l.id], ob = o && o.basis ? o.basis[l.id] : undefined, d = dtnFor(l.id, r);
         if (r.show && FG.num(b) && b > 0) warn.push(l.name + ' ' + r.commodity + ' ' + r.label + ': basis is POSITIVE (' + FG.basis(b) + ').');

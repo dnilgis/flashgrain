@@ -339,7 +339,8 @@ def _central_iso(epoch):
 
 
 def backup_futures(symbols, last_dtn):
-    """Delayed CBOT futures when DTN is down: Yahoo Finance first, agsist's prices.json second.
+    """Delayed CBOT futures for contracts DTN cannot give us: Yahoo Finance, then agsist's prices.json, then
+    (corn only) Ace Ethanol's board.
     Returns ({symbol: {price, change, time}}, source) for the symbols it could get and verify."""
     got, used, notes = {}, set(), []
     for sym in symbols:  # Yahoo, contract by contract
@@ -376,6 +377,24 @@ def backup_futures(symbols, last_dtn):
         except Exception as e:
             notes.append("agsist: %s" % e)
             print("backup agsist: %s" % e, file=sys.stderr)
+    missing = [s for s in symbols if s not in got and s.startswith("@C")]
+    if missing:  # Ace Ethanol's own board (read by refs_bushel.mjs) lists the corn curve with each row
+        try:
+            d = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "refs", "ace.json")))
+            chk = datetime.strptime(d["checked"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            since = closed_since()
+            if datetime.now(timezone.utc) - chk > BACKUP_MAX_AGE and not (since and _ct(chk) >= since):
+                raise ValueError("ace.json is %s old" % (datetime.now(timezone.utc) - chk))
+            code = {"Mar": "H", "May": "K", "Jul": "N", "Sep": "U", "Dec": "Z"}
+            for r in d.get("rows", []):
+                m = re.match(r"^(\w{3}) (\d\d) Corn$", r.get("futures_month") or "")
+                sym = m and m.group(1) in code and "@C%s%s" % (m.group(2)[-1], code[m.group(1)])
+                if sym in missing and isinstance(r.get("futures"), (int, float)) and sym not in got:
+                    got[sym] = {"price": round(r["futures"], 5), "change": None, "time": _central_iso(chk.timestamp())}
+                    used.add("ace")
+        except Exception as e:
+            notes.append("ace: %s" % e)
+            print("backup ace: %s" % e, file=sys.stderr)
     for sym in list(got):  # refuse anything that disagrees wildly with the last DTN price (units, wrong contract)
         ref = (last_dtn or {}).get(sym, {}).get("price")
         if ref and abs(got[sym]["price"] - ref) / ref > SANITY:
@@ -515,15 +534,24 @@ def main():
         old = json.load(open(OUT))
     except Exception:
         old = {}
+    try:  # every contract a shown row needs, including months DTN's own board does not post
+        site = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "site.json")))
+        wanted = sorted({r["symbol"] for r in site["bids"]["rows"] if r.get("show") and r.get("symbol")})
+    except Exception:
+        wanted = sorted((old.get("futures") or {}).keys())
     try:
         data, url = fetch()
+        extra = [s for s in wanted if s not in data["futures"]]
+        if extra:
+            fut, src, notes = backup_futures(extra, old.get("dtn_futures"))
+            data["futures"].update(fut)
+            if fut:
+                data["extra_futures_source"] = src
+                print("DTN board lacks %s; filled %s from %s" % (", ".join(extra), ", ".join(sorted(fut)) or "none", src))
+            if notes:
+                data["backup_notes"] = [n[:200] for n in notes]
     except SystemExit as dtn_down:
         print(dtn_down, file=sys.stderr)
-        try:
-            site = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "site.json")))
-            wanted = sorted({r["symbol"] for r in site["bids"]["rows"] if r.get("show")})
-        except Exception:
-            wanted = sorted((old.get("futures") or {}).keys())
         fut, src, notes = backup_futures(wanted, old.get("dtn_futures") or old.get("futures"))
         if not any(k.startswith("@C") for k in fut) or not any(k.startswith("@S") for k in fut):
             # Market closed and the stored prices were read after the last session ended: they ARE the close
