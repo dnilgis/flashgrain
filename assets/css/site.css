@@ -71,7 +71,9 @@ main{container:page/inline-size}
 @media(min-width:760px){.seg button{flex:0 1 14rem}}
 /* a fresh price lands: yellow, then fade back */
 @keyframes tick{0%,35%{background:var(--flash);color:#0b0b0b}100%{background:transparent}}
-td.cash.tick{animation:tick 2.6s ease-out}
+/* Cash is yellow, so its flash is on/off: a fade from a yellow box would pass through yellow-on-yellow. */
+@keyframes tickcash{0%,60%{background:var(--flash);color:#0b0b0b}60.01%,100%{background:transparent;color:var(--flash)}}
+td.cash.tick{animation:tickcash 2.6s steps(1,end)}
 .stamp.tick{animation:tick 2.6s ease-out;padding:0 4px;margin:0 -4px}
 .bids{container:bids/inline-size}
 .board{width:100%;border-collapse:collapse;table-layout:fixed}
@@ -83,7 +85,7 @@ td.cash.tick{animation:tick 2.6s ease-out}
 .board .c.sub{font-size:1.5rem;font-weight:600}
 .board tr.grp th{border-top:3px solid var(--ink);border-bottom:0;padding:16px 0 2px}
 .board tbody:first-of-type tr.grp th{border-top:0;padding-top:10px}
-.board td.cash{font-size:clamp(2rem,6vw,2.75rem);font-weight:700;color:var(--ink)}
+.board td.cash{font-size:clamp(2rem,6vw,2.75rem);font-weight:700;color:var(--flash)}
 .board .pend{color:var(--mute);font-weight:500}
 .up,.dn,.fl{display:inline-block;min-width:4.5ch;text-align:right;font-size:.85em;margin-left:6px}
 .up{color:var(--ink)}.dn{color:var(--down)}.fl{color:var(--ink2)}
