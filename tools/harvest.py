@@ -280,6 +280,44 @@ ROOTS = {"@C": "ZC", "@S": "ZS", "@W": "ZW"}
 AGSIST = "https://raw.githubusercontent.com/dnilgis/agsist/main/data/prices.json"
 BACKUP_MAX_AGE = timedelta(hours=2)
 
+# Futures as printed on live elevator boards, read by dnilgis/bids every few minutes. Five companies on four
+# platforms, so no one feed decides the price; the middle value per contract is used, and at least two must agree.
+BOARDS = ["adm-hoopestonil", "nexus-denisonia", "chsherman-glenwood", "farmerscooperative-mccooljunction", "premiercooperative1-dewey"]
+BOARDS_URL = "https://raw.githubusercontent.com/dnilgis/bids/main/data/%s.json"
+BOARDS_MAX_AGE = timedelta(minutes=45)
+
+
+def board_futures(symbols):
+    """{symbol: {price, change, time}} from the BOARDS consensus, for the symbols at least two boards carry."""
+    seen, times, notes = {}, [], []
+    since = closed_since()
+    for b in BOARDS:
+        try:
+            d = _get(BOARDS_URL % b)
+            pa = datetime.strptime(d["pricedAt"][:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) - pa > BOARDS_MAX_AGE and not (since and _ct(pa) >= since):
+                raise ValueError("priced %s ago" % (datetime.now(timezone.utc) - pa))
+            for r in d.get("bids") or []:
+                m = re.match(r"^Z([CS])([FHKNQUXZ])(\d{1,2})$", r.get("futuresMonth") or "")
+                if m and isinstance(r.get("futuresPriceCents"), (int, float)):
+                    sym = "@%s%s%s" % (m.group(1), m.group(3)[-1], m.group(2))
+                    seen.setdefault(sym, {})[b] = r["futuresPriceCents"]
+            times.append(pa)
+        except Exception as e:
+            notes.append("board %s: %s" % (b, e))
+    got = {}
+    for sym in symbols:
+        vals = sorted(seen.get(sym, {}).values())
+        if not vals:
+            continue
+        mid = vals[len(vals) // 2] if len(vals) % 2 else (vals[len(vals) // 2 - 1] + vals[len(vals) // 2]) / 2
+        agree = [v for v in vals if abs(v - mid) / mid <= 0.03]
+        if len(agree) < 2:
+            notes.append("board %s: only %d board(s) agree" % (sym, len(agree)))
+            continue
+        got[sym] = {"price": round(mid / 100, 5), "change": None, "time": _central_iso(max(times).timestamp()) if times else None}
+    return got, notes
+
 
 def _ct(utc):
     """UTC datetime -> naive US Central wall time (same DST rule as _central_iso)."""
@@ -339,11 +377,18 @@ def _central_iso(epoch):
 
 
 def backup_futures(symbols, last_dtn):
-    """Delayed CBOT futures for contracts DTN cannot give us: Yahoo Finance, then agsist's prices.json, then
-    (corn only) Ace Ethanol's board.
+    """Delayed CBOT futures for contracts DTN cannot give us: live elevator boards (via dnilgis/bids), then
+    Yahoo Finance, then agsist's prices.json, then (corn only) Ace Ethanol's board.
     Returns ({symbol: {price, change, time}}, source) for the symbols it could get and verify."""
     got, used, notes = {}, set(), []
-    for sym in symbols:  # Yahoo, contract by contract
+    try:  # live elevator boards first: they update all day, and GitHub's runners can always reach them
+        got, bnotes = board_futures(symbols)
+        notes += bnotes
+        if got:
+            used.add("boards")
+    except Exception as e:
+        notes.append("boards: %s" % e)
+    for sym in [x for x in symbols if x not in got]:  # Yahoo, contract by contract
         t = yahoo_ticker(sym)
         if not t:
             continue
