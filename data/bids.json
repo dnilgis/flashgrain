@@ -1,5 +1,5 @@
 {
- "checked": "2026-10-08T00:21:12Z",
+ "checked": "2026-10-08T00:31:14Z",
  "updated": "2026-10-08T00:21:12Z",
  "source": "backup:agsist+boards",
  "quote_time": "2026-10-07T19:16:04",
@@ -129,9 +129,9 @@
  "futures_source": "agsist+boards",
  "dtn_error": "all fetches failed; bids.json left unchanged. last error: https://flashgrains.com/index.cfm?show=11&mid=3: <urlopen error timed out>",
  "backup_notes": [
-  "board nexus-denisonia: priced 5:40:07.456510 ago",
-  "board farmerscooperative-mccooljunction: priced 3:42:14.613364 ago",
-  "board premiercooperative1-dewey: priced 5:40:07.681808 ago",
+  "board nexus-denisonia: priced 5:50:09.298888 ago",
+  "board farmerscooperative-mccooljunction: priced 3:52:16.495146 ago",
+  "board premiercooperative1-dewey: priced 5:50:09.611956 ago",
   "yahoo ZCZ28.CBT: HTTP Error 429: Too Many Requests",
   "yahoo ZSX28.CBT: HTTP Error 429: Too Many Requests"
  ],
