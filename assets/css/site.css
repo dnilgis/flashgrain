@@ -34,7 +34,7 @@ h1,h2{font-family:var(--cond);font-weight:800;text-transform:uppercase;line-heig
 .mast h1 svg{width:.58em;height:.9em;vertical-align:-.08em;margin:0 -.04em;fill:var(--flash)}
 .call{font-family:var(--mono);font-size:clamp(1.125rem,2.6vw,1.25rem);font-weight:700;text-decoration:none;display:inline-flex;flex-wrap:wrap;align-items:baseline;column-gap:1em;padding:12px 0;min-height:44px;white-space:normal}
 .call>span{color:var(--ink2);font-weight:500;white-space:nowrap}
-@media(max-width:759px){.mast{display:block;padding-bottom:0}.call{display:flex;margin:10px 0 0;padding:14px 0;border-top:1px solid var(--line);font-size:1.25rem}}
+@media(max-width:759px){.mast{display:block;padding-bottom:0}.mast .brand{margin-bottom:4px}.call{display:flex;margin:10px 0 0;padding:14px 0;border-top:1px solid var(--line);font-size:1.25rem}}
 
 /* notices */
 .alert{background:var(--flash);color:#0b0b0b}
@@ -206,7 +206,7 @@ abbr[title]{text-decoration:none}
 .offer-cta{margin:22px 0 0;padding-top:18px;border-top:1px solid var(--line,#2a2a2a)}
 .offer-cta .cta{margin:0}
 .offer-cta .fine{margin-top:10px}
-/* Logo: shown on its own white background as a rounded badge, as supplied. */
+/* Logo: the dark version, its background faded out so it sits on the page black. */
 .mast h1.brand{font-size:0;line-height:0;white-space:normal}
-.mast .logo{display:block;width:clamp(220px,62vw,340px);height:auto;border-radius:12px;background:#fff}
-@media print{.mast .logo{width:220px}}
+.mast .logo{display:block;width:clamp(160px,42vw,230px);height:auto}
+@media print{.mast .logo{width:160px}}
