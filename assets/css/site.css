@@ -206,3 +206,7 @@ abbr[title]{text-decoration:none}
 .offer-cta{margin:22px 0 0;padding-top:18px;border-top:1px solid var(--line,#2a2a2a)}
 .offer-cta .cta{margin:0}
 .offer-cta .fine{margin-top:10px}
+/* Logo: shown on its own white background as a rounded badge, as supplied. */
+.mast h1.brand{font-size:0;line-height:0;white-space:normal}
+.mast .logo{display:block;width:clamp(220px,62vw,340px);height:auto;border-radius:12px;background:#fff}
+@media print{.mast .logo{width:220px}}
