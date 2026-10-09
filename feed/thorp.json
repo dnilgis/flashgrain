@@ -1,8 +1,8 @@
 {
  "schema": "emmert-cash-bids/2",
- "generated": "2026-10-09T06:50:15.657Z",
- "observed": "2026-10-09T06:50:12Z",
- "pricedAt": "2026-10-09T06:50:12Z",
+ "generated": "2026-10-09T07:00:16.787Z",
+ "observed": "2026-10-09T07:00:14Z",
+ "pricedAt": "2026-10-09T07:00:14Z",
  "status": "ok",
  "terms": {
   "note": "Flash Grain's own posted cash bids and basis, as shown on flshgrn.com. No exchange-licensed futures prices are included. Bids are indications, not offers, and change without notice. Call the elevator to confirm before hauling.",
@@ -33,7 +33,7 @@
    "commodity": "Soybeans",
    "delivery": "Fall 26",
    "basis": -0.75,
-   "cashPrice": 12.22
+   "cashPrice": 12.21
   },
   {
    "commodity": "Soybeans",
