@@ -257,7 +257,7 @@
       $('lime-text').innerHTML = (SITE.lime.taking_orders ? 'Taking orders. ' : 'Not taking orders right now. ')
         + (t.length ? 'Spreading in <em>' + t.slice(0, -1).map(esc).join(', ') + '</em>' + (t.length > 1 ? ' and ' : '') + '<em>' + esc(t[t.length - 1]) + '.</em>' : '');
     });
-    safe(function () { if (/^https:\/\//.test(SITE.portal_url || '')) $('portal').href = SITE.portal_url; });
+    safe(function () { if (/^https:\/\//.test(SITE.portal_url || '')) [].forEach.call(document.querySelectorAll('[data-portal]'), function (a) { a.href = SITE.portal_url; }); });
     safe(function () {
       var bidLocs = SITE.locations.filter(function (l) { return l.bids; }), ids = bidLocs.map(function (l) { return l.id; }).join('|');
       if (!bidLocs.some(function (l) { return l.id === current; })) current = bidLocs.length ? bidLocs[0].id : null;
