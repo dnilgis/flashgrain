@@ -1,8 +1,8 @@
 {
  "schema": "emmert-cash-bids/2",
- "generated": "2026-10-09T08:30:17.374Z",
- "observed": "2026-10-09T08:30:15Z",
- "pricedAt": "2026-10-09T08:30:15Z",
+ "generated": "2026-10-09T08:40:14.847Z",
+ "observed": "2026-10-09T08:40:11Z",
+ "pricedAt": "2026-10-09T08:40:11Z",
  "status": "ok",
  "terms": {
   "note": "Flash Grain's own posted cash bids and basis, as shown on flshgrn.com. No exchange-licensed futures prices are included. Bids are indications, not offers, and change without notice. Call the elevator to confirm before hauling.",
