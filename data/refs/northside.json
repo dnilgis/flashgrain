@@ -2,6 +2,6 @@
  "id": "northside",
  "source": "http://grain.northsideelevator.com/index.cfm?show=11&mid=3",
  "rows": [],
- "error": "no Soybeans rows for None. Locations: none. Commodities: none. ",
- "error_at": "2026-10-10T20:40:12Z"
+ "error": "page served without prices (246 bytes, 0 price calls); not logging in. Page says: Request Rejected The requested URL was rejected. Please consult with your administrator. Your support ID is: 8948276078800080331 [Go Back]",
+ "error_at": "2026-10-10T21:11:15Z"
 }
