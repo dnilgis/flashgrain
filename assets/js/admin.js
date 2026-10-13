@@ -1,5 +1,5 @@
 /* Flash Grain admin. Loads data/site.json from GitHub, edits it, saves it back with one commit.
-   Needs a GitHub key with Contents: Read and write on this one repo (see README).
+   Needs a GitHub key with Contents: Read and write on this one repo (steps in the panel and the README).
    Basis typed here sets the public cash price, so every save shows the price changes and asks first. */
 (function () {
   var $ = function (id) { return document.getElementById(id); };
@@ -25,6 +25,9 @@
     opts = opts || {};
     opts.headers = { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + $('token').value.trim(), 'X-GitHub-Api-Version': '2022-11-28' };
     return fetch(API + $('repo').value.trim() + path, opts).then(function (r) {
+      // GitHub sends the key's expiry on every call, but its CORS rules hide it from browsers today. Use it if that changes.
+      var hx = r.headers.get('github-authentication-token-expiration'), hm = /^(\d{4}-\d{2}-\d{2})/.exec(hx || '');
+      if (hm && r.ok) { $('key-exp').value = hm[1]; store('fg-key-exp', hm[1]); }
       return r.json().catch(function () { return {}; }).then(function (j) {
         if (!r.ok) { var e = new Error(j.message || ('HTTP ' + r.status)); e.status = r.status; throw e; }
         return j;
@@ -40,9 +43,14 @@
   function bidLocs(s) { return (s || S).locations.filter(function (l) { return l.bids; }); }
 
   // ---------- connect ----------
-  ['repo', 'branch'].forEach(function (k) { var v = stored('fg-' + k); if (v) $(k).value = v; });
+  ['repo', 'branch'].forEach(function (k) {
+    var v = stored('fg-' + k); if (v) $(k).value = v;
+    if ($(k).value !== $(k).defaultValue) $(k).closest('details').open = true; // never hide a changed repo or branch
+  });
+  var kx = stored('fg-key-exp'); if (kx) $('key-exp').value = kx;
+  $('key-exp').onchange = function () { store('fg-key-exp', $('key-exp').value || null); if (S) drawChips(); };
   var t = stored('fg-token'); if (t) { $('token').value = t; $('remember').checked = true; }
-  $('forget').onclick = function () { store('fg-token', null); $('token').value = ''; $('remember').checked = false; status('Key removed from this device.'); };
+  $('forget').onclick = function () { store('fg-token', null); store('fg-key-exp', null); $('key-exp').value = ''; $('token').value = ''; $('remember').checked = false; status('Key removed from this device.'); };
 
   // Futures for previews: the harvester's file first, then agsist's price file, then Ace's board (corn).
   // The site itself only ever uses what the harvester writes; this is so Jeff sees a cash number before saving.
@@ -63,6 +71,7 @@
     if (dirty && !confirm('You have unsaved changes. Load the saved version and throw them away?')) return;
     store('fg-repo', $('repo').value.trim()); store('fg-branch', $('branch').value.trim());
     store('fg-token', $('remember').checked ? $('token').value.trim() : null);
+    store('fg-key-exp', $('key-exp').value || null);
     status('Loading…');
     Promise.all([gh('/contents/' + PATH + ref()), gh('/contents/data/bids.json' + ref()).catch(function () { return null; })])
       .then(function (r) {
@@ -74,7 +83,7 @@
         $('connect').hidden = true; $('change-key').hidden = false; drawChips();
         status('Loaded.');
       }).catch(function (e) {
-        status(e.status === 401 ? 'Key rejected. Check it was copied whole and has not expired.'
+        status(e.status === 401 ? 'Key rejected. Check it was copied whole and has not expired. An expired key needs a new one: see How to get one below.'
           : e.status === 404 ? 'Repo or file not found, or the key has no access to this repo.'
           : 'Load failed: ' + e.message, true);
       });
@@ -95,6 +104,7 @@
       out.push(chip(age > 25 ? 'bad' : 'ok', 'Checked <b>' + esc(t) + '</b> · ' + (isFinite(age) ? Math.max(0, Math.round(age)) + ' min ago' : '?')));
     } else out.push(chip('bad', 'Feed <b>no data</b>'));
     out.push(FG.cbotOpen() ? chip('ok', 'CBOT <b>open</b>') : chip('', 'CBOT <b>closed</b>'));
+    out.push(keyChip());
     (S && S.references || []).forEach(function (r) {
       var st = REFST[r.id];
       var nm = esc(r.name.split(' ')[0]);
@@ -103,6 +113,16 @@
     $('chips').innerHTML = out.join('');
   }
   setInterval(function () { if (S) drawChips(); }, 60000);
+  // Key expiry, from the date typed under the key (GitHub shows it when the key is made). Warns 14 days out.
+  function keyChip() {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec($('key-exp').value || '');
+    if (!m) return chip('', 'Key expiry <b>not set</b>');
+    var exp = new Date(+m[1], +m[2] - 1, +m[3]), now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var days = Math.round((exp - today) / 864e5), when = exp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (days < 0) return chip('bad', 'Key <b>expired ' + esc(when) + '</b>');
+    if (days <= 14) return chip('bad', 'Key expires <b>' + esc(when) + '</b> · ' + (days === 0 ? 'today' : days === 1 ? 'tomorrow' : days + ' days') + ', make a new one');
+    return chip('ok', 'Key expires <b>' + esc(when) + '</b>');
+  }
 
   // ---------- draw ----------
   // ---------- delivery list: every period, a switch each, basis when on ----------
