@@ -25,15 +25,32 @@
 <section id="connect" class="a-sec">
   <h2>Connect</h2>
   <hr class="rule">
-  <p class="a-help">Changes save to the site's GitHub repo and show on the site in 1&ndash;3 minutes. You need a GitHub key with write access to this one repo (see README).</p>
+  <p class="a-help">Changes show on the site in 1&ndash;3 minutes. Paste your GitHub key and press Load.</p>
   <div class="a-grid">
-    <label>Repo<input id="repo" value="dnilgis/flashgrain" autocomplete="off"></label>
-    <label>Branch<input id="branch" value="main" autocomplete="off"></label>
     <label class="wide">GitHub key<input id="token" type="password" autocomplete="off" placeholder="github_pat_..."></label>
+    <label>Key expires<input id="key-exp" type="date"></label>
   </div>
   <label class="a-check"><input type="checkbox" id="remember"> Remember key on this device</label>
   <div class="a-actions"><button class="cta" id="load" type="button">Load</button><button class="a-btn" id="forget" type="button">Forget key</button></div>
   <p class="a-status" id="status" role="status"></p>
+  <details class="a-mini a-keyhelp">
+    <summary>No key yet? How to get one</summary>
+    <ol class="a-steps">
+      <li>On github.com, tap your picture, then <b>Settings</b>, <b>Developer settings</b>, <b>Personal access tokens</b>, <b>Fine-grained tokens</b>, <b>Generate new token</b>.</li>
+      <li>Name it <b>flashgrain admin</b>. Expiration: 90 days. Write down the date it shows and type it in <b>Key expires</b> above.</li>
+      <li>Repository access: <b>Only select repositories</b>, pick <b>flashgrain</b>. Permissions: <b>Contents</b>, Read and write. Leave the rest alone.</li>
+      <li>Generate, copy the key, paste it here, tick Remember, press Load.</li>
+    </ol>
+    <p class="a-help">Lost a phone or laptop? Delete the key on that same GitHub page and it stops working right away.</p>
+  </details>
+  <details class="a-mini">
+    <summary>Advanced</summary>
+    <p class="a-help">Leave these alone unless you were told to change them.</p>
+    <div class="a-grid">
+      <label>Repo<input id="repo" value="dnilgis/flashgrain" autocomplete="off"></label>
+      <label>Branch<input id="branch" value="main" autocomplete="off"></label>
+    </div>
+  </details>
 </section>
 
 <div id="editor" class="ops" hidden>

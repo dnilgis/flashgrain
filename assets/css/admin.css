@@ -237,3 +237,7 @@ body.admin [hidden]{display:none!important}
 /* A data table may scroll inside its own box at 200% text (WCAG 1.4.10); the page itself never scrolls sideways. */
 body.admin .a-reft{display:block;max-width:100%;overflow-x:auto}
 body.admin .a-reft .ref{white-space:normal}
+/* connect: key help steps */
+.a-steps{margin:6px 0 4px;padding-left:1.4em;line-height:1.45}
+.a-steps li{margin:4px 0}
+.a-keyhelp{margin-top:4px}

@@ -139,6 +139,8 @@
   // Flash what changed when a refresh brings new prices (not on first load, not on a location switch).
   var lastCash = {}, lastQuote = null, flashNext = false;
   try { current = localStorage.getItem('fg-loc') || undefined; } catch (e) {}
+  // ?loc=granton opens that yard (links from Google and texts). An id that is not a bid location is ignored.
+  try { var qLoc = new URLSearchParams(location.search).get('loc'); if (qLoc) current = qLoc.toLowerCase(); } catch (e) {}
 
   var FALLBACK_TEL = '715-653-6585';
   function phone() { return (SITE && SITE.business && SITE.business.phone) || FALLBACK_TEL; }
@@ -165,7 +167,13 @@
     // stamp
     var st = $('stamp'), txt;
     if (feed === 'none') txt = 'Futures unavailable';
-    else if (feed === 'down') txt = 'Bids not updating since ' + new Date(Date.parse(BIDS.checked || BIDS.updated)).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' });
+    else if (feed === 'down') {
+      // Over a day stale, "since Fri 8:40 AM" could be any Friday: add the date.
+      var downAt = BIDS.checked || BIDS.updated, longAgo = ageMin(downAt) > 24 * 60;
+      txt = 'Bids not updating since ' + new Date(Date.parse(downAt)).toLocaleString('en-US', longAgo
+        ? { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }
+        : { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' });
+    }
     else {
       // Lead with when the harvester last checked (every 10 minutes). Closed market: say whose close the prices are.
       var chk = new Date(Date.parse(BIDS.checked || BIDS.updated)).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' });

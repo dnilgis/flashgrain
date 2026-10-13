@@ -21,6 +21,67 @@
 <link rel="preload" href="assets/fonts/barlow-condensed-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/jetbrains-mono-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css?v=2">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Organization",
+   "@id": "https://flshgrn.com/#org",
+   "name": "Flash Grain LLC",
+   "url": "https://flshgrn.com/",
+   "logo": "https://flshgrn.com/assets/img/flash-grain-logo.png",
+   "telephone": "+1-715-653-6585",
+   "email": "office@flashgrain.com"
+  },
+  {
+   "@type": "LocalBusiness",
+   "@id": "https://flshgrn.com/#thorp",
+   "name": "Flash Grain Thorp",
+   "parentOrganization": {
+    "@id": "https://flshgrn.com/#org"
+   },
+   "url": "https://flshgrn.com/",
+   "telephone": "+1-715-653-6585",
+   "email": "office@flashgrain.com",
+   "image": "https://flshgrn.com/assets/img/og.png",
+   "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "8576 County Rd N",
+    "addressLocality": "Thorp",
+    "addressRegion": "WI",
+    "postalCode": "54771",
+    "addressCountry": "US"
+   },
+   "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 44.91635,
+    "longitude": -90.74426
+   }
+  },
+  {
+   "@type": "LocalBusiness",
+   "@id": "https://flshgrn.com/#granton",
+   "name": "Flash Grain Granton",
+   "parentOrganization": {
+    "@id": "https://flshgrn.com/#org"
+   },
+   "url": "https://flshgrn.com/?loc=granton",
+   "telephone": "+1-715-653-6585",
+   "email": "office@flashgrain.com",
+   "image": "https://flshgrn.com/assets/img/og.png",
+   "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "W2306 US-10",
+    "addressLocality": "Granton",
+    "addressRegion": "WI",
+    "postalCode": "54436",
+    "addressCountry": "US"
+   }
+  }
+ ]
+}
+</script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><path id="boltp" d="M58 0 10 92h36L30 160 92 60H54L76 0Z"/></defs></svg>
@@ -29,7 +90,7 @@
 <div class="wrap">
 
 <header class="mast">
-  <h1 class="brand"><picture><source srcset="assets/img/flash-grain-logo.webp" type="image/webp"><img class="logo" style="width:clamp(160px,42vw,230px);height:auto" src="assets/img/flash-grain-logo.png" width="680" height="366" alt="Flash Grain"></picture></h1>
+  <h1 class="brand"><a href="./"><picture><source srcset="assets/img/flash-grain-logo.webp" type="image/webp"><img class="logo" style="width:clamp(160px,42vw,230px);height:auto" src="assets/img/flash-grain-logo.png" width="460" height="248" alt="Flash Grain"></picture></a></h1>
   <a class="call" href="tel:7156536585" data-tel>715-653-6585<span><span class="vh">, </span>call or text</span></a>
 </header>
 
@@ -37,7 +98,7 @@
 
 <section class="bids" id="bids" aria-labelledby="bids-h">
   <div class="bids-head">
-    <h2 id="bids-h"><span id="bids-loc"></span> Cash bids</h2>
+    <h2 id="bids-h"><span id="bids-loc">Thorp</span> Cash bids</h2>
     <p class="bids-meta"><span class="stamp" id="stamp"><i aria-hidden="true"></i><span id="asof">Loading</span></span><span class="open" id="open"></span><span id="basis-set"></span></p>
   </div>
   <p class="feed-msg" id="feed-msg" role="status" hidden></p>
@@ -58,6 +119,7 @@
     </tbody>
   </table>
   <noscript><p class="feed-msg">Bids need JavaScript to show. Call or text <a href="tel:7156536585">715-653-6585</a> for today&rsquo;s bid.</p></noscript>
+  <p class="fine">Corn and soybean cash bids at Thorp and Granton, WI.</p>
   <p class="fine" id="bids-note">Cash = CBOT futures + basis, $/bu. Subject to change without notice.</p>
   <p class="fine">Checks are mailed. Allow 7&ndash;10 days.</p>
   <a class="more" href="discounts.html">2026 discount schedule &rarr;</a>
@@ -104,7 +166,7 @@
 </main>
 
 <footer>
-  <p>Flash Grain LLC &middot; Thorp, WI 54771 &middot; <a href="tel:7156536585" data-tel>715-653-6585</a> &middot; <a href="mailto:office@flashgrain.com">office@flashgrain.com</a></p>
+  <p>Flash Grain LLC &middot; 8576 County Rd N, Thorp, WI 54771 &middot; <a href="tel:7156536585" data-tel>715-653-6585</a> &middot; <a href="mailto:office@flashgrain.com">office@flashgrain.com</a></p>
   <p><a href="discounts.html">2026 discount schedule</a></p>
   <p class="legal">Flash Grain LLC participates in the Wisconsin Agricultural Producer Security Program. For producers, the program may reimburse up to 80% of the first $60,000 of your allowed claim, and up to 75% of any additional amount. For depositors, the program may reimburse you for the loss of up to $100,000 worth of grain. Wisconsin Department of Agriculture, Trade and Consumer Protection, 2811 Agriculture Drive, PO Box 8911, Madison, WI 53708-8911, 608-224-4998.</p>
 </footer>
