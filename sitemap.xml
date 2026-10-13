@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Public pages only (not admin, not 404). At launch, change flshgrn.com to the new domain here too. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://flshgrn.com/</loc></url>
+  <url><loc>https://flshgrn.com/discounts.html</loc></url>
+</urlset>

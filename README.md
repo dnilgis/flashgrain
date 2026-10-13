@@ -28,6 +28,7 @@ tools/vendor/parse.mjs  board parser copied from dnilgis/bids (header says which
 .github/workflows/harvest.yml   runs the harvester
 CNAME                 flshgrn.com
 robots.txt            staging: blocks search engines
+sitemap.xml           public pages for search engines; uses the current domain, change it at launch with the rest
 ```
 
 ## How a bid gets on the page
