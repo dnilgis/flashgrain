@@ -1,6 +1,6 @@
 {
- "checked": "2026-10-13T12:30:20Z",
- "updated": "2026-10-13T12:30:20Z",
+ "checked": "2026-10-13T12:40:11Z",
+ "updated": "2026-10-13T12:40:11Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
  "quote_time": null,
  "dtn_as_of": null,
@@ -16,13 +16,13 @@
    "time": null
   },
   "@C8Z": {
-   "price": 5.0825,
-   "change": -0.03,
+   "price": 5.12,
+   "change": 0.0075,
    "time": null
   },
   "@S6X": {
-   "price": 12.835,
-   "change": -0.0425,
+   "price": 12.8325,
+   "change": -0.045,
    "time": null
   },
   "@S7X": {
@@ -56,14 +56,14 @@
     "label": "Fall 28",
     "commodity": "Corn",
     "symbol": "@C8Z",
-    "cash": 4.38,
+    "cash": 4.42,
     "basis": -0.7
    },
    {
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S6X",
-    "cash": 12.09,
+    "cash": 12.08,
     "basis": -0.75
    },
    {
@@ -100,14 +100,14 @@
     "label": "Fall 28",
     "commodity": "Corn",
     "symbol": "@C8Z",
-    "cash": 4.38,
+    "cash": 4.42,
     "basis": -0.7
    },
    {
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S6X",
-    "cash": 12.09,
+    "cash": 12.08,
     "basis": -0.75
    },
    {
@@ -139,13 +139,13 @@
    "time": null
   },
   "@C8Z": {
-   "price": 5.0825,
-   "change": -0.03,
+   "price": 5.12,
+   "change": 0.0075,
    "time": null
   },
   "@S6X": {
-   "price": 12.835,
-   "change": -0.0425,
+   "price": 12.8325,
+   "change": -0.045,
    "time": null
   },
   "@S7X": {
