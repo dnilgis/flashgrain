@@ -1,79 +1,79 @@
 {
  "id": "ace",
- "checked": "2026-10-16T07:30:15Z",
- "updated": "2026-10-16T07:30:15Z",
+ "checked": "2026-10-16T07:40:12Z",
+ "updated": "2026-10-16T07:40:12Z",
  "source": "https://aceethanol.o.bushelsites.com/cashbidssingle-3578",
  "quote_time": null,
  "rows": [
   {
    "label": "Oct 2026",
-   "cash": 4.19,
+   "cash": 4.18,
    "basis": -0.6,
    "futures_month": "Dec 26 Corn",
-   "futures": 4.785
+   "futures": 4.78
   },
   {
    "label": "Nov 2026",
-   "cash": 4.29,
+   "cash": 4.28,
    "basis": -0.5,
    "futures_month": "Dec 26 Corn",
-   "futures": 4.785
+   "futures": 4.78
   },
   {
    "label": "Dec 2026",
-   "cash": 4.29,
+   "cash": 4.28,
    "basis": -0.5,
    "futures_month": "Dec 26 Corn",
-   "futures": 4.785
+   "futures": 4.78
   },
   {
    "label": "Jan 2027",
    "cash": 4.34,
    "basis": -0.57,
    "futures_month": "Mar 27 Corn",
-   "futures": 4.91
+   "futures": 4.905
   },
   {
    "label": "Feb 2027",
    "cash": 4.37,
    "basis": -0.54,
    "futures_month": "Mar 27 Corn",
-   "futures": 4.91
+   "futures": 4.905
   },
   {
    "label": "Mar 2027",
    "cash": 4.41,
    "basis": -0.5,
    "futures_month": "Mar 27 Corn",
-   "futures": 4.91
+   "futures": 4.905
   },
   {
    "label": "Apr 2027",
    "cash": 4.44,
    "basis": -0.54,
    "futures_month": "May 27 Corn",
-   "futures": 4.98
+   "futures": 4.975
   },
   {
    "label": "May 2027",
    "cash": 4.46,
    "basis": -0.52,
    "futures_month": "May 27 Corn",
-   "futures": 4.98
+   "futures": 4.975
   },
   {
    "label": "Jun 2027",
    "cash": 4.51,
    "basis": -0.52,
    "futures_month": "Jul 27 Corn",
-   "futures": 5.0325
+   "futures": 5.0275
   },
   {
    "label": "Jul 2027",
    "cash": 4.51,
    "basis": -0.52,
    "futures_month": "Jul 27 Corn",
-   "futures": 5.0325
+   "futures": 5.0275
   },
   {
    "label": "Aug 2027",
