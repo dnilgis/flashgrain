@@ -641,7 +641,9 @@ if (typeof window !== 'undefined' && window.document) (function () {
   // Ask in the page which reading Jeff meant, big, with one button per reading. Saving waits until he picks.
   function askHours(inp, ask) {
     var box = $('hours-ask'), raw = inp.value.trim();
-    box.dataset.for = inp.dataset.loc + inp.dataset.d;
+    // already asking about this box and this text: leave the buttons alone (a blur would rebuild them under the tap)
+    if (!box.hidden && box.dataset.for === inp.dataset.loc + inp.dataset.d && box.dataset.raw === raw) return;
+    box.dataset.for = inp.dataset.loc + inp.dataset.d; box.dataset.raw = raw;
     box.innerHTML = '<p class="a-ask-q">' + esc(hoursName(inp)) + ': <b>' + esc(raw) + '</b>. Which one?</p><div class="a-actions">'
       + '<button class="a-btn a-pick" type="button" data-v="' + ask.pm + '">' + esc(FGA.hoursWords(ask.pm)) + '</button>'
       + '<button class="a-btn a-pick" type="button" data-v="' + ask.am + '">' + esc(FGA.hoursWords(ask.am)) + '</button></div>';
