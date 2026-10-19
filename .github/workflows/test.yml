@@ -1,0 +1,34 @@
+name: tests
+
+# Every test in the repo, on each push and pull request. No schedule: the harvester's own commits are
+# pushed with the workflow token, which does not start other workflows, and are ignored by path anyway.
+on:
+  push:
+    paths-ignore: ["data/bids.json", "data/refs/**", "feed/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Contract calendar
+        run: python tools/cbot_calendar.py --selftest
+      - name: Harvester selftest
+        run: python tools/harvest.py --selftest
+      - name: Python tests
+        run: python -m unittest discover -s test -p "test_*.py"
+      - name: Feed selftest
+        run: node tools/feed.mjs --selftest
+      - name: Node tests
+        run: node --test test/*.mjs

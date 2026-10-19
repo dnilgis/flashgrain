@@ -778,7 +778,39 @@ def assemble(old, wanted, site, now, fetch=None, backup=None, cal=None):
     return {"checked": stamp, "updated": stamp if not same else old.get("updated", stamp), "source": url, **data}
 
 
+def selftest():
+    """No network, no files written. Exit 1 on any failure."""
+    here = os.path.dirname(__file__)
+    fails = []
+    ok = lambda c, m: (print(("ok   " if c else "FAIL ") + m), c or fails.append(m))
+    b = build(open(os.path.join(here, "..", "test", "fixtures", "dtn-cash-page.html"), encoding="latin-1").read())
+    ok(b["futures"]["@C6Z"]["price"] == 4.67 and b["futures"]["@C6Z"]["change"] == -0.0725, "decode: Dec corn 467'0, -7'2")
+    ok(b["futures"]["@S6X"]["price"] == 12.535, "decode: Nov beans 1253'4")
+    ok(b["dtn"]["thorp"][0]["cash"] == 4.07 and b["dtn"]["thorp"][0]["basis"] == -0.6, "decode: hidden cash 4.07 and basis -0.60 (offset 3.17)")
+    ok((b["quote_time"], b["quote_time_source"]) == ("2026-10-19T13:19:58", "dtn"), "decode: trade time from the cell title")
+    ok(as_of_iso("10/16/26 09:30PM CDT") == "2026-10-16T21:30:00", "Price as of stamp -> Central ISO")
+    ok(eighths("501'6") == 5.0175 and eighths("-0'4") == -0.005, "eighths")
+    now = datetime(2026, 10, 19, 12, tzinfo=timezone.utc)
+    ok(yahoo_ticker("@C6Z", now) == "ZCZ26.CBT" and yahoo_ticker("@S9X", now) == "ZSX29.CBT", "yahoo_ticker")
+    ok(yahoo_ticker("@C5Z", now) == "ZCZ25.CBT" and yahoo_ticker("@C4Z", now) == "ZCZ34.CBT", "yahoo_ticker year digit")
+    cal = cbot()
+    ok(bool(cal.get("contracts")), "data/cbot.json loads")
+    ct = lambda y, mo, d, h, mi, off=6: datetime(y, mo, d, h + off, mi, tzinfo=timezone.utc)  # Central -> UTC
+    ok(closed_since(ct(2026, 10, 19, 13, 0, 5)) is None, "Mon 1:00 PM CDT: open")
+    ok(closed_since(ct(2026, 10, 19, 14, 0, 5)) == datetime(2026, 10, 19, 13, 20), "Mon 2:00 PM CDT: closed since 1:20")
+    ok(closed_since(ct(2026, 10, 24, 10, 0, 5)) == datetime(2026, 10, 23, 13, 20), "Saturday: closed since Fri 1:20")
+    ok(closed_since(ct(2026, 11, 26, 10, 0)) == datetime(2026, 11, 25, 13, 20), "Thanksgiving: closed since Wed 1:20")
+    ok(closed_since(ct(2026, 11, 27, 12, 30)) == datetime(2026, 11, 27, 12, 5), "Fri Nov 27: early close 12:05")
+    ok(not expired("@S6X", datetime(2026, 11, 13).date()) and expired("@S6X", datetime(2026, 11, 14).date()),
+       "@S6X expires after Fri Nov 13")
+    if fails:
+        raise SystemExit(1)
+
+
 def main():
+    if "--selftest" in sys.argv:
+        selftest()
+        return
     if len(sys.argv) >= 2 and sys.argv[1] == "--refs":
         harvest_refs()
         return
