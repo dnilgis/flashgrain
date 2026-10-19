@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Scripts only from this site. Third-party widgets (DTN) go in an iframe, never a script tag here. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'none'; img-src 'self'; connect-src 'self'">
 <title>Flash Grain | Target offers</title>
 <meta name="description" content="Place a target offer on corn or soybeans with Flash Grain LLC, Thorp and Granton, Wisconsin. Log in to the offer portal, request a login, or see your offers.">
 <meta name="robots" content="noindex, nofollow">
@@ -48,11 +50,6 @@
   <p><a href="./">Cash bids</a> &middot; <a href="discounts.html">2026 discount schedule</a></p>
 </footer>
 </div>
-<script>
-// The portal link is set in /admin (data/site.json portal_url); site.js does the same on the home page.
-fetch('data/site.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
-  if (/^https:\/\//.test(s.portal_url || '')) [].forEach.call(document.querySelectorAll('[data-portal]'), function (a) { a.href = s.portal_url; });
-}).catch(function () {});
-</script>
+<script src="assets/js/site.js?v=3"></script>
 </body>
 </html>

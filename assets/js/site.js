@@ -177,7 +177,15 @@
     else setTimeout(function () { if (strike.parentNode) strike.remove(); }, 1300);
   }
   var board = document.getElementById('board');
-  if (!board) return;
+  if (!board) {
+    // Pages without the board (offers): only the portal link from /admin (site.json portal_url).
+    if (document.querySelector && document.querySelector('[data-portal]') && typeof fetch === 'function') {
+      fetch('data/site.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
+        if (/^https:\/\//.test(s.portal_url || '')) [].forEach.call(document.querySelectorAll('[data-portal]'), function (a) { a.href = s.portal_url; });
+      }).catch(function () {});
+    }
+    return;
+  }
   var $ = function (id) { return document.getElementById(id); };
   function safe(fn) { try { fn(); } catch (e) { if (window.console) console.error(e); } }
   function getJSON(u) {
@@ -390,8 +398,11 @@
             el.className = '';
             el.innerHTML = '<div class="wx-now"><div class="t">' + t + '<sup>&deg;F</sup></div><div class="c">' + esc(cond) + '</div><div class="d">Wind ' + esc(wdir) + ' ' + esc(wnd) + (rh ? ' &middot; ' + rh : '') + (when ? ' &middot; Thorp, as of ' + when : '') + '</div></div>'
               + '<div class="wx-hr">' + h + '</div><ul class="wx-days">' + dl + '</ul>'
-              + (radar ? '<div class="wx-radar"><img alt="Radar loop, ' + esc(radar) + '" loading="lazy" decoding="async" src="https://radar.weather.gov/ridge/standard/' + esc(radar) + '_loop.gif" onerror="this.parentNode.remove()"></div>' : '')
+              + (radar ? '<div class="wx-radar"><img alt="Radar loop, ' + esc(radar) + '" loading="lazy" decoding="async" src="https://radar.weather.gov/ridge/standard/' + esc(radar) + '_loop.gif"></div>' : '')
               + '<p class="wx-cap"><span>National Weather Service, ' + esc(pt.gridId) + ' office' + (radar ? ' &middot; radar ' + esc(radar) : '') + '</span><a href="' + NWS + '" target="_blank" rel="noopener">Full forecast &rarr;</a></p>';
+            // No inline onerror (the page's CSP blocks inline handlers): a radar loop that fails to load is removed.
+            var img = el.querySelector('.wx-radar img');
+            if (img) img.addEventListener('error', function () { if (img.parentNode && img.parentNode.parentNode) img.parentNode.remove(); });
           });
       });
     }).catch(function () {
