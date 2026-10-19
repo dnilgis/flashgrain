@@ -1,7 +1,42 @@
 /* Flash Grain admin. Loads data/site.json from GitHub, edits it, saves it back with one commit.
    Needs a GitHub key with Contents: Read and write on this one repo (steps in the panel and the README).
-   Basis typed here sets the public cash price, so every save shows the price changes and asks first. */
-(function () {
+   Basis typed here sets the public cash price, so every save shows the price changes and asks first.
+   FGA below holds the pure rules (no page, no network) so test/admin-core.test.mjs can run them in node. */
+var FGA = (function () {
+  // "-0.60", "−.6", " -0,60 " -> -0.6 ; anything else -> NaN
+  function parseBasis(v) {
+    v = String(v).replace(/[−–—]/g, '-').replace(/,/g, '.').replace(/\s+/g, '');
+    return /^[+-]?(\d+\.?\d*|\.\d+)$/.test(v) ? Math.round(Number(v) * 100) / 100 : NaN;
+  }
+  // Hours as typed: "8-5", "7:30-4:30", "8a-12p", "call", "closed" -> "08:00-17:00" / "call" / "closed" / null.
+  function hoursParts(t) {
+    t = String(t || '').toLowerCase().replace(/[–—]/g, '-').replace(/\s+/g, '').replace(/to/g, '-');
+    if (/^(call|callahead|c)$/.test(t)) return 'call';
+    if (/^(closed|close|x)$/.test(t)) return 'closed';
+    var m = /^(\d{1,2})(?::(\d{2}))?(a|am|p|pm)?-(\d{1,2})(?::(\d{2}))?(a|am|p|pm)?$/.exec(t);
+    if (!m) return null;
+    var mins = function (h, mm, suf) {
+      h = +h; mm = +(mm || 0); if (mm > 59 || h > 24) return NaN;
+      if (suf) { if (h > 12 || h === 0) return NaN; return (suf[0] === 'p' ? (h % 12) + 12 : h % 12) * 60 + mm; }
+      return h * 60 + mm;
+    };
+    var o = mins(m[1], m[2], m[3]), c = mins(m[4], m[5], m[6]), shifted = false;
+    // bare closing hour at or before the opening hour is afternoon: 8-5 is 8 AM to 5 PM; 8-12 is 8 to noon
+    if (!m[6] && +m[4] > 0 && +m[4] < 12 && c <= o) { c += 12 * 60; shifted = true; }
+    return { o: o, c: c, bareClose: !m[6], openPM: !!(m[3] && m[3][0] === 'p'), shifted: shifted };
+  }
+  function hhmm(x) { return ('0' + Math.floor(x / 60)).slice(-2) + ':' + ('0' + x % 60).slice(-2); }
+  function textToHours(t) {
+    var p = hoursParts(t);
+    if (p === null || typeof p === 'string') return p;
+    if (!(p.o >= 0 && p.c > p.o && p.c <= 1440)) return null;
+    return hhmm(p.o) + '-' + hhmm(p.c);
+  }
+  return { parseBasis: parseBasis, textToHours: textToHours, hoursParts: hoursParts, hhmm: hhmm };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = FGA;
+
+if (typeof window !== 'undefined' && window.document) (function () {
   var $ = function (id) { return document.getElementById(id); };
   var FG = window.FG, esc = FG.esc;
   var API = 'https://api.github.com/repos/';
@@ -35,11 +70,7 @@
     });
   }
   function ref() { return '?ref=' + encodeURIComponent($('branch').value.trim()); }
-  // "-0.60", "−.6", " -0,60 " -> -0.6 ; anything else -> NaN
-  function parseBasis(v) {
-    v = String(v).replace(/[−–—]/g, '-').replace(/,/g, '.').replace(/\s+/g, '');
-    return /^[+-]?(\d+\.?\d*|\.\d+)$/.test(v) ? Math.round(Number(v) * 100) / 100 : NaN;
-  }
+  var parseBasis = FGA.parseBasis, textToHours = FGA.textToHours;
   function bidLocs(s) { return (s || S).locations.filter(function (l) { return l.bids; }); }
 
   // ---------- connect ----------
@@ -254,24 +285,6 @@
     if (p === 'call') return 'Call'; if (p === 'closed') return 'Closed';
     var t = function (m) { var h = Math.floor(m / 60) % 24, mm = m % 60; return (h % 12 || 12) + (mm ? ':' + ('0' + mm).slice(-2) : '') + (h < 12 ? 'a' : 'p'); };
     return t(p.o) + '–' + t(p.c);
-  }
-  function textToHours(t) {
-    t = String(t || '').toLowerCase().replace(/[–—]/g, '-').replace(/\s+/g, '').replace(/to/g, '-');
-    if (/^(call|callahead|c)$/.test(t)) return 'call';
-    if (/^(closed|close|x)$/.test(t)) return 'closed';
-    var m = /^(\d{1,2})(?::(\d{2}))?(a|am|p|pm)?-(\d{1,2})(?::(\d{2}))?(a|am|p|pm)?$/.exec(t);
-    if (!m) return null;
-    var mins = function (h, mm, suf) {
-      h = +h; mm = +(mm || 0); if (mm > 59 || h > 24) return NaN;
-      if (suf) { if (h > 12 || h === 0) return NaN; return (suf[0] === 'p' ? (h % 12) + 12 : h % 12) * 60 + mm; }
-      return h * 60 + mm;
-    };
-    var o = mins(m[1], m[2], m[3]), c = mins(m[4], m[5], m[6]);
-    // bare closing hour at or before the opening hour is afternoon: 8-5 is 8 AM to 5 PM; 8-12 is 8 to noon
-    if (!m[6] && +m[4] > 0 && +m[4] < 12 && c <= o) c += 12 * 60;
-    if (!(o >= 0 && c > o && c <= 1440)) return null;
-    var hh = function (x) { return ('0' + Math.floor(x / 60)).slice(-2) + ':' + ('0' + x % 60).slice(-2); };
-    return hh(o) + '-' + hh(c);
   }
   function drawHours() {
     var locs = S.locations.filter(function (l) { return l.hours; });
