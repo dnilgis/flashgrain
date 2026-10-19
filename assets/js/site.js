@@ -264,9 +264,12 @@
         if (gone) anyExpired = true;
         var ch = hasF && num(f.change) ? '<span class="' + (f.change > 0 ? 'up' : f.change < 0 ? 'dn' : 'fl') + '" aria-hidden="true">' + cents8(f.change, true) + '</span>' : '';
         var dash = '<span class="pend" aria-label="not available">—</span>';
+        // Phones under 400px hide the futures column; the same quote shows small under the cash instead.
+        var mini = hasF ? '<span class="fmini"><span class="vh">' + esc(m + ' futures ' + cents8Words(f.price) + (num(f.change) ? ', ' + cents8Words(f.change, true) : '')) + '</span><span aria-hidden="true">' + esc(m) + ' ' + cents8(f.price) + ch + '</span></span>'
+          : gone ? '<span class="fmini">' + esc(m) + ' futures expired</span>' : '';
         var k = current + '|' + r.commodity + '|' + r.label, val = show ? '$' + money(f.price + b) : '';
         html += '<tr><th scope="row" class="c sub">' + esc(r.label) + '</th>'
-          + '<td class="cash" data-k="' + esc(k) + '" data-v="' + esc(val) + '">' + (show ? val : dash) + '</td>'
+          + '<td class="cash" data-k="' + esc(k) + '" data-v="' + esc(val) + '">' + (show ? val : dash) + mini + '</td>'
           + '<td>' + (hasB ? basis(b) : dash) + '</td>'
           + '<td class="fut"' + (hasF ? ' aria-label="' + esc(m + ' futures ' + cents8Words(f.price) + (num(f.change) ? ', ' + cents8Words(f.change, true) : '')) + '"' : '') + '>'
           + (hasF ? '<span aria-hidden="true">' + cents8(f.price) + '</span>' + ch : gone ? '<span class="pend">' + esc(m) + ' expired</span>' : dash) + '</td></tr>';

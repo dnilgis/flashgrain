@@ -94,7 +94,10 @@ td.cash.tick{animation:tickcash 2.6s steps(1,end)}
 .up{color:var(--ink)}.dn{color:var(--down)}.fl{color:var(--ink2)}
 .fine{font-family:var(--mono);font-size:1.0625rem;color:var(--ink2);margin:12px 0 0;line-height:1.5;max-width:860px}
 .more{display:inline-block;padding:12px 0;min-height:44px;font-family:var(--mono);font-size:1.0625rem;color:var(--ink);text-underline-offset:3px}
-@media(max-width:399px){.fut{display:none}.board{table-layout:auto}}
+.fmini{display:none}
+@media(max-width:399px){.fut{display:none}.board{table-layout:auto}
+  .board td.cash .fmini{display:block;margin-top:2px;font-size:.9375rem;font-weight:500;color:var(--ink2);white-space:nowrap}
+  .board td.cash .fmini .up,.board td.cash .fmini .dn,.board td.cash .fmini .fl{min-width:0;margin-left:6px;font-size:1em}}
 @container bids (max-width:21rem){
   .board,.board tbody{display:block}.board thead,.board colgroup{display:none}
   .board tr{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;column-gap:16px;border-bottom:1px solid var(--line)}
