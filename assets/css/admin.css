@@ -293,3 +293,6 @@ body.admin .a-bids .bl-undo,body.admin .bl-loc~.bl-undo{min-height:44px}
 .a-adv summary{min-height:44px}
 .a-adv .a-help{margin:2px 0 6px}
 @media(min-width:1200px){body.admin .a-bar{flex-wrap:wrap}body.admin .a-bar .a-status{flex:1 1 0}.a-adv{flex-basis:auto}}
+
+/* futures source next to a price that is not DTN's */
+.bl-src{color:var(--flash);font-size:1rem}

@@ -176,12 +176,25 @@ var FGA = (function () {
     if (e.status >= 500) return 'GitHub is having trouble. ' + none + ' Try again in a minute.';
     return 'GitHub said no (' + (e.message || 'error ' + e.status) + '). ' + none + ' Try again in a minute.';
   }
+  // Where each shown contract's futures came from. bids: data/bids.json; syms: symbols of rows on the site.
+  // Uses futures_sources {sym: source} when the harvester writes it, else the old one-word futures_source.
+  function futuresSources(bids, syms) {
+    var per = bids && bids.futures_sources, all = (bids && bids.futures_source) || 'dtn', out = { notDtn: [], missing: [], mixed: !per && all.indexOf('+') >= 0 ? all : '' };
+    syms.forEach(function (s) {
+      if (!bids || !bids.futures || !bids.futures[s] || !isNum(bids.futures[s].price)) return out.missing.push(s);
+      if (out.mixed) return;
+      var src = per ? per[s] : all;
+      if (src !== 'dtn') out.notDtn.push({ sym: s, src: src || 'unknown' });
+    });
+    return out;
+  }
+  function cropOf(sym) { return /^@C/.test(sym) ? 'corn' : /^@S/.test(sym) ? 'soybeans' : /^@W/.test(sym) ? 'wheat' : ''; }
   // GitHub's key-expiry header, "2026-12-01 00:00:00 UTC" or "2026-12-01 00:00:00 -0600" -> "2026-12-01"
   function expiryFromHeader(h) { var m = /^(\d{4}-\d{2}-\d{2})/.exec(h || ''); return m ? m[1] : null; }
 
   return { parseBasis: parseBasis, textToHours: textToHours, hoursParts: hoursParts, hhmm: hhmm, hoursAsk: hoursAsk, hoursWords: hoursWords, clockWords: clockWords,
     money: money, basisTxt: basisTxt, centsTxt: centsTxt, symName: symName, labelMonth: labelMonth, review: review,
-    merge3: merge3, pathWords: pathWords, errWords: errWords, expiryFromHeader: expiryFromHeader,
+    merge3: merge3, pathWords: pathWords, errWords: errWords, expiryFromHeader: expiryFromHeader, futuresSources: futuresSources, cropOf: cropOf,
     MON: MON, CODEMON: CODEMON, LISTED: LISTED };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = FGA;
@@ -282,8 +295,14 @@ if (typeof window !== 'undefined' && window.document) (function () {
   function drawChips() {
     var out = [], b = BIDS;
     if (b) {
-      var src = b.futures_source || 'dtn', age = FG.ageMin(b.checked || b.updated);
-      out.push(chip('ok', 'Futures <b>' + esc(src.split('+').map(function (x) { return SRC[x] || x; }).join(' + ')) + '</b>'));
+      var age = FG.ageMin(b.checked || b.updated), shown = [];
+      (S ? S.bids.rows : []).forEach(function (r) { if (r.show && shown.indexOf(r.symbol) < 0) shown.push(r.symbol); });
+      var fs = FGA.futuresSources(b, shown);
+      // say plainly when a price on the site is not DTN's, contract by contract
+      if (fs.mixed) out.push(chip('bad', 'Futures <b>' + esc(fs.mixed.split('+').map(function (x) { return SRC[x] || x; }).join(' + ')) + '</b>, some not DTN'));
+      else if (!fs.notDtn.length && !fs.missing.length) out.push(chip('ok', 'Futures <b>DTN</b>'));
+      fs.notDtn.forEach(function (x) { out.push(chip('bad', esc(FGA.symName(x.sym) + ' ' + FGA.cropOf(x.sym)) + ' <b>' + esc(SRC[x.src] || x.src) + ', not DTN</b>')); });
+      fs.missing.forEach(function (s) { out.push(chip('bad', esc(FGA.symName(s) + ' ' + FGA.cropOf(s)) + ' <b>no price</b>')); });
       var t = new Date(Date.parse(b.checked || b.updated)).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       out.push(chip(age > 25 ? 'bad' : 'ok', 'Checked <b>' + esc(t) + '</b> · ' + (isFinite(age) ? Math.max(0, Math.round(age)) + ' min ago' : '?')));
     } else out.push(chip('bad', 'Feed <b>no data</b>'));
@@ -360,7 +379,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
           var p = x.p, r = p.row || {}, f = futFor(p.symbol);
           return '<div class="bl-row' + (r.show ? ' on' : '') + '" data-c="' + x.i + '">'
             + '<span class="bl-name">' + esc(p.label) + '</span>'
-            + '<span class="bl-fut">' + symName(p.symbol) + ' <b>' + (f ? FG.cents8(f.price) : 'no quote') + '</b><input class="sym" data-f="symbol" value="' + esc(p.symbol) + '" aria-label="Futures symbol, ' + esc(c + ' ' + p.label) + '"></span>'
+            + '<span class="bl-fut"><span class="bl-sn">' + symName(p.symbol) + '</span> <b>' + (f ? FG.cents8(f.price) : 'no quote') + '</b><span class="bl-src"></span><input class="sym" data-f="symbol" value="' + esc(p.symbol) + '" aria-label="Futures symbol, ' + esc(c + ' ' + p.label) + '"></span>'
             + '<span class="bl-locs">' + locs.map(function (l, li) {
               var b = r.basis && r.basis[l.id];
               return '<span class="bl-loc' + (li ? ' follow' : '') + '"><span class="bl-ln">' + esc(l.name) + '</span>'
@@ -382,6 +401,10 @@ if (typeof window !== 'undefined' && window.document) (function () {
       cell.textContent = f && FG.num(n) ? '$' + FG.money(f.price + n) : '';
     });
     row.querySelector('.bl-fut b').textContent = f ? FG.cents8(f.price) : 'no quote';
+    row.querySelector('.bl-sn').textContent = FGA.symName(sym);
+    // not DTN, or only a preview the site does not have: say so next to the price
+    var per = BIDS && BIDS.futures_sources, src = f && f.from ? f.from + ', preview only' : per && per[sym] && per[sym] !== 'dtn' ? (SRC[per[sym]] || per[sym]) + ', not DTN' : '';
+    row.querySelector('.bl-src').textContent = src ? ' ' + src : '';
   }
   $('bids-list').addEventListener('change', function (e) {
     if (e.target.dataset.f !== 'show') return;

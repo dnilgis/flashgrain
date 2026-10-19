@@ -114,3 +114,12 @@ test('merge: rows matched by crop and month; a real clash is reported, not guess
   assert.ok(row(m.merged, 'Corn', 'Nov 26'));                              // their new row kept
   assert.equal(row(m.merged, 'Soybeans', 'Fall 28').show, false);          // my change kept
 });
+
+test('futures source per contract: says plainly when a shown price is not DTN (verdict 2)', () => {
+  const shown = ['@C6Z', '@C7Z', '@S6X', '@S7F'];
+  const b = Object.assign({}, BIDS, { futures_sources: { '@C6Z': 'dtn', '@C7Z': 'yahoo', '@S6X': 'dtn' } });
+  assert.deepEqual(A.futuresSources(b, shown), { notDtn: [{ sym: '@C7Z', src: 'yahoo' }], missing: ['@S7F'], mixed: '' });
+  // the file as it is today (no futures_sources, futures_source "dtn"): all DTN
+  assert.deepEqual(A.futuresSources(BIDS, ['@C6Z', '@S6X']), { notDtn: [], missing: [], mixed: '' });
+  assert.equal(A.futuresSources(Object.assign({}, BIDS, { futures_source: 'dtn+yahoo' }), ['@C6Z']).mixed, 'dtn+yahoo');
+});
