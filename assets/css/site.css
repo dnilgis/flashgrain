@@ -49,9 +49,9 @@ main{container:page/inline-size}
 /* bids */
 .bids{padding:26px 0 0}
 .bids-head h2{font-size:clamp(2.75rem,7vw,4rem)}
-.bids-meta{display:flex;flex-wrap:wrap;gap:4px 0;margin:10px 0 0;min-height:1.5em;font-family:var(--mono);font-size:1.0625rem;line-height:1.45;color:var(--ink2)}
+.bids-meta{display:flex;flex-wrap:wrap;gap:4px 0;margin:10px 0 0;min-height:1.45em;font-family:var(--mono);font-size:1.0625rem;line-height:1.45;color:var(--ink2)}
 @media(min-width:560px){.bids-meta>span:not(:empty)+span:not(:empty)::before{content:"\00b7";margin:0 8px;color:var(--ink2)}}
-@media(max-width:559px){.bids-meta{flex-direction:column}}
+@media(max-width:559px){.bids-meta{flex-direction:column;min-height:calc(3 * 1.45em + 8px)}}
 .stamp i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mute);margin-right:7px;vertical-align:1px}
 .stamp.live i{background:var(--flash);animation:p 2.4s infinite}
 .stamp.warn{color:var(--flash)}
@@ -84,14 +84,22 @@ td.cash.tick{animation:tickcash 2.6s steps(1,end)}
 .board .c{font-family:var(--cond);font-size:2rem;font-weight:800;text-transform:uppercase;line-height:1;text-align:left;letter-spacing:0;color:var(--ink)}
 .board .c.sub{font-size:1.5rem;font-weight:600}
 .board tr.grp th{border-top:3px solid var(--ink);border-bottom:0;padding:16px 0 2px}
-.board tbody:first-of-type tr.grp th{border-top:0;padding-top:10px}
+.board #msg-body+tbody tr.grp th{border-top:0;padding-top:10px}
+.board tbody[hidden]{display:none!important}
+.board td.msgc{text-align:left;padding:4px 0 14px;font-family:var(--sans);font-size:1rem;border-bottom:0}
+.board td.msgc .feed-msg{margin:0}
 .board td.cash{font-size:clamp(2rem,6vw,2.75rem);font-weight:700;color:var(--flash)}
 .board .pend{color:var(--mute);font-weight:500}
 .up,.dn,.fl{display:inline-block;min-width:4.5ch;text-align:right;font-size:.85em;margin-left:6px}
 .up{color:var(--ink)}.dn{color:var(--down)}.fl{color:var(--ink2)}
 .fine{font-family:var(--mono);font-size:1.0625rem;color:var(--ink2);margin:12px 0 0;line-height:1.5;max-width:860px}
 .more{display:inline-block;padding:12px 0;min-height:44px;font-family:var(--mono);font-size:1.0625rem;color:var(--ink);text-underline-offset:3px}
-@media(max-width:399px){.fut{display:none}.board{table-layout:auto}}
+.fmini{display:none}
+.board .c.sub .cmo{display:block;margin-top:4px;font-family:var(--mono);font-size:.875rem;font-weight:500;text-transform:none;color:var(--ink2);letter-spacing:0}
+@media(max-width:399px){.fut{display:none}.board{table-layout:auto}
+  .board .c.sub .cmo{display:none}
+  .board td.cash .fmini{display:block;margin-top:2px;font-size:.9375rem;font-weight:500;color:var(--ink2);white-space:nowrap}
+  .board td.cash .fmini .up,.board td.cash .fmini .dn,.board td.cash .fmini .fl{min-width:0;margin-left:6px;font-size:1em}}
 @container bids (max-width:21rem){
   .board,.board tbody{display:block}.board thead,.board colgroup{display:none}
   .board tr{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;column-gap:16px;border-bottom:1px solid var(--line)}
@@ -162,6 +170,7 @@ section h2{font-size:clamp(2rem,4.4vw,2.75rem);margin-bottom:10px}
 .wx-cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:1rem;color:var(--ink2);margin:10px 0 0}
 .wx-cap a{color:var(--ink2);display:inline-block;padding:12px 0;margin:-12px 0}
 .wx-err{font-family:var(--mono);font-size:1.0625rem;color:var(--ink2);padding:16px 0}
+.wx-err a{display:inline-block;min-height:44px;padding:12px 0;line-height:20px}
 
 /* footer */
 footer{margin-top:56px;border-top:3px solid var(--ink);padding:16px 0 44px;font-family:var(--mono);font-size:1.0625rem;color:var(--ink2);line-height:1.6}
@@ -192,7 +201,7 @@ abbr[title]{text-decoration:none}
 /* 404 */
 .nf{padding:60px 0}
 
-@media(prefers-reduced-motion:reduce){.stamp.live i{animation:none}}
+@media(prefers-reduced-motion:reduce){.stamp.live i{animation:none}#strike{display:none}}
 
 @media print{
   :root{--bg:#fff;--ink:#000;--ink2:#111;--mute:#111;--line:#000;--flash:#000;--down:#111}

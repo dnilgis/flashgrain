@@ -24,6 +24,13 @@
     return signed ? (v > 0 ? 'up ' + s : v < 0 ? 'down ' + s : 'unchanged') : s;
   }
   function monthOf(sym) { var m = /([A-Z])(\d)?$/.exec(sym || ''); return m ? MONTH[m[1]] : ''; }
+  // "@C6Z" -> "Dec 26" (DTN symbols carry the last digit of the year; contracts run at most a few years out).
+  function contractName(sym, d) {
+    var m = /(\d)([FGHJKMNQUVXZ])$/.exec(sym || ''); if (!m) return monthOf(sym);
+    var y = +(d || new Date()).toLocaleDateString('en-CA', { timeZone: TZ }).slice(0, 4), yy = y - y % 10 + +m[1];
+    if (yy < y - 1) yy += 10; else if (yy > y + 8) yy -= 10;
+    return MONTH[m[2]] + ' ' + String(yy).slice(2);
+  }
   function parseH(h) {
     var m = /^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$/.exec(h || '');
     if (m) return { o: +m[1] * 60 + +m[2], c: +m[3] * 60 + +m[4] };
@@ -54,16 +61,30 @@
   }
   function central(d) {
     var o = {};
-    new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false })
+    new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: 'numeric', hour12: false })
       .formatToParts(d || new Date()).forEach(function (p) { o[p.type] = p.value; });
-    return { day: o.weekday.toLowerCase().slice(0, 3), min: (+o.hour % 24) * 60 + +o.minute };
+    return { day: o.weekday.toLowerCase().slice(0, 3), min: (+o.hour % 24) * 60 + +o.minute, ymd: o.year + '-' + o.month + '-' + o.day };
   }
-  // CBOT corn/soy: Sun-Fri 7:00 PM - 7:45 AM and Mon-Fri 8:30 AM - 1:20 PM Central. Exchange holidays not modelled.
+  function addDays(s, n) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3] + n, 12)).toISOString().slice(0, 10); }
+  function dowOf(s) { return (new Date(s + 'T12:00:00Z').getUTCDay() + 6) % 7; } // index into DAYS (mon = 0)
+  function holiday(s) { return !!(CAL && CAL.holidays && CAL.holidays.indexOf(s) >= 0); }
+  // Minutes after midnight that grains close on an early-close day ("12:05" -> 725), or null.
+  function earlyClose(s) { var m = /^(\d{1,2}):(\d{2})$/.exec(CAL && CAL.early_close && CAL.early_close[s] || ''); return m ? +m[1] * 60 + +m[2] : null; }
+  function dayClose(s) { var e = earlyClose(s); return e == null ? 800 : Math.min(800, e); }
+  // The overnight session that opens at 7 PM on Central date s trades for the next day. None on Fri/Sat, none
+  // into a holiday, and none on a holiday night before an early-close day (Thanksgiving: no Thursday night).
+  function eveningOpen(s) {
+    var i = dowOf(s), next = addDays(s, 1);
+    if (!(i === 6 || i <= 3) || holiday(next)) return false;
+    return !(holiday(s) && earlyClose(next) != null);
+  }
+  // CBOT corn/soy: Sun-Fri 7:00 PM - 7:45 AM and Mon-Fri 8:30 AM - 1:20 PM Central, less the holidays and early
+  // closes in data/cbot.json. No calendar file: weekly hours only.
   function cbotOpen(d) {
     var n = central(d), i = DAYS.indexOf(n.day), wk = i <= 4;
-    if (wk && n.min >= 510 && n.min < 800) return true;
-    if (wk && n.min < 465) return true;
-    if ((n.day === 'sun' || i <= 3) && n.min >= 1140) return true;
+    if (wk && !holiday(n.ymd) && n.min >= 510 && n.min < dayClose(n.ymd)) return true;
+    if (wk && n.min < 465 && eveningOpen(addDays(n.ymd, -1))) return true;
+    if (n.min >= 1140 && eveningOpen(n.ymd)) return true;
     return false;
   }
   function openState(loc, bare) {
@@ -71,13 +92,13 @@
     var n = central(), i = DAYS.indexOf(n.day), today = parseH(loc.hours[n.day]), name = bare ? '' : esc(loc.name) + ' ';
     if (bare) {
       if (today === 'call') return '<b>Call ahead</b> today';
-      if (today.o != null && n.min >= today.o && n.min < today.c) return '<b class="on">Open now</b> until ' + clock(today.c);
+      if (today.o != null && n.min >= today.o && n.min < today.c) return '<b class="on">Open now</b> until ' + clock(today.c) + ' CT';
     }
     if (today === 'call') return '<b>' + name + '</b>call ahead to deliver';
-    if (today.o != null && n.min >= today.o && n.min < today.c) return '<b class="on">' + name + 'open now</b> until ' + clock(today.c);
+    if (today.o != null && n.min >= today.o && n.min < today.c) return '<b class="on">' + name + 'open now</b> until ' + clock(today.c) + ' CT';
     for (var k = 0; k < 7; k++) {
       var d = DAYS[(i + k) % 7], p = parseH(loc.hours[d]), when = k === 0 ? 'today' : k === 1 ? 'tomorrow' : DAYN[d];
-      if (p.o != null && (k > 0 || n.min < p.o)) return '<b>' + name + 'closed</b> · opens ' + when + ' ' + clock(p.o);
+      if (p.o != null && (k > 0 || n.min < p.o)) return '<b>' + name + 'closed</b> · opens ' + when + ' ' + clock(p.o) + ' CT';
       if (p === 'call' && k > 0) return '<b>' + name + 'closed today</b> · call ahead ' + when;
     }
     return '<b>' + name + 'closed</b>';
@@ -98,14 +119,19 @@
     var wd = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
     return wd + ' ' + clock(+m[4] * 60 + +m[5]);
   }
-  // With CBOT shut, a stamp read after the 1:20 PM close (or over the weekend) is the day's close, not a
-  // trade at that minute: the backup feed stamps when it READ the price. Say "Fri close" instead of "Fri 4:25 PM".
+  // With CBOT shut, a stamp read after the close (or over a weekend or holiday) is the last close, not a trade
+  // at that minute: the backup feed, and the harvester's run time (quote_time_source "run"), stamp when the price
+  // was READ. Say "Fri close" instead of "Fri 4:25 PM". Inside a session it is a plain wall time.
   function closeLabel(iso) {
     var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || '');
     if (!m) return '';
-    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)), dow = d.getUTCDay(), min = +m[4] * 60 + +m[5];
-    if (dow === 6 || (dow === 0 && min < 1140)) { d.setUTCDate(d.getUTCDate() - (dow === 6 ? 1 : 2)); return d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) + ' close'; }
-    if (dow >= 1 && dow <= 5 && min >= 800 && min < 1140) return d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) + ' close';
+    var s = m[1] + '-' + m[2] + '-' + m[3], min = +m[4] * 60 + +m[5], i = dowOf(s);
+    var name = function (x) { return new Date(x + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) + ' close'; };
+    var lastDay = function (x) { for (var k = 0; k < 10 && (dowOf(x) > 4 || holiday(x)); k++) x = addDays(x, -1); return x; };
+    if (min >= 1140 && eveningOpen(s)) return wall(iso);
+    if (i > 4 || holiday(s)) return name(lastDay(s));
+    if (min < 465) return eveningOpen(addDays(s, -1)) ? wall(iso) : name(lastDay(addDays(s, -1)));
+    if (min >= dayClose(s)) return name(s);
     return wall(iso);
   }
   // "Oct 26" -> "2026-10"; "Fall 26" -> "2026-12" (harvest runs to year end). Unknown labels never expire.
@@ -119,15 +145,54 @@
   }
   function ageMin(isoZ) { var t = Date.parse(isoZ || ''); return isNaN(t) ? Infinity : (Date.now() - t) / 60000; }
 
-  window.FG = { labelUntil: labelUntil, cbotOpen: cbotOpen, ageMin: ageMin, closeLabel: closeLabel, DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, num: num };
+  // ---------- CBOT calendar (data/cbot.json, written by tools/cbot_calendar.py) ----------
+  // Holidays, early closes, first notice (fnd) and last trading day (ltd) per contract. Missing file = no calendar:
+  // nothing expires and only the weekly hours apply, as before the file existed. tools/feed.mjs sets FG_CBOT first.
+  var CAL = null;
+  function setCalendar(c) { CAL = c && typeof c === 'object' ? c : null; return CAL; }
+  if (window.FG_CBOT) setCalendar(window.FG_CBOT);
+  function ymd(d) { return (d || new Date()).toLocaleDateString('en-CA', { timeZone: TZ }); } // Central date, YYYY-MM-DD
+  function contractDates(sym) { return CAL && CAL.contracts && CAL.contracts[sym] || null; }
+  // A contract is expired from the Central day after its last trading day. Its last price is a final settle,
+  // not a market: a cash bid built on it would be a guess.
+  function expired(sym, d) { var c = contractDates(sym); return !!(c && /^\d{4}-\d{2}-\d{2}$/.test(c.ltd || '') && ymd(d) > c.ltd); }
+  // The futures quote a row may use, or null: no quote, no price, or the contract has expired. The page and
+  // tools/feed.mjs both go through this, so a row is dashed on the page exactly when it leaves the feed.
+  function quote(sym, futures, d) {
+    var f = futures && futures[sym];
+    if (!f || !num(f.price) || expired(sym, d)) return null;
+    return f;
+  }
+  var calReady = Promise.resolve(CAL);
+  if (!CAL && typeof fetch === 'function') {
+    try {
+      // site.js sits in assets/js/, the calendar in data/: works from / and from /admin/ alike.
+      var calUrl = new URL('../../data/cbot.json', (document.currentScript && document.currentScript.src) || location.href).href;
+      calReady = fetch(calUrl).then(function (r) { return r.ok ? r.json() : null; }).then(setCalendar, function () { return null; });
+    } catch (e) {}
+  }
+
+  window.FG = { labelUntil: labelUntil, cbotOpen: cbotOpen, ageMin: ageMin, closeLabel: closeLabel, DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, contractName: contractName, num: num,
+    setCalendar: setCalendar, calReady: calReady, contractDates: contractDates, holiday: holiday, earlyClose: earlyClose, expired: expired, quote: quote, ymd: ymd };
 
   // ---------- page ----------
+  // The bolt plays on every load, except for people who asked their device for less motion: then it never shows.
   var strike = document.getElementById('strike');
   if (strike) {
-    setTimeout(function () { if (strike.parentNode) strike.remove(); }, 1300);
+    var still = false; try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    if (still) strike.remove();
+    else setTimeout(function () { if (strike.parentNode) strike.remove(); }, 1300);
   }
   var board = document.getElementById('board');
-  if (!board) return;
+  if (!board) {
+    // Pages without the board (offers): only the portal link from /admin (site.json portal_url).
+    if (document.querySelector && document.querySelector('[data-portal]') && typeof fetch === 'function') {
+      fetch('data/site.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
+        if (/^https:\/\//.test(s.portal_url || '')) [].forEach.call(document.querySelectorAll('[data-portal]'), function (a) { a.href = s.portal_url; });
+      }).catch(function () {});
+    }
+    return;
+  }
   var $ = function (id) { return document.getElementById(id); };
   function safe(fn) { try { fn(); } catch (e) { if (window.console) console.error(e); } }
   function getJSON(u) {
@@ -145,7 +210,9 @@
   var FALLBACK_TEL = '715-653-6585';
   function phone() { return (SITE && SITE.business && SITE.business.phone) || FALLBACK_TEL; }
   function callMsg(lead) {
-    var m = $('feed-msg'); m.hidden = false;
+    // The message sits in its own row at the top of the board, where the cash prices would be, so showing it
+    // only pushes down what is below the board (no layout jump above the fold).
+    var m = $('feed-msg'); $('msg-body').hidden = false;
     m.innerHTML = esc(lead) + ' Call <a href="tel:' + esc(phone().replace(/\D/g, '')) + '">' + esc(phone()) + '</a> for today’s bid.';
   }
   function feedState() {
@@ -172,18 +239,20 @@
       var downAt = BIDS.checked || BIDS.updated, longAgo = ageMin(downAt) > 24 * 60;
       txt = 'Bids not updating since ' + new Date(Date.parse(downAt)).toLocaleString('en-US', longAgo
         ? { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }
-        : { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' });
+        : { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' }) + ' CT';
     }
     else {
       // Lead with when the harvester last checked (every 10 minutes). Closed market: say whose close the prices are.
-      var chk = new Date(Date.parse(BIDS.checked || BIDS.updated)).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' });
+      // Today: "Futures checked 1:50 PM CT"; another day keeps its weekday.
+      var chkD = new Date(Date.parse(BIDS.checked || BIDS.updated)), sameDay = ymd(chkD) === ymd();
+      var chk = chkD.toLocaleString('en-US', sameDay ? { timeZone: TZ, hour: 'numeric', minute: '2-digit' } : { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' }) + ' CT';
       var cl = !market && BIDS.quote_time ? closeLabel(BIDS.quote_time) : '';
-      txt = 'Checked ' + chk + (market ? '' : ' · CBOT closed' + (/close$/.test(cl) ? ', prices at ' + cl : ''));
+      txt = 'Futures checked ' + chk + (market ? '' : ' · CBOT closed' + (/close$/.test(cl) ? ', prices at ' + cl : ''));
     }
     $('asof').textContent = txt;
     st.className = 'stamp' + (feed === 'ok' && market ? ' live' : '') + (feed !== 'ok' ? ' warn' : '');
     var bset = SITE.bids.basis_set ? new Date(SITE.bids.basis_set) : null;
-    $('basis-set').textContent = bset && !isNaN(bset) ? 'Basis set ' + bset.toLocaleString('en-US', { timeZone: TZ, weekday: 'short', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+    $('basis-set').textContent = bset && !isNaN(bset) ? 'Basis set ' + bset.toLocaleString('en-US', { timeZone: TZ, weekday: 'short', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' CT' : '';
 
     // rows grouped by commodity in first-appearance order
     var groups = [], by = {};
@@ -194,29 +263,33 @@
       if (!by[r.commodity]) { by[r.commodity] = []; groups.push(r.commodity); }
       by[r.commodity].push(r);
     });
-    var html = '', months = [];
+    var html = '', anyExpired = false, anyMissing = false;
     groups.forEach(function (c) {
       html += '<tbody><tr class="grp"><th scope="rowgroup" colspan="4" class="c">' + esc(c) + '</th></tr>';
       by[c].forEach(function (r) {
-        var f = BIDS && BIDS.futures && BIDS.futures[r.symbol], b = r.basis ? r.basis[current] : null;
-        var hasB = num(b), hasF = f && num(f.price), show = hasB && hasF && feed === 'ok';
-        var m = monthOf(r.symbol); if (m && months.indexOf(c + ': ' + m) < 0) months.push(c + ': ' + m);
+        var f = quote(r.symbol, BIDS && BIDS.futures), b = r.basis ? r.basis[current] : null, gone = expired(r.symbol);
+        var hasB = num(b), hasF = !!f, show = hasB && hasF && feed === 'ok';
+        var m = monthOf(r.symbol);
+        if (gone) anyExpired = true; else if (!hasF) anyMissing = true;
         var ch = hasF && num(f.change) ? '<span class="' + (f.change > 0 ? 'up' : f.change < 0 ? 'dn' : 'fl') + '" aria-hidden="true">' + cents8(f.change, true) + '</span>' : '';
         var dash = '<span class="pend" aria-label="not available">—</span>';
+        // Phones under 400px hide the futures column; the same quote shows small under the cash instead.
+        var mini = hasF ? '<span class="fmini"><span class="vh">' + esc(m + ' futures ' + cents8Words(f.price) + (num(f.change) ? ', ' + cents8Words(f.change, true) : '')) + '</span><span aria-hidden="true">' + esc(contractName(r.symbol)) + ' ' + cents8(f.price) + ch + '</span></span>'
+          : gone ? '<span class="fmini">' + esc(contractName(r.symbol)) + ' futures expired</span>' : '';
         var k = current + '|' + r.commodity + '|' + r.label, val = show ? '$' + money(f.price + b) : '';
-        html += '<tr><th scope="row" class="c sub">' + esc(r.label) + '</th>'
-          + '<td class="cash" data-k="' + esc(k) + '" data-v="' + esc(val) + '">' + (show ? val : dash) + '</td>'
+        html += '<tr><th scope="row" class="c sub">' + esc(r.label) + (m ? '<span class="cmo">' + esc(contractName(r.symbol)) + ' futures</span>' : '') + '</th>'
+          + '<td class="cash" data-k="' + esc(k) + '" data-v="' + esc(val) + '">' + (show ? val : dash) + mini + '</td>'
           + '<td>' + (hasB ? basis(b) : dash) + '</td>'
           + '<td class="fut"' + (hasF ? ' aria-label="' + esc(m + ' futures ' + cents8Words(f.price) + (num(f.change) ? ', ' + cents8Words(f.change, true) : '')) + '"' : '') + '>'
-          + (hasF ? '<span aria-hidden="true">' + cents8(f.price) + '</span>' + ch : dash) + '</td></tr>';
+          + (hasF ? '<span aria-hidden="true">' + cents8(f.price) + '</span>' + ch : gone ? '<span class="pend">' + esc(contractName(r.symbol)) + ' expired</span>' : dash) + '</td></tr>';
       });
       html += '</tbody>';
     });
     var table = board.parentNode;
-    [].slice.call(table.querySelectorAll('tbody')).forEach(function (t) { t.remove(); });
+    [].slice.call(table.querySelectorAll('tbody:not(#msg-body)')).forEach(function (t) { t.remove(); });
     if (!html) html = '<tbody><tr><td colspan="4" class="pend">No bids posted. Call ' + esc(phone()) + '.</td></tr></tbody>';
     table.insertAdjacentHTML('beforeend', html);
-    board = table.querySelector('tbody');
+    board = table.querySelector('tbody:not(#msg-body)');
 
     // flash: cash cells whose value moved since the last refresh, and the stamp when the quote time moved
     var flash = flashNext; flashNext = false;
@@ -229,17 +302,21 @@
     if (flash && q && lastQuote && q !== lastQuote) { st.classList.remove('tick'); void st.offsetWidth; st.classList.add('tick'); }
     if (q) lastQuote = q;
 
-    if (feed === 'ok') { $('feed-msg').hidden = true; $('feed-msg').innerHTML = ''; }
+    if (feed === 'ok') { $('msg-body').hidden = true; $('feed-msg').innerHTML = ''; }
     else callMsg('Cash prices are hidden until the futures feed is back.');
-    $('bids-note').textContent = 'Cash = CBOT futures + basis, $/bu. ' + (months.length ? months.join(', ') + ' futures. ' : '') + (SITE.bids.footnote || '');
+    // Each row names its own contract now, so no crop-wide "Corn: Dec" line that a Fall 27 row would contradict.
+    $('bids-note').textContent = 'Cash = CBOT futures + basis, $/bu. '
+      + (anyMissing && feed === 'ok' ? 'A dash = no futures price right now. Call for a bid. ' : '')
+      + (anyExpired ? 'Expired = that futures contract has stopped trading. Call for a bid. ' : '') + (SITE.bids.footnote || '');
   }
 
   function render() {
-    var biz = SITE.business, tel = (biz.phone || '').replace(/\D/g, '');
     safe(function () {
+      // No phone in site.json (or no business block at all): keep the number printed in the HTML, never an empty tel: link.
+      var biz = SITE.business || {}, tel = phone().replace(/\D/g, '');
       document.querySelectorAll('[data-tel]').forEach(function (a) { a.href = 'tel:' + tel; });
       var call = document.querySelector('.call');
-      if (call) call.innerHTML = esc(biz.phone) + '<span><span class="vh">, </span>' + esc(biz.phone_note) + '</span>';
+      if (call) call.innerHTML = esc(phone()) + (biz.phone_note ? '<span><span class="vh">, </span>' + esc(biz.phone_note) + '</span>' : '');
     });
     safe(function () {
       // Alert bar. notice_until (YYYY-MM-DD, Central) hides it after that day without anyone remembering to.
@@ -249,12 +326,12 @@
       $('alert').hidden = !list.length;
     });
     safe(function () {
-      var biz = SITE.business || {}, tel = String(biz.phone || '715-653-6585').replace(/\D/g, '');
+      var tel = phone().replace(/\D/g, '');
       $('loc-list').innerHTML = SITE.locations.map(function (l) {
         var s = l.hours ? summary(l.hours) : '', now = l.hours ? openState(l, true) : '';
         var url = mapUrl(l), note = l.note && s.toLowerCase().indexOf(l.note.toLowerCase()) < 0 ? l.note : '';
         return '<li class="loc"><div class="loc-top"><b>' + esc(l.name) + '</b>' + (now ? '<span class="loc-now">' + now + '</span>' : '') + '</div>'
-          + (l.address || s ? '<p class="loc-info">' + [l.address, s].filter(Boolean).map(esc).join(' · ') + '</p>' : '')
+          + (l.address || s ? '<p class="loc-info">' + [l.address, /\d/.test(s) ? s + ' CT' : s].filter(Boolean).map(esc).join(' · ') + '</p>' : '')
           + (note ? '<p class="loc-note">' + esc(note) + '</p>' : '')
           + '<p class="loc-acts">' + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">Directions<span class="vh"> to ' + esc(l.name) + ', opens Google Maps</span></a>' : '')
           + '<a href="tel:' + tel + '">Call<span class="vh"> about ' + esc(l.name) + '</span></a></p></li>';
@@ -286,7 +363,7 @@
 
   var failedAt = null;
   function load() {
-    return Promise.all([getJSON('data/site.json'), getJSON('data/bids.json').catch(function () { return BIDS || null; })])
+    return Promise.all([getJSON('data/site.json'), getJSON('data/bids.json').catch(function () { return BIDS || null; }), calReady])
       .then(function (r) {
         if (SITE && BIDS && r[1] && (r[1].checked !== BIDS.checked || JSON.stringify(r[1].futures) !== JSON.stringify(BIDS.futures))) flashNext = true;
         SITE = r[0]; BIDS = r[1]; failedAt = null;
@@ -334,12 +411,15 @@
               var pp = p.probabilityOfPrecipitation && p.probabilityOfPrecipitation.value;
               return '<li><b>' + name + '</b><span>' + esc(p.shortForecast) + '</span><em><small>' + (pp ? n0(pp) + '%' : '') + '</small>' + (d.day ? n0(d.day.temperature) + '&deg;' : '') + (d.night ? ' <span class="lo">/ ' + n0(d.night.temperature) + '&deg;</span>' : '') + '</em></li>';
             }).join('');
-            var when = obs && obs.timestamp ? new Date(obs.timestamp).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }) : '';
+            var when = obs && obs.timestamp ? new Date(obs.timestamp).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }) + ' CT' : '';
             el.className = '';
             el.innerHTML = '<div class="wx-now"><div class="t">' + t + '<sup>&deg;F</sup></div><div class="c">' + esc(cond) + '</div><div class="d">Wind ' + esc(wdir) + ' ' + esc(wnd) + (rh ? ' &middot; ' + rh : '') + (when ? ' &middot; Thorp, as of ' + when : '') + '</div></div>'
-              + '<div class="wx-hr">' + h + '</div><ul class="wx-days">' + dl + '</ul>'
-              + (radar ? '<div class="wx-radar"><img alt="Radar loop, ' + esc(radar) + '" loading="lazy" decoding="async" src="https://radar.weather.gov/ridge/standard/' + esc(radar) + '_loop.gif" onerror="this.parentNode.remove()"></div>' : '')
+              + '<div class="wx-hr" tabindex="0" role="region" aria-label="Hourly forecast, next 12 hours. Scrolls sideways.">' + h + '</div><ul class="wx-days">' + dl + '</ul>'
+              + (radar ? '<div class="wx-radar"><img alt="Radar loop, ' + esc(radar) + '" loading="lazy" decoding="async" src="https://radar.weather.gov/ridge/standard/' + esc(radar) + '_loop.gif"></div>' : '')
               + '<p class="wx-cap"><span>National Weather Service, ' + esc(pt.gridId) + ' office' + (radar ? ' &middot; radar ' + esc(radar) : '') + '</span><a href="' + NWS + '" target="_blank" rel="noopener">Full forecast &rarr;</a></p>';
+            // No inline onerror (the page's CSP blocks inline handlers): a radar loop that fails to load is removed.
+            var img = el.querySelector('.wx-radar img');
+            if (img) img.addEventListener('error', function () { if (img.parentNode && img.parentNode.parentNode) img.parentNode.remove(); });
           });
       });
     }).catch(function () {
