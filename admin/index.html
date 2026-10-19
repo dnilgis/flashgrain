@@ -9,7 +9,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self' https://api.github.com https://raw.githubusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <link rel="stylesheet" href="../assets/css/site.css">
-<link rel="stylesheet" href="../assets/css/admin.css">
+<link rel="stylesheet" href="../assets/css/admin.css?v=2">
 </head>
 <body class="admin">
 <svg width="0" height="0" class="vh" aria-hidden="true" focusable="false"><defs><path id="boltp" d="M58 0 10 92h36L30 160 92 60H54L76 0Z"/></defs></svg>
@@ -59,6 +59,7 @@
   <div class="p-head"><h2 id="h-bids">Cash bids</h2><span class="p-note">Tap a month on, type its basis.</span>
     <label class="a-check bl-same" id="same-wrap"><input type="checkbox" id="same"> <span id="same-lab">Granton uses Thorp basis</span></label>
     <span class="p-tools"><button class="a-btn sm" id="edit-rows" type="button" aria-pressed="false">Edit contracts</button></span></div>
+  <div class="a-cards" id="cards"></div>
   <p class="a-help x-only" id="fut-asof"></p>
   <div class="bl" id="bids-list"></div>
 </section>
@@ -68,6 +69,7 @@
 <section class="a-sec p-hours" aria-labelledby="h-hours">
   <div class="p-head"><h2 id="h-hours">Hours</h2><span class="p-note">Type <b>8-5</b>, <b>call</b> or <b>closed</b>.</span></div>
   <div class="a-scroll"><table class="a-week" id="hours"></table></div>
+  <div class="a-ask" id="hours-ask" role="region" aria-live="polite" aria-label="Check hours" hidden></div>
 </section>
 <section class="a-sec" aria-labelledby="h-alert">
   <div class="p-head"><h2 id="h-alert">Alert bar</h2><span class="p-note">Top of the site. Empty hides it.</span></div>
@@ -100,16 +102,28 @@
 
 <div class="a-bar">
   <button class="cta" id="save" type="button">Save to site</button>
-  <button class="a-btn" id="download" type="button">Download</button>
+  <button class="a-btn" id="discard" type="button" hidden>Discard all changes</button>
   <span class="a-dirty" id="dirty" aria-live="polite"></span>
   <span class="a-status" id="status2" role="status"></span>
+  <ul class="a-probs" id="problems" hidden></ul>
+  <details class="a-mini a-adv"><summary>Advanced</summary>
+    <p class="a-help">Saves this page as a file on this device. Only for when Save to site keeps failing: send the file to Sig and nothing is lost.</p>
+    <button class="a-btn" id="download" type="button">Download a copy</button>
+  </details>
 </div>
 <datalist id="coms"><option value="Corn"><option value="Soybeans"></datalist>
 
 </div>
 </main>
+<dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+  <div class="sheet-in">
+    <h2 id="sheet-title"></h2>
+    <div id="sheet-body"></div>
+    <div class="sheet-acts"><button class="a-btn" id="sheet-back" type="button">Back</button><button class="cta" id="sheet-ok" type="button">Publish</button></div>
+  </div>
+</dialog>
 </div>
 <script src="../assets/js/site.js"></script>
-<script src="../assets/js/admin.js"></script>
+<script src="../assets/js/admin.js?v=2"></script>
 </body>
 </html>
