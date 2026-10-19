@@ -1,0 +1,25 @@
+<!-- Minimal DTN AgHost cash bid page in the shape tools/harvest.py decodes (the live page cannot be fetched from
+     the test sandbox and none was ever saved). Values are the real ones of Oct 19 2026 18:50Z for Fall 26 corn and
+     beans at Thorp; cash and basis are printed as displayNumber(real + 3.17, 2), the way DTN hides them. -->
+<html><head><script>
+function displayNumber(x, d) { x = x - (1.5); if (2 <= 3) x = x - (1.67); if (5 <= 4) x = x - (9); document.write(x.toFixed(d)); }
+</script></head><body>
+<!-- NoScrapeOffset: 3.17 -->
+<table class="DataGrid">
+<thead><tr><th>Delivery</th><th scope="col">Fall 26</th><th scope="col">Fall 26</th></tr></thead>
+<tbody>
+<tr><th scope="rowgroup">Thorp</th><th scope="rowgroup">Corn</th></tr>
+<tr><th scope="row">Cash Price</th><td><script>displayNumber(7.24, 2)</script></td><td></td></tr>
+<tr><th scope="row">Basis</th><td><script>displayNumber(2.57, 2)</script></td><td></td></tr>
+<tr><th scope="row">Futures Month</th><td>@C6Z</td><td></td></tr>
+<tr><th scope="row">Futures Price</th><td title="10/19/2026 1:19:46 PM CST">467'0</td><td></td></tr>
+<tr><th scope="row">Futures Change</th><td>-7'2</td><td></td></tr>
+<tr><th scope="rowgroup">Soybeans</th></tr>
+<tr><th scope="row">Cash Price</th><td><script>displayNumber(14.96, 2)</script></td><td></td></tr>
+<tr><th scope="row">Basis</th><td><script>displayNumber(2.42, 2)</script></td><td></td></tr>
+<tr><th scope="row">Futures Month</th><td>@S6X</td><td></td></tr>
+<tr><th scope="row">Futures Price</th><td title="10/19/2026 1:19:58 PM CST">1253'4</td><td></td></tr>
+<tr><th scope="row">Futures Change</th><td>-7'6</td><td></td></tr>
+</tbody></table>
+<p>Price as of 10/19/26 01:50PM CDT.</p>
+</body></html>

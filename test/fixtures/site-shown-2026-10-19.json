@@ -1,0 +1,83 @@
+{
+ "locations": [
+  {
+   "id": "thorp",
+   "name": "Thorp",
+   "bids": true
+  },
+  {
+   "id": "granton",
+   "name": "Granton",
+   "bids": true
+  },
+  {
+   "id": "hixwood",
+   "name": "Hixwood",
+   "bids": false
+  }
+ ],
+ "bids": {
+  "rows": [
+   {
+    "commodity": "Corn",
+    "label": "Fall 26",
+    "symbol": "@C6Z",
+    "show": true,
+    "basis": {
+     "thorp": -0.6,
+     "granton": -0.6
+    }
+   },
+   {
+    "commodity": "Corn",
+    "label": "Fall 27",
+    "symbol": "@C7Z",
+    "show": true,
+    "basis": {
+     "thorp": -0.65,
+     "granton": -0.65
+    }
+   },
+   {
+    "commodity": "Corn",
+    "label": "Fall 28",
+    "symbol": "@C8Z",
+    "show": true,
+    "basis": {
+     "thorp": -0.7,
+     "granton": -0.7
+    }
+   },
+   {
+    "commodity": "Soybeans",
+    "label": "Fall 26",
+    "symbol": "@S6X",
+    "show": true,
+    "basis": {
+     "thorp": -0.75,
+     "granton": -0.75
+    }
+   },
+   {
+    "commodity": "Soybeans",
+    "label": "Fall 27",
+    "symbol": "@S7X",
+    "show": true,
+    "basis": {
+     "thorp": -0.85,
+     "granton": -0.85
+    }
+   },
+   {
+    "commodity": "Soybeans",
+    "label": "Fall 28",
+    "symbol": "@S8X",
+    "show": true,
+    "basis": {
+     "thorp": -0.95,
+     "granton": -0.95
+    }
+   }
+  ]
+ }
+}
