@@ -1,8 +1,9 @@
 {
- "checked": "2026-10-19T19:40:11Z",
+ "checked": "2026-10-19T19:50:11Z",
  "updated": "2026-10-19T18:30:13Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": null,
+ "quote_time": "2026-10-19T14:50:11",
+ "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
@@ -125,6 +126,14 @@
     "basis": -0.95
    }
   ]
+ },
+ "futures_sources": {
+  "@C6Z": "dtn",
+  "@C7Z": "dtn",
+  "@C8Z": "dtn",
+  "@S6X": "dtn",
+  "@S7X": "dtn",
+  "@S8X": "dtn"
  },
  "futures_source": "dtn",
  "dtn_futures": {
