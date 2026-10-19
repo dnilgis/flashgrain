@@ -123,3 +123,11 @@ test('futures source per contract: says plainly when a shown price is not DTN (v
   assert.deepEqual(A.futuresSources(BIDS, ['@C6Z', '@S6X']), { notDtn: [], missing: [], mixed: '' });
   assert.equal(A.futuresSources(Object.assign({}, BIDS, { futures_source: 'dtn+yahoo' }), ['@C6Z']).mixed, 'dtn+yahoo');
 });
+
+test('key expiry: warns from 14 days out, quiet before, says expired after', () => {
+  assert.deepEqual(A.keyState('', '2026-10-19'), { level: 'unknown' });
+  assert.equal(A.keyState('2027-01-17', '2026-10-19').level, 'ok');
+  assert.deepEqual(A.keyState('2026-11-02', '2026-10-19'), { level: 'soon', days: 14, exp: '2026-11-02' });
+  assert.equal(A.keyState('2026-11-03', '2026-10-19').level, 'ok');
+  assert.equal(A.keyState('2026-10-18', '2026-10-19').level, 'expired');
+});

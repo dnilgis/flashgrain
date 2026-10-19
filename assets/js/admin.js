@@ -188,13 +188,19 @@ var FGA = (function () {
     });
     return out;
   }
+  // Key expiry: exp and today as YYYY-MM-DD. Warns 14 days out; quiet before that.
+  function keyState(exp, today) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(exp || '')) return { level: 'unknown' };
+    var days = Math.round((Date.parse(exp + 'T00:00:00Z') - Date.parse(today + 'T00:00:00Z')) / 864e5);
+    return { level: days < 0 ? 'expired' : days <= 14 ? 'soon' : 'ok', days: days, exp: exp };
+  }
   function cropOf(sym) { return /^@C/.test(sym) ? 'corn' : /^@S/.test(sym) ? 'soybeans' : /^@W/.test(sym) ? 'wheat' : ''; }
   // GitHub's key-expiry header, "2026-12-01 00:00:00 UTC" or "2026-12-01 00:00:00 -0600" -> "2026-12-01"
   function expiryFromHeader(h) { var m = /^(\d{4}-\d{2}-\d{2})/.exec(h || ''); return m ? m[1] : null; }
 
   return { parseBasis: parseBasis, textToHours: textToHours, hoursParts: hoursParts, hhmm: hhmm, hoursAsk: hoursAsk, hoursWords: hoursWords, clockWords: clockWords,
     money: money, basisTxt: basisTxt, centsTxt: centsTxt, symName: symName, labelMonth: labelMonth, review: review,
-    merge3: merge3, pathWords: pathWords, errWords: errWords, expiryFromHeader: expiryFromHeader, futuresSources: futuresSources, cropOf: cropOf,
+    merge3: merge3, pathWords: pathWords, errWords: errWords, expiryFromHeader: expiryFromHeader, futuresSources: futuresSources, cropOf: cropOf, keyState: keyState,
     MON: MON, CODEMON: CODEMON, LISTED: LISTED };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = FGA;
@@ -318,13 +324,12 @@ if (typeof window !== 'undefined' && window.document) (function () {
   setInterval(function () { if (S) drawChips(); }, 60000);
   // Key expiry, from the date typed under the key (GitHub shows it when the key is made). Warns 14 days out.
   function keyChip() {
-    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec($('key-exp').value || '');
-    if (!m) return chip('', 'Key expiry <b>not set</b>');
-    var exp = new Date(+m[1], +m[2] - 1, +m[3]), now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var days = Math.round((exp - today) / 864e5), when = exp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    if (days < 0) return chip('bad', 'Key <b>expired ' + esc(when) + '</b>');
-    if (days <= 14) return chip('bad', 'Key expires <b>' + esc(when) + '</b> · ' + (days === 0 ? 'today' : days === 1 ? 'tomorrow' : days + ' days') + ', make a new one');
-    return chip('ok', 'Key expires <b>' + esc(when) + '</b>');
+    var now = new Date(), k = FGA.keyState($('key-exp').value, now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2));
+    if (k.level === 'unknown') return chip('', 'Key expiry <b>not set</b>');
+    if (k.level === 'ok') return ''; // known and more than 14 days off: nothing to nag about
+    var when = new Date(k.exp + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (k.level === 'expired') return chip('bad', 'Key <b>expired ' + esc(when) + '</b>, make a new one');
+    return chip('bad', 'Key expires <b>' + esc(when) + '</b> · ' + (k.days === 0 ? 'today' : k.days === 1 ? 'tomorrow' : k.days + ' days') + ', make a new one');
   }
 
   // ---------- draw ----------
