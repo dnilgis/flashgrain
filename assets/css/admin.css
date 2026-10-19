@@ -311,3 +311,5 @@ body.admin .bl-loc .num.sugg{outline:2px dashed var(--flash);outline-offset:-2px
 .bl-crop:not(.more) .chip.later:not(:has(input:checked)){display:none}
 .chip.bl-more{background:transparent;border-style:dashed;color:var(--ink2);font-size:1rem}
 .bl-crop:not(:has(.chip.later)) .bl-more{display:none}
+/* keep the sticky save bar short on a phone: Advanced sits on the status line until opened */
+@media(max-width:1199px){.a-adv:not([open]){flex-basis:auto;margin-left:auto}body.admin .a-bar .a-status:not(:empty){flex:1 1 60%}body.admin .a-bar .a-status:empty{display:none}}

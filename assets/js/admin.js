@@ -932,4 +932,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
     a.href = URL.createObjectURL(new Blob([JSON.stringify(c.draft, null, 2) + '\n'], { type: 'application/json' }));
     a.download = 'site.json'; a.click();
   };
+
+  // Key remembered on this device: load straight away, one tap fewer at 6 am. Loading only reads.
+  if ($('token').value.trim()) $('load').onclick();
 })();
