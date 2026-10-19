@@ -23,6 +23,7 @@
 <link rel="preload" href="assets/fonts/barlow-condensed-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/jetbrains-mono-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css?v=3">
+<noscript><style>.board,.seg,.bids-meta,#wx{display:none}</style></noscript>
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -103,6 +104,7 @@
     <h2 id="bids-h"><span id="bids-loc">Thorp</span> Cash bids</h2>
     <p class="bids-meta"><span class="stamp" id="stamp"><i aria-hidden="true"></i><span id="asof">Loading</span></span><span class="open" id="open"></span><span id="basis-set"></span></p>
   </div>
+  <noscript><p class="feed-msg">Bids need JavaScript to show. Call or text <a href="tel:7156536585">715-653-6585</a> for today&rsquo;s bid.</p></noscript>
   <div class="seg" role="group" aria-label="Choose location" id="seg"><button type="button" data-id="thorp" aria-pressed="true">Thorp</button><button type="button" data-id="granton" aria-pressed="false">Granton</button></div>
   <table class="board">
     <caption class="vh">Cash bids by delivery period</caption>
@@ -120,7 +122,6 @@
       <tr><th scope="row" class="c sub">&nbsp;</th><td class="cash"><span class="pend">&mdash;</span></td><td><span class="pend">&mdash;</span></td><td class="fut"><span class="pend">&mdash;</span></td></tr>
     </tbody>
   </table>
-  <noscript><p class="feed-msg">Bids need JavaScript to show. Call or text <a href="tel:7156536585">715-653-6585</a> for today&rsquo;s bid.</p></noscript>
   <p class="fine">Corn and soybean cash bids at Thorp and Granton, WI.</p>
   <p class="fine" id="bids-note">Cash = CBOT futures + basis, $/bu. Subject to change without notice.</p>
   <p class="fine">Checks are mailed. Allow 7&ndash;10 days.</p>
@@ -144,7 +145,8 @@
 <section id="weather" aria-labelledby="wx-h">
   <h2 id="wx-h">Weather</h2>
   <hr class="rule">
-  <div id="wx" class="wx-err wx-load">Loading the Thorp forecast from the National Weather Service&hellip; <noscript><a href="https://forecast.weather.gov/MapClick.php?lat=44.9611&amp;lon=-90.7999">Open it here &rarr;</a></noscript></div>
+  <div id="wx" class="wx-err wx-load">Loading the Thorp forecast from the National Weather Service&hellip;</div>
+  <noscript><p class="wx-err"><a href="https://forecast.weather.gov/MapClick.php?lat=44.9611&amp;lon=-90.7999">Open the NWS forecast for Thorp &rarr;</a></p></noscript>
 </section>
 
 <section id="lime" aria-labelledby="lime-h">
