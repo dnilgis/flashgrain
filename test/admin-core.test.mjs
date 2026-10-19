@@ -30,3 +30,43 @@ test('hours "7-9" and "6-10" are asked, not guessed (reviewer C3)', () => {
   // documented readings stay silent
   for (const t of ['8-5', '8-12', '7a-9p', '7-9a', '7:30-4:30', '6-5', 'call', 'closed', '8-17']) assert.equal(A.hoursAsk(t), null, t);
 });
+
+// Real case: site.json and bids.json as committed Oct 19 2026.
+const SITE = () => fx('admin-site.json');
+const BIDS = fx('admin-bids.json');
+const LOCS = [{ id: 'thorp', name: 'Thorp' }, { id: 'granton', name: 'Granton' }];
+const fut = s => (BIDS.futures[s] ? BIDS.futures[s].price : (s === '@S7F' ? 12.665 : null));
+const row = (D, com, label) => D.bids.rows.find(r => r.commodity === com && r.label === label);
+
+test('typo guard: -0.06 for -0.60 on Fall 26 corn, one warning for both yards, in cents with the cash effect (C4)', () => {
+  const O = SITE(), D = SITE();
+  row(D, 'Corn', 'Fall 26').basis = { thorp: -0.06, granton: -0.06 };
+  const rv = A.review(D, O, LOCS, true, fut);
+  assert.deepEqual(rv.warn, ['Thorp and Granton Corn Fall 26: -0.06 is 54 cents higher than your last -0.60. Cash goes up 54 cents.']);
+  assert.deepEqual(rv.lines, ['Thorp and Granton Corn Fall 26: cash $4.07 to $4.61 (basis -0.06)']);
+});
+
+test('typo guard: a newly turned-on month compares with the nearest shown month of the same crop (C4)', () => {
+  const O = SITE(), D = SITE();
+  D.bids.rows.push({ commodity: 'Corn', label: 'Nov 26', symbol: '@C6Z', show: true, basis: { thorp: -0.05, granton: -0.05 } });
+  const rv = A.review(D, O, LOCS, true, fut);
+  assert.deepEqual(rv.warn, ['Thorp and Granton Corn Nov 26 (new): -0.05 is 55 cents higher than your Fall 26 basis -0.60.']);
+  assert.deepEqual(rv.lines, ['Thorp and Granton Corn Nov 26: cash new to $4.62 (basis -0.05)']);
+});
+
+test('typo guard: a changed contract still compares with the saved basis and states the cash move (C4)', () => {
+  const O = SITE(), D = SITE(), r = row(D, 'Soybeans', 'Fall 26');
+  r.symbol = '@S7F'; r.basis = { thorp: -0.45, granton: -0.45 }; // Nov 26 12.535 -> Jan 27 12.665
+  const rv = A.review(D, O, LOCS, true, fut);
+  assert.deepEqual(rv.warn, ['Thorp and Granton Soybeans Fall 26: -0.45 is 30 cents higher than your last -0.75. Cash goes up 43 cents.']);
+  assert.equal(rv.lines[0], 'Soybeans Fall 26: futures Nov 26 to Jan 27.');
+});
+
+test('typo guard: Granton far from Thorp is flagged when the yards differ; small moves stay quiet', () => {
+  const O = SITE(), D = SITE();
+  row(D, 'Corn', 'Fall 26').basis = { thorp: -0.58, granton: -0.95 };
+  const rv = A.review(D, O, LOCS, false, fut);
+  assert.deepEqual(rv.warn, ['Granton Corn Fall 26: -0.95 is 35 cents lower than your last -0.60. Cash goes down 35 cents.', 'Granton Corn Fall 26: -0.95 is 37 cents lower than Thorp -0.58.']);
+  const quiet = SITE(); row(quiet, 'Corn', 'Fall 26').basis = { thorp: -0.58, granton: -0.58 };
+  assert.deepEqual(A.review(quiet, O, LOCS, true, fut).warn, []);
+});

@@ -50,7 +50,82 @@ var FGA = (function () {
     var m = /^(\d\d):(\d\d)-(\d\d):(\d\d)$/.exec(v || '');
     return m ? clockWords(+m[1] * 60 + +m[2]) + ' to ' + clockWords(+m[3] * 60 + +m[4]) : v === 'call' ? 'Call' : v === 'closed' ? 'Closed' : '';
   }
-  return { parseBasis: parseBasis, textToHours: textToHours, hoursParts: hoursParts, hhmm: hhmm, hoursAsk: hoursAsk, hoursWords: hoursWords, clockWords: clockWords };
+  // ---------- money words ----------
+  function isNum(v) { return typeof v === 'number' && isFinite(v); }
+  function r2(v) { return Math.round(v * 100 + (v < 0 ? -1e-9 : 1e-9)) / 100; }
+  function money(v) { return r2(v).toFixed(2); }
+  function basisTxt(v) { var r = r2(v); return (r < 0 ? '-' : r > 0 ? '+' : '') + Math.abs(r).toFixed(2); }
+  function centsTxt(d) { var c = Math.round(Math.abs(d) * 100); return c === 1 ? '1 cent' : c + ' cents'; }
+
+  // ---------- contracts ----------
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var CODEMON = { F: 1, G: 2, H: 3, J: 4, K: 5, M: 6, N: 7, Q: 8, U: 9, V: 10, X: 11, Z: 12 };
+  var LISTED = { '@C': { 3: 'H', 5: 'K', 7: 'N', 9: 'U', 12: 'Z' }, '@S': { 1: 'F', 3: 'H', 5: 'K', 7: 'N', 8: 'Q', 9: 'U', 11: 'X' } };
+  function symName(sym) { var m = /^@[A-Z]+(\d)([A-Z])$/.exec(sym || ''); return m && CODEMON[m[2]] ? MON[CODEMON[m[2]] - 1] + ' ' + (20 + +m[1]) : String(sym || ''); }
+  // "Fall 26" -> month number 2026*12+11 (Nov, harvest), "Oct 26" -> 2026*12+10; else NaN. For "nearest month" only.
+  function labelMonth(label) {
+    var m = /^\s*([a-z]{3})[a-z]*\.?\s+'?(\d{2}|\d{4})\s*$/i.exec(label || '');
+    if (!m) return NaN;
+    var y = m[2].length === 2 ? 2000 + +m[2] : +m[2], k = m[1].toLowerCase();
+    var mo = k === 'fal' ? 11 : MON.map(function (x) { return x.toLowerCase(); }).indexOf(k) + 1;
+    return mo ? y * 12 + mo : NaN;
+  }
+
+  // ---------- price review: every cash change, and every number that looks like a typo ----------
+  // D, O: new and saved site.json. locs: [{id, name}] that post bids. same: Granton uses Thorp basis.
+  // fut(sym) -> futures price or null. Returns { lines: [cash changes], warn: [check these], off: [rows taken down] }.
+  var JUMP = 0.25;
+  function review(D, O, locs, same, fut) {
+    var lines = [], warn = [], off = [];
+    var key = function (r) { return r.commodity + '|' + r.label; };
+    var saved = {}; (O.bids.rows || []).forEach(function (r) { saved[key(r)] = r; });
+    var useLocs = same && locs.length > 1 ? [locs[0]] : locs;
+    var locName = function (l) { return same && locs.length > 1 ? locs.map(function (x) { return x.name; }).join(' and ') : l.name; };
+    // nearest month of the same crop that was showing, with a basis for this yard
+    var nearest = function (r, lid) {
+      var me = labelMonth(r.label), best = null, bd = Infinity;
+      (O.bids.rows || []).forEach(function (o) {
+        if (o.commodity !== r.commodity || !o.show || key(o) === key(r) || !isNum(o.basis && o.basis[lid])) return;
+        var d = Math.abs(labelMonth(o.label) - me); if (!isFinite(d)) d = 999;
+        if (d < bd) { bd = d; best = o; }
+      });
+      return best;
+    };
+    (D.bids.rows || []).forEach(function (r) {
+      var o = saved[key(r)], name = r.commodity + ' ' + r.label;
+      if (!r.show) { if (o && o.show) off.push(name + ': taken off the site.'); return; }
+      var fNew = fut(r.symbol), wasOn = !!(o && o.show), moved = !!(o && o.symbol !== r.symbol), fOld = o ? fut(o.symbol) : null;
+      if (!isNum(fNew)) warn.push(name + ': no futures price for ' + symName(r.symbol) + ' yet. The site shows a dash until one comes in.');
+      if (moved && wasOn) lines.push(name + ': futures ' + symName(o.symbol) + ' to ' + symName(r.symbol) + '.');
+      useLocs.forEach(function (l, li) {
+        var b = r.basis && r.basis[l.id], ob = wasOn && o.basis ? o.basis[l.id] : undefined, who = locName(l) + ' ' + name;
+        if (!isNum(b)) return;
+        if (b > 0) warn.push(who + ': basis is POSITIVE (' + basisTxt(b) + '), cash above futures.');
+        if (isNum(ob)) {
+          if (Math.abs(b - ob) > JUMP + 1e-9) {
+            var up = b > ob, cash = moved && isNum(fNew) && isNum(fOld) ? (fNew + b) - (fOld + ob) : b - ob;
+            warn.push(who + ': ' + basisTxt(b) + ' is ' + centsTxt(b - ob) + (up ? ' higher' : ' lower') + ' than your last ' + basisTxt(ob) + '. Cash goes ' + (cash >= 0 ? 'up ' : 'down ') + centsTxt(cash) + '.');
+          }
+        } else {
+          var n = nearest(r, l.id);
+          if (n && Math.abs(b - n.basis[l.id]) > JUMP + 1e-9) warn.push(who + ' (new): ' + basisTxt(b) + ' is ' + centsTxt(b - n.basis[l.id]) + (b > n.basis[l.id] ? ' higher' : ' lower') + ' than your ' + n.label + ' basis ' + basisTxt(n.basis[l.id]) + '.');
+        }
+        if (!same && li > 0) { // the other yard against the first
+          var b0 = r.basis[locs[0].id];
+          if (isNum(b0) && Math.abs(b - b0) > JUMP + 1e-9) warn.push(who + ': ' + basisTxt(b) + ' is ' + centsTxt(b - b0) + (b > b0 ? ' higher' : ' lower') + ' than ' + locs[0].name + ' ' + basisTxt(b0) + '.');
+        }
+        if (isNum(fNew) && (b !== ob || moved || !wasOn)) {
+          var was = wasOn && isNum(ob) && isNum(fOld) ? '$' + money(fOld + ob) : 'new';
+          lines.push(who + ': cash ' + was + ' to $' + money(fNew + b) + ' (basis ' + basisTxt(b) + ')');
+        }
+      });
+    });
+    return { lines: lines, warn: warn, off: off };
+  }
+
+  return { parseBasis: parseBasis, textToHours: textToHours, hoursParts: hoursParts, hhmm: hhmm, hoursAsk: hoursAsk, hoursWords: hoursWords, clockWords: clockWords,
+    money: money, basisTxt: basisTxt, centsTxt: centsTxt, symName: symName, labelMonth: labelMonth, review: review,
+    MON: MON, CODEMON: CODEMON, LISTED: LISTED };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = FGA;
 
@@ -178,16 +253,14 @@ if (typeof window !== 'undefined' && window.document) (function () {
   // Periods: the next 12 calendar months plus Fall of this year and the next two. Futures by the usual rule:
   // the nearest listed contract at or after the delivery month (corn H K N U Z, soybeans F H K N Q U X);
   // Fall = Dec corn / Nov soybeans. Overridable per row under "Edit rows".
-  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  var LISTED = { '@C': { 3: 'H', 5: 'K', 7: 'N', 9: 'U', 12: 'Z' }, '@S': { 1: 'F', 3: 'H', 5: 'K', 7: 'N', 8: 'Q', 9: 'U', 11: 'X' } };
-  var CODEMON = { F: 1, G: 2, H: 3, J: 4, K: 5, M: 6, N: 7, Q: 8, U: 9, V: 10, X: 11, Z: 12 };
+  var MON = FGA.MON, LISTED = FGA.LISTED;
   var FUT = {}, CAT = [], SAME = true;
   function contractFor(pfx, y, m) {
     var ms = Object.keys(LISTED[pfx]).map(Number);
     for (var k = 0; k < 2; k++) { var hit = ms.filter(function (x) { return k || x >= m; })[0]; if (hit) return pfx + ((y + k) % 10) + LISTED[pfx][hit]; }
   }
   function nowYM() { var p = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' }); return p.slice(0, 7); }
-  function symName(sym) { var m = /^@[A-Z]+(\d)([A-Z])$/.exec(sym || ''); return m ? MON[CODEMON[m[2]] - 1] + ' ' + (20 + +m[1]) : esc(sym || ''); }
+  function symName(sym) { return esc(FGA.symName(sym)); }
   function buildCatalog() {
     var now = nowYM(), y0 = +now.slice(0, 4), m0 = +now.slice(5, 7), coms = [];
     S.bids.rows.concat([{ commodity: 'Corn' }, { commodity: 'Soybeans' }]).forEach(function (r) { if (coms.indexOf(r.commodity) < 0 && PREFIX[(r.commodity || '').toLowerCase()]) coms.push(r.commodity); });
@@ -461,20 +534,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
 
   // ---------- save ----------
   function priceReview(D) {
-    var lines = [], warn = [];
-    D.bids.rows.forEach(function (r) {
-      var o = ORIG.bids.rows.filter(function (x) { return x.symbol === r.symbol && x.label === r.label && x.commodity === r.commodity; })[0];
-      var f = futFor(r.symbol);
-      if (r.show && !f) warn.push(r.commodity + ' ' + r.label + ': no futures quote for ' + r.symbol + ' yet. The site shows a dash until the next check finds one.');
-      bidLocs(D).forEach(function (l) {
-        var b = r.basis[l.id], ob = o && o.basis ? o.basis[l.id] : undefined;
-        if (r.show && FG.num(b) && b > 0) warn.push(l.name + ' ' + r.commodity + ' ' + r.label + ': basis is POSITIVE (' + FG.basis(b) + ').');
-        // typo guard: a basis that jumps more than 25 cents from what was saved
-        if (r.show && FG.num(b) && FG.num(ob) && Math.abs(b - ob) > 0.25) warn.push(l.name + ' ' + r.commodity + ' ' + r.label + ': ' + FG.basis(b) + ' is ' + FG.money(Math.abs(b - ob)) + ' away from the saved ' + FG.basis(ob) + '.');
-        if (FG.num(b) && b !== ob && f) lines.push(l.name + ' ' + r.commodity + ' ' + r.label + ': cash ' + (FG.num(ob) ? FG.money(f.price + ob) : '—') + ' → ' + FG.money(f.price + b) + ' (basis ' + FG.basis(b) + ')');
-      });
-    });
-    return { lines: lines, warn: warn };
+    return FGA.review(D, ORIG, bidLocs(D), SAME, function (sym) { var f = futFor(sym); return f ? f.price : null; });
   }
 
   $('save').onclick = function () {
@@ -485,7 +545,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
     if (JSON.stringify(D) === JSON.stringify(ORIG)) { setDirty(false); return status('Nothing to save. The site already has this version.'); }
     var rv = priceReview(D);
     if (rv.warn.length || rv.lines.length) {
-      var msg = (rv.warn.length ? 'CHECK THESE FIRST:\n' + rv.warn.join('\n') + '\n\n' : '') + (rv.lines.length ? 'Price changes going live:\n' + rv.lines.join('\n') + '\n\n' : '') + 'Save to the site?';
+      var msg = (rv.warn.length ? 'CHECK THESE FIRST:\n' + rv.warn.join('\n') + '\n\n' : '') + (rv.lines.length ? 'Price changes going live:\n' + rv.lines.concat(rv.off).join('\n') + '\n\n' : '') + 'Save to the site?';
       if (!confirm(msg)) return status('Not saved.');
     }
     if (rv.lines.length) D.bids.basis_set = new Date().toISOString();

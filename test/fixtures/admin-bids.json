@@ -1,0 +1,37 @@
+{
+ "checked": "2026-10-19T18:50:10Z",
+ "updated": "2026-10-19T18:30:13Z",
+ "futures_source": "dtn",
+ "futures": {
+  "@C6Z": {
+   "price": 4.67,
+   "change": -0.0725,
+   "time": null
+  },
+  "@C7Z": {
+   "price": 5.0425,
+   "change": -0.025,
+   "time": null
+  },
+  "@C8Z": {
+   "price": 5.0525,
+   "change": -0.0275,
+   "time": null
+  },
+  "@S6X": {
+   "price": 12.535,
+   "change": -0.0775,
+   "time": null
+  },
+  "@S7X": {
+   "price": 12.395,
+   "change": -0.0125,
+   "time": null
+  },
+  "@S8X": {
+   "price": 12.0325,
+   "change": 0.0,
+   "time": null
+  }
+ }
+}
