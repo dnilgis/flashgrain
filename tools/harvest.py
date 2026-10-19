@@ -95,7 +95,7 @@ def _body_offset(body):
     for st in [t for t in body.split(";") if t]:
         cond, assign = _strip_if(st)
         if not re.match(r"^x=[^=]", assign):
-            raise ValueError("displayNumber statement does not assign x: %r" % st[:60])
+            raise ValueError("displayNumber statement does not assign x: " + st[:60])
         if cond is not None:
             c = cond.replace("!==", "!=").replace("===", "==")
             if not eval(c, {"__builtins__": {}}, {"x": x}):  # whitelisted arithmetic only, see ARITH
@@ -610,8 +610,15 @@ def pick_ref(src, ref):
         rows.append({"label": d["label"], "cash": round(d["cash"], 4), "basis": round(d["basis"], 4),
                      "futures_month": d["symbol"], "futures": d["futures"], "time": d.get("time")})
     if not rows:
-        raise ValueError("no %s rows for %r. Locations: %s. Commodities: %s. %s" % (
-            ref["commodity"], ref.get("location"), ", ".join(locs) or "none", ", ".join(coms) or "none", "; ".join(dropped)))
+        crop = ref["commodity"].lower()
+        if not locs:
+            msg = "their board showed no %s bids (no bid table on the page)." % crop
+        elif want:
+            msg = "their board showed no %s bids at %s. Locations on the board: %s. Crops: %s." % (
+                crop, ref["location"], ", ".join(locs), ", ".join(coms) or "none")
+        else:
+            msg = "their board showed no %s bids. Crops on the board: %s." % (crop, ", ".join(coms) or "none")
+        raise ValueError(msg + (" Rows that failed the cash check: " + "; ".join(dropped) if dropped else ""))
     times = [r["time"] for r in rows if r.get("time")]
     return {"rows": rows, "quote_time": max(times) if times else None, "dtn_as_of": as_of, "dropped": dropped}
 
