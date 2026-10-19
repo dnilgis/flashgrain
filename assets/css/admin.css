@@ -265,3 +265,16 @@ body.admin .a-reft .ref{white-space:normal}
 .sheet-acts .cta{border:0}
 .sheet-acts .cta:disabled{opacity:.5}
 .sheet-acts .cta.danger{background:var(--ink)}
+
+/* cards at the top of Cash bids: draft to restore, contract roll, conflicts */
+.a-cards{display:grid;gap:8px;margin:8px 0 0}
+.a-cards:empty{display:none}
+.a-card{border:2px solid var(--flash);padding:10px 12px}
+.a-card p{margin:0;font-size:1.0625rem;line-height:1.35}
+.a-card b{font-family:var(--mono)}
+.a-card.warn{border-color:var(--flash)}
+.a-card.bad{border-color:#ff5a4f;background:#2a0d0b}
+.a-card .a-actions{margin:8px 0 0}
+.a-card .a-main{background:var(--flash);color:#0b0b0b;border-color:var(--flash)}
+.a-card.bad .a-main{background:#ff5a4f;border-color:#ff5a4f}
+.a-card .sugg{display:block;margin-top:4px;color:var(--ink2)}

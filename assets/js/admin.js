@@ -123,8 +123,61 @@ var FGA = (function () {
     return { lines: lines, warn: warn, off: off };
   }
 
+  // ---------- three-way merge: two saves made from the same loaded copy ----------
+  // base: what both started from; mine: Jeff's page; theirs: what is on GitHub now. Fields only one side changed
+  // are kept from that side. A field both changed to different values is a clash: mine wins when mineWins, else theirs.
+  // Lists of rows, locations and boards are matched by commodity+label or id, so two people can touch different rows.
+  function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function isObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function rowKey(x) { return isObj(x) ? (x.id != null ? 'id:' + x.id : x.commodity != null && x.label != null ? x.commodity + '|' + x.label : null) : null; }
+  function merge3(base, mine, theirs, mineWins) {
+    var clashes = [];
+    function m(b, a, t, path) {
+      if (same(a, b)) return t;
+      if (same(t, b) || same(a, t)) return a;
+      if (path[path.length - 1] === 'basis_set') return String(a || '') > String(t || '') ? a : t; // a stamp: keep the later one
+      if (isObj(a) && isObj(t)) {
+        var out = {}, bb = isObj(b) ? b : {};
+        Object.keys(t).concat(Object.keys(a).filter(function (k) { return !(k in t); })).forEach(function (k) {
+          var v = m(bb[k], a[k], t[k], path.concat(k)); if (v !== undefined) out[k] = v;
+        });
+        return out;
+      }
+      if (Array.isArray(a) && Array.isArray(t) && a.concat(t, Array.isArray(b) ? b : []).every(rowKey)) {
+        var map = function (arr) { var o = {}; (Array.isArray(arr) ? arr : []).forEach(function (x) { o[rowKey(x)] = x; }); return o; };
+        var B = map(b), M = map(a), T = map(t), keys = [], res = [];
+        a.concat(t).forEach(function (x) { var k = rowKey(x); if (keys.indexOf(k) < 0) keys.push(k); });
+        keys.forEach(function (k) { var v = m(B[k], M[k], T[k], path.concat(k.replace(/^id:/, ''))); if (v !== undefined) res.push(v); });
+        return res;
+      }
+      clashes.push({ path: path, mine: a, theirs: t });
+      return mineWins ? a : t;
+    }
+    return { merged: m(base, mine, theirs, []), clashes: clashes };
+  }
+  // ["bids","rows","Corn|Fall 26","basis","thorp"] -> "Corn Fall 26, basis, thorp"
+  function pathWords(path) {
+    return path.filter(function (x) { return ['bids', 'rows', 'locations', 'references', 'business', 'lime'].indexOf(x) < 0; })
+      .map(function (x) { return String(x).replace('|', ' '); }).join(', ') || 'the whole file';
+  }
+
+  // ---------- errors in plain words ----------
+  // e.status from GitHub, e.offline when the request never left the phone. what: 'save' or 'load'.
+  function errWords(e, what) {
+    var none = what === 'save' ? 'Nothing saved.' : 'Nothing loaded.';
+    if (e.offline) return 'No signal. ' + none + ' Try again.';
+    if (e.status === 401) return 'Your key ran out or was deleted. ' + none + ' Make a new one (steps under "No key yet" in Change key) and paste it.';
+    if (e.status === 403 || (what === 'save' && e.status === 404)) return 'This key cannot ' + what + ' the site. It needs Contents: Read and write on flashgrain. ' + none;
+    if (e.status === 404) return 'Repo or file not found, or the key has no access to this repo. ' + none;
+    if (e.status >= 500) return 'GitHub is having trouble. ' + none + ' Try again in a minute.';
+    return 'GitHub said no (' + (e.message || 'error ' + e.status) + '). ' + none + ' Try again in a minute.';
+  }
+  // GitHub's key-expiry header, "2026-12-01 00:00:00 UTC" or "2026-12-01 00:00:00 -0600" -> "2026-12-01"
+  function expiryFromHeader(h) { var m = /^(\d{4}-\d{2}-\d{2})/.exec(h || ''); return m ? m[1] : null; }
+
   return { parseBasis: parseBasis, textToHours: textToHours, hoursParts: hoursParts, hhmm: hhmm, hoursAsk: hoursAsk, hoursWords: hoursWords, clockWords: clockWords,
     money: money, basisTxt: basisTxt, centsTxt: centsTxt, symName: symName, labelMonth: labelMonth, review: review,
+    merge3: merge3, pathWords: pathWords, errWords: errWords, expiryFromHeader: expiryFromHeader,
     MON: MON, CODEMON: CODEMON, LISTED: LISTED };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = FGA;
@@ -153,14 +206,15 @@ if (typeof window !== 'undefined' && window.document) (function () {
     opts = opts || {};
     opts.headers = { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + $('token').value.trim(), 'X-GitHub-Api-Version': '2022-11-28' };
     return fetch(API + $('repo').value.trim() + path, opts).then(function (r) {
-      // GitHub sends the key's expiry on every call, but its CORS rules hide it from browsers today. Use it if that changes.
-      var hx = r.headers.get('github-authentication-token-expiration'), hm = /^(\d{4}-\d{2}-\d{2})/.exec(hx || '');
-      if (hm && r.ok) { $('key-exp').value = hm[1]; store('fg-key-exp', hm[1]); }
+      // GitHub sends the key's expiry on every call (github-authentication-token-expiration). Its CORS rules hide the
+      // header from browsers today; when it is readable it fills Key expires by itself, so Jeff never types it.
+      var hx = FGA.expiryFromHeader(r.headers.get('github-authentication-token-expiration'));
+      if (hx && r.ok) { $('key-exp').value = hx; store('fg-key-exp', hx); }
       return r.json().catch(function () { return {}; }).then(function (j) {
         if (!r.ok) { var e = new Error(j.message || ('HTTP ' + r.status)); e.status = r.status; throw e; }
         return j;
       });
-    });
+    }, function () { var e = new Error('offline'); e.offline = true; throw e; }); // the request never reached GitHub
   }
   function ref() { return '?ref=' + encodeURIComponent($('branch').value.trim()); }
   var parseBasis = FGA.parseBasis, textToHours = FGA.textToHours;
@@ -192,8 +246,11 @@ if (typeof window !== 'undefined' && window.document) (function () {
 
   $('load').onclick = function () {
     if (!$('token').value.trim()) return status('Paste your GitHub key first.', true);
-    if (dirty) return sheet({ title: 'Throw away your changes?', html: '<p>You have changes that are not published. Loading again throws them away.</p>', ok: 'Throw away and load', back: 'Keep my changes', danger: true })
-      .then(function (yes) { if (yes) { setDirty(false); $('load').onclick(); } });
+    if (S && dirty) { // a new key mid-edit (the old one ran out): keep every change, just use the new key
+      store('fg-token', $('remember').checked ? $('token').value.trim() : null); store('fg-key-exp', $('key-exp').value || null);
+      $('connect').hidden = true; drawChips();
+      return status('New key in. Your changes are still here. Press Save to site.');
+    }
     store('fg-repo', $('repo').value.trim()); store('fg-branch', $('branch').value.trim());
     store('fg-token', $('remember').checked ? $('token').value.trim() : null);
     store('fg-key-exp', $('key-exp').value || null);
@@ -207,10 +264,8 @@ if (typeof window !== 'undefined' && window.document) (function () {
       }).then(function () {
         $('connect').hidden = true; $('change-key').hidden = false; drawChips();
         status('Loaded.');
-      }).catch(function (e) {
-        status(e.status === 401 ? 'Key rejected. Check it was copied whole and has not expired. An expired key needs a new one: see How to get one below.'
-          : e.status === 404 ? 'Repo or file not found, or the key has no access to this repo.'
-          : 'Load failed: ' + e.message, true);
+      }).then(offerDraft).catch(function (e) {
+        status(e.status === 401 ? 'Key not accepted. Check it was copied whole. If it ran out or was deleted, make a new one: steps under "No key yet" below.' : FGA.errWords(e, 'load'), true);
       });
   };
 
@@ -464,12 +519,12 @@ if (typeof window !== 'undefined' && window.document) (function () {
     $('portal').value = S.portal_url || ''; $('footnote').value = S.bids.footnote || '';
   }
 
-  function readHours(D, flag) {
+  function readHours(D, flag, quiet) {
     $('hours').querySelectorAll('input[data-loc]').forEach(function (inp) {
       var l = D.locations.filter(function (x) { return x.id === inp.dataset.loc; })[0];
       if (!l || !l.hours) return;
       var ask = FGA.hoursAsk(inp.value);
-      if (ask) { flag(inp, l.name + ' ' + FG.DAYN[inp.dataset.d] + ': is "' + inp.value.trim() + '" ' + FGA.hoursWords(ask.pm) + ' or ' + FGA.hoursWords(ask.am) + '? Tap one under the hours.'); if ($('hours-ask').hidden) askHours(inp, ask); return; }
+      if (ask) { flag(inp, l.name + ' ' + FG.DAYN[inp.dataset.d] + ': is "' + inp.value.trim() + '" ' + FGA.hoursWords(ask.pm) + ' or ' + FGA.hoursWords(ask.am) + '? Tap one under the hours.'); if (!quiet && $('hours-ask').hidden) askHours(inp, ask); return; }
       var v = textToHours(inp.value);
       if (!v) { flag(inp, l.name + ' ' + FG.DAYN[inp.dataset.d] + ': "' + inp.value + '" is not hours. Type 8-5, call or closed.'); return; }
       l.hours[inp.dataset.d] = v;
@@ -478,12 +533,12 @@ if (typeof window !== 'undefined' && window.document) (function () {
 
 
   // ---------- read the form into a draft; S is only replaced when the draft is valid ----------
-  function collect() {
+  function collect(quiet) { // quiet: read only, leave the red outlines alone (for the draft)
     var D = clone(S), bad = [];
-    document.querySelectorAll('.bad').forEach(function (e) { e.classList.remove('bad'); });
-    var flag = function (el, why) { el.classList.add('bad'); bad.push(why); };
+    if (!quiet) document.querySelectorAll('.bad').forEach(function (e) { e.classList.remove('bad'); });
+    var flag = function (el, why) { if (!quiet) el.classList.add('bad'); bad.push(why); };
 
-    readHours(D, flag);
+    readHours(D, flag, quiet);
     $('locs').querySelectorAll('.a-loc').forEach(function (div) {
       var l = D.locations[+div.dataset.i];
       ['name', 'address', 'note', 'pin'].forEach(function (f) { l[f] = div.querySelector('[data-f=' + f + ']').value.trim(); });
@@ -527,6 +582,43 @@ if (typeof window !== 'undefined' && window.document) (function () {
   // ---------- row buttons, live preview, dirty tracking ----------
   $('editor').addEventListener('input', function () { setDirty(true); });
   $('editor').addEventListener('change', function () { setDirty(true); });
+
+  // ---------- draft: every change is kept on this device until it is published ----------
+  // A dead battery, a lost signal or a closed tab costs nothing: on the next load the page offers it back.
+  var DRAFT = 'fg-draft', draftTimer = null;
+  function keepDraft() {
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(function () {
+      if (!S || !dirty) return;
+      store(DRAFT, JSON.stringify({ at: new Date().toISOString(), repo: $('repo').value.trim(), branch: $('branch').value.trim(), base: ORIG, draft: collect(true).draft }));
+    }, 400);
+  }
+  function dropDraft() { clearTimeout(draftTimer); store(DRAFT, null); }
+  $('editor').addEventListener('input', keepDraft);
+  $('editor').addEventListener('change', keepDraft);
+  function offerDraft() {
+    var d = null; try { d = JSON.parse(stored(DRAFT) || 'null'); } catch (e) {}
+    if (!d || !d.draft || !d.base || d.repo !== $('repo').value.trim() || d.branch !== $('branch').value.trim()) return;
+    var m = FGA.merge3(d.base, d.draft, S, true);
+    if (JSON.stringify(m.merged) === JSON.stringify(S)) return dropDraft();
+    var when = new Date(d.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+    card('draft', 'warn', 'Changes from ' + esc(when) + ' were never published.', [
+      ['Bring them back', function () { S = m.merged; draw(); setDirty(true); keepDraft(); closeCard('draft'); status('Your changes are back. Check them, then Save to site.'); }],
+      ['Throw them away', function () { dropDraft(); closeCard('draft'); }]
+    ]);
+  }
+  // Cards: the yellow (warn) or red (bad) notes at the top of Cash bids. id keeps one card per subject.
+  function card(id, kind, html, buttons) {
+    closeCard(id);
+    var c = document.createElement('div'); c.className = 'a-card ' + kind; c.dataset.card = id; c.setAttribute('role', 'status');
+    c.innerHTML = '<p>' + html + '</p>' + (buttons && buttons.length ? '<div class="a-actions"></div>' : '');
+    (buttons || []).forEach(function (b, i) {
+      var el = document.createElement('button'); el.type = 'button'; el.className = i ? 'a-btn' : 'a-btn a-main'; el.textContent = b[0]; el.onclick = b[1];
+      c.querySelector('.a-actions').appendChild(el);
+    });
+    $('cards').appendChild(c); return c;
+  }
+  function closeCard(id) { var c = $('cards').querySelector('[data-card="' + id + '"]'); if (c) c.remove(); }
   window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
   $('locs').addEventListener('change', function (e) {
     if (apply()) { drawBids(); drawHours(); }
@@ -585,18 +677,22 @@ if (typeof window !== 'undefined' && window.document) (function () {
     saving = true; $('save').disabled = true; $('editor').inert = true; status('Saving…');
     gh('/contents/' + PATH, { method: 'PUT', body: JSON.stringify({ message: 'admin: update site.json', content: b64enc(body), sha: SHA, branch: $('branch').value.trim() }) })
       .then(function (j) {
-        SHA = j.content.sha; S = D; ORIG = clone(D); setDirty(false); drawBids();
+        SHA = j.content.sha; S = D; ORIG = clone(D); setDirty(false); dropDraft(); drawBids();
         status('Saved ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '. The site shows it in 1–3 minutes; pages already open update within 5.', false, j.commit && j.commit.html_url);
       })
       .catch(function (e) {
-        if (e.status !== 409) return status(e.status === 403 || e.status === 404 ? 'Key cannot write to this repo. It needs Contents: Read and write.' : 'Save failed: ' + e.message, true);
+        if (e.status !== 409) return saveFailed(e);
         return gh('/contents/' + PATH + ref()).then(function (cur) {
           if (b64dec(cur.content) === body) { SHA = cur.sha; S = D; ORIG = clone(D); setDirty(false); return status('Saved.'); }
           status('Someone saved a different version since you loaded. Your edits are still on this page. Note them, press Load, and enter them again.', true);
         });
       })
-      .catch(function (e) { status('Save failed: ' + e.message + '. Your edits are still on this page.', true); })
+      .catch(saveFailed)
       .then(function () { saving = false; $('save').disabled = false; $('editor').inert = false; });
+  }
+  function saveFailed(e) {
+    status(FGA.errWords(e, 'save') + ' Your changes are kept on this device.', true);
+    if (e.status === 401) { $('connect').hidden = false; $('token').value = ''; store('fg-token', null); $('token').focus(); }
   }
   $('download').onclick = function () {
     var c = collect(); if (c.bad.length) return status(c.bad[0], true);

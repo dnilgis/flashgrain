@@ -70,3 +70,46 @@ test('typo guard: Granton far from Thorp is flagged when the yards differ; small
   const quiet = SITE(); row(quiet, 'Corn', 'Fall 26').basis = { thorp: -0.58, granton: -0.58 };
   assert.deepEqual(A.review(quiet, O, LOCS, true, fut).warn, []);
 });
+
+test('save errors in plain words (C5): 401, no signal, 5xx', () => {
+  assert.equal(A.errWords({ status: 401, message: 'Bad credentials' }, 'save'), 'Your key ran out or was deleted. Nothing saved. Make a new one (steps under "No key yet" in Change key) and paste it.');
+  assert.equal(A.errWords({ offline: true, message: 'Failed to fetch' }, 'save'), 'No signal. Nothing saved. Try again.');
+  assert.match(A.errWords({ status: 502 }, 'save'), /^GitHub is having trouble\. Nothing saved\./);
+  assert.doesNotMatch(A.errWords({ status: 401, message: 'Bad credentials' }, 'save'), /Bad credentials/);
+});
+
+test('key expiry read from GitHub header', () => {
+  assert.equal(A.expiryFromHeader('2027-01-17 06:00:00 UTC'), '2027-01-17');
+  assert.equal(A.expiryFromHeader('2027-01-17 00:00:00 -0600'), '2027-01-17');
+  assert.equal(A.expiryFromHeader(null), null);
+});
+
+test('merge: the other save touched different fields, both kept (C2)', () => {
+  const base = SITE(), mine = SITE(), theirs = SITE();
+  row(mine, 'Corn', 'Fall 26').basis = { thorp: -0.58, granton: -0.58 };
+  mine.bids.basis_set = '2026-10-20T11:05:00Z';
+  theirs.business.phone_note = 'call';                       // reviewer C's real 409 case
+  theirs.notices = ['Closed Friday at noon'];
+  const m = A.merge3(base, mine, theirs);
+  assert.deepEqual(m.clashes, []);
+  assert.equal(m.merged.business.phone_note, 'call');
+  assert.deepEqual(m.merged.notices, ['Closed Friday at noon']);
+  assert.deepEqual(row(m.merged, 'Corn', 'Fall 26').basis, { thorp: -0.58, granton: -0.58 });
+  assert.equal(m.merged.bids.basis_set, '2026-10-20T11:05:00Z');
+  assert.deepEqual(Object.keys(m.merged), Object.keys(theirs));
+});
+
+test('merge: rows matched by crop and month; a real clash is reported, not guessed', () => {
+  const base = SITE(), mine = SITE(), theirs = SITE();
+  row(mine, 'Corn', 'Fall 26').basis.thorp = -0.58;
+  row(theirs, 'Corn', 'Fall 26').basis.thorp = -0.62;
+  theirs.bids.rows.push({ commodity: 'Corn', label: 'Nov 26', symbol: '@C6Z', show: true, basis: { thorp: -0.55, granton: -0.55 } });
+  row(mine, 'Soybeans', 'Fall 28').show = false;
+  const m = A.merge3(base, mine, theirs);
+  assert.equal(m.clashes.length, 1);
+  assert.equal(A.pathWords(m.clashes[0].path), 'Corn Fall 26, basis, thorp');
+  assert.equal(row(m.merged, 'Corn', 'Fall 26').basis.thorp, -0.62);       // theirs unless told otherwise
+  assert.equal(row(A.merge3(base, mine, theirs, true).merged, 'Corn', 'Fall 26').basis.thorp, -0.58);
+  assert.ok(row(m.merged, 'Corn', 'Nov 26'));                              // their new row kept
+  assert.equal(row(m.merged, 'Soybeans', 'Fall 28').show, false);          // my change kept
+});
