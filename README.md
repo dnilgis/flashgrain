@@ -8,6 +8,7 @@ Staging at flshgrn.com.
 ```
 index.html            home: bids, hours, weather, locations, lime, target offers
 discounts.html        2026 discount schedule
+offers.html           target offers: one short address (/offers) that opens the DTN offer portal, with the login and order videos
 404.html
 admin/index.html      edit panel (hours, basis, which bid rows show, notices, lime, contact)
 assets/css/site.css   one stylesheet for every page
@@ -106,9 +107,9 @@ confirm harvester commits rebuild the site.
 ## Launch checklist (when moving to flashgrain.com)
 
 - Delete the `Disallow` line in robots.txt.
-- Delete `<meta name="robots" content="noindex, nofollow">` from index.html and discounts.html (keep it on admin and 404).
+- Delete `<meta name="robots" content="noindex, nofollow">` from index.html, discounts.html and offers.html (keep it on admin and 404).
 - Change CNAME to the new domain; repoint DNS (Jeff's login).
-- Change `flshgrn.com` in the canonical and og: tags of index.html and discounts.html.
+- Change `flshgrn.com` in the canonical and og: tags of index.html, discounts.html and offers.html.
 - In dnilgis/bids, change `url` in sources/flashgrain-thorp.json and flashgrain-granton.json from
   flshgrn.com/feed/... to the new domain (the old address stops answering when DNS moves).
 - flashgrains.com stays on DTN for the bid portal only. Swap the portal link for DTN's widget once DTN is back.

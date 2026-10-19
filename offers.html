@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flash Grain | Target offers</title>
+<meta name="description" content="Place a target offer on corn or soybeans with Flash Grain LLC, Thorp and Granton, Wisconsin. Log in to the offer portal, request a login, or see your offers.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="assets/img/icon-192.png?v=2" type="image/png" sizes="192x192">
+<meta name="theme-color" content="#0b0b0b">
+<link rel="canonical" href="https://flshgrn.com/offers">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Flash Grain">
+<meta property="og:title" content="Flash Grain | Target offers">
+<meta property="og:description" content="Log in to the Flash Grain offer portal, request a login, or see your offers.">
+<meta property="og:url" content="https://flshgrn.com/offers">
+<meta property="og:image" content="https://flshgrn.com/assets/img/og.png?v=2">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.ico?v=2" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png?v=2">
+<link rel="preload" href="assets/fonts/barlow-condensed-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/site.css?v=2">
+</head>
+<body>
+<div class="wrap disc">
+<header class="mast">
+  <h1 class="brand"><a href="./"><picture><source srcset="assets/img/flash-grain-logo.webp" type="image/webp"><img class="logo" style="width:clamp(160px,42vw,230px);height:auto" src="assets/img/flash-grain-logo.png" width="460" height="248" alt="Flash Grain"></picture></a></h1>
+  <a class="call" href="tel:7156536585">715-653-6585<span><span class="vh">, </span>call or text</span></a>
+</header>
+<main><a class="back" href="./">&larr; Cash bids</a>
+<section style="padding-top:10px" aria-labelledby="off-h">
+  <h2 id="off-h">Target offers</h2>
+  <hr class="rule">
+  <p>Set your price on corn or soybeans in our offer portal. Same portal and same login as before.</p>
+  <a class="cta" data-portal href="https://www.flashgrains.com/index.cfm?show=11&amp;mid=3" target="_blank" rel="noopener">Open the offer portal</a>
+  <p class="fine">The portal runs on DTN and opens in a new tab.</p>
+
+  <ol class="steps">
+    <li><span><b>Have a login?</b> Open the portal and log in.</span></li>
+    <li><span><b>No login yet?</b> Open the portal and click &ldquo;Click Here to request a username/password&rdquo;.</span><a href="https://youtu.be/4G38Kc_SdFg">Watch: create your account &rarr;</a></li>
+    <li><span><b>Place the offer</b> in 1,000-bushel increments. Offers in any other amount will not be acknowledged.</span><a href="https://youtu.be/KyIJZK78djM">Watch: create a target order &rarr;</a></li>
+    <li><span><b>See your offers.</b> Log in and click &ldquo;View Transactions&rdquo;.</span></li>
+  </ol>
+  <p class="fine">Questions about an offer? Call or text <a href="tel:7156536585">715-653-6585</a>.</p>
+</section></main>
+<footer>
+  <p>Flash Grain LLC &middot; 8576 County Rd N, Thorp, WI 54771 &middot; <a href="tel:7156536585">715-653-6585</a> &middot; <a href="mailto:office@flashgrain.com">office@flashgrain.com</a></p>
+  <p><a href="./">Cash bids</a> &middot; <a href="discounts.html">2026 discount schedule</a></p>
+</footer>
+</div>
+<script>
+// The portal link is set in /admin (data/site.json portal_url); site.js does the same on the home page.
+fetch('data/site.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
+  if (/^https:\/\//.test(s.portal_url || '')) [].forEach.call(document.querySelectorAll('[data-portal]'), function (a) { a.href = s.portal_url; });
+}).catch(function () {});
+</script>
+</body>
+</html>
