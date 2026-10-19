@@ -1,39 +1,39 @@
 {
- "checked": "2026-10-19T08:50:11Z",
- "updated": "2026-10-19T08:50:11Z",
- "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": null,
+ "checked": "2026-10-19T09:01:17Z",
+ "updated": "2026-10-19T09:01:17Z",
+ "source": "backup:agsist+boards",
+ "quote_time": "2026-10-19T04:01:13",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.725,
-   "change": -0.0175,
-   "time": null
+   "price": 4.7275,
+   "change": -0.015,
+   "time": "2026-10-19T03:50:29"
   },
   "@C7Z": {
    "price": 5.065,
    "change": -0.0025,
-   "time": null
-  },
-  "@C8Z": {
-   "price": 5.08,
-   "change": 0.0,
-   "time": null
+   "time": "2026-10-19T03:50:29"
   },
   "@S6X": {
-   "price": 12.615,
-   "change": 0.0025,
-   "time": null
+   "price": 12.6125,
+   "change": 0.0,
+   "time": "2026-10-19T03:50:29"
   },
   "@S7X": {
    "price": 12.41,
    "change": 0.0025,
-   "time": null
+   "time": "2026-10-19T03:50:29"
+  },
+  "@C8Z": {
+   "price": 5.08,
+   "change": -0.0125,
+   "time": "2026-10-19T04:01:13"
   },
   "@S8X": {
    "price": 12.0325,
-   "change": 0.0,
-   "time": null
+   "change": 0.0075,
+   "time": "2026-10-19T04:01:13"
   }
  },
  "dtn": {
@@ -126,7 +126,12 @@
    }
   ]
  },
- "futures_source": "dtn",
+ "futures_source": "agsist+boards",
+ "dtn_error": "all fetches failed; bids.json left unchanged. last error: https://flashgrains.com/index.cfm?show=11&mid=3: <urlopen error timed out>",
+ "backup_notes": [
+  "yahoo ZCZ28.CBT: HTTP Error 429: Too Many Requests",
+  "yahoo ZSX28.CBT: HTTP Error 429: Too Many Requests"
+ ],
  "dtn_futures": {
   "@C6Z": {
    "price": 4.725,
