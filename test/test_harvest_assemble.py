@@ -1,5 +1,5 @@
 """tools/harvest.py assemble(): one harvest with the network mocked. Fixtures are the real files of Oct 19 2026."""
-import copy, io, json, os, sys, unittest
+import copy, io, json, os, re, sys, unittest
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
 
@@ -21,7 +21,7 @@ def dtn_page(old=OLD):
 
 
 def no_backup(symbols, last):
-    return {}, None, []
+    return {}, {}, []
 
 
 def run(now, fetch=None, backup=no_backup, old=OLD):
@@ -43,7 +43,7 @@ class Expiry(unittest.TestCase):
 
         def backup(symbols, last):
             asked.extend(symbols)
-            return {}, None, []
+            return {}, {}, []
         out, err = run(datetime(2026, 11, 16, 15, 0, tzinfo=timezone.utc), backup=backup)
         self.assertNotIn("@S6X", out["futures"])
         self.assertNotIn("@S6X", asked, "no backup fetched for an expired contract")
@@ -140,3 +140,46 @@ class BackupFutures(unittest.TestCase):
         self.assertEqual(sorted(got), ["@C7K"])
         self.assertEqual(src, {"@C7K": "boards"})
         self.assertTrue(any("@C7H refused" in n for n in notes))
+
+
+PAGE = open(os.path.join(FIX, "dtn-cash-page.html"), encoding="latin-1").read()
+
+
+class QuoteTime(unittest.TestCase):
+    def test_titles_win(self):
+        b = harvest.build(PAGE)
+        self.assertEqual((b["quote_time"], b["quote_time_source"]), ("2026-10-19T13:19:58", "dtn"))
+
+    def test_price_as_of_stamp(self):
+        """The home page carried 'Price as of 10/16/26 09:30PM CDT' (bids.json of Oct 17 02:30Z)."""
+        b = harvest.build(re.sub(r' title="[^"]*"', "", PAGE).replace("10/19/26 01:50PM", "10/16/26 09:30PM"))
+        self.assertEqual((b["quote_time"], b["quote_time_source"]), ("2026-10-16T21:30:00", "dtn_as_of"))
+
+    def test_run_time_when_dtn_prints_no_time(self):
+        """Real case: every commit since mid October has quote_time null (no titles, no stamp)."""
+        bare = re.sub(r' title="[^"]*"', "", PAGE).replace("Price as of 10/19/26 01:50PM CDT.", "")
+        b = harvest.build(bare)
+        self.assertIsNone(b["quote_time"])
+        out, _ = run(datetime(2026, 10, 19, 18, 50, 10, tzinfo=timezone.utc), fetch=lambda: (b, OLD["source"]))
+        self.assertEqual((out["quote_time"], out["quote_time_source"]), ("2026-10-19T13:50:10", "run"))
+
+    def test_weekend_keeps_the_close(self):
+        """DTN down and every backup down on Saturday. Friday's last run (2:00 PM CT, quote_time from the run)
+        is after the 1:20 close plus DTN's delay: keep those prices instead of failing all weekend."""
+        def down():
+            raise SystemExit("all fetches failed")
+        fri = dict(copy.deepcopy(OLD), quote_time="2026-10-23T14:00:10", quote_time_source="run")
+        out, _ = run(datetime(2026, 10, 24, 15, 0, tzinfo=timezone.utc), fetch=down, old=fri)
+        self.assertEqual(out["futures"], OLD["futures"])
+        self.assertEqual((out["quote_time"], out["quote_time_source"]), ("2026-10-23T14:00:10", "run"))
+        self.assertIn("kept the close", " ".join(out["backup_notes"]))
+
+    def test_weekend_refuses_a_pre_close_read(self):
+        def down():
+            raise SystemExit("all fetches failed")
+        fri = dict(copy.deepcopy(OLD), quote_time="2026-10-23T13:25:00", quote_time_source="run")
+        with self.assertRaises(SystemExit):
+            run(datetime(2026, 10, 24, 15, 0, tzinfo=timezone.utc), fetch=down, old=fri)
+        old_null = dict(copy.deepcopy(OLD), quote_time=None)  # the real Oct 19 file: could never keep the close
+        with self.assertRaises(SystemExit):
+            run(datetime(2026, 10, 24, 15, 0, tzinfo=timezone.utc), fetch=down, old=old_null)

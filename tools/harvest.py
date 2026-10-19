@@ -5,11 +5,18 @@ Run by .github/workflows/harvest.yml. Standard library only.
 
   python tools/harvest.py                    fetch live, write data/bids.json if needed
   python tools/harvest.py --file page.html   decode a saved page, print JSON, write nothing
+  python tools/harvest.py --selftest         decode test/fixtures/dtn-cash-page.html and check the clock, no network
 
 Published:
   futures   {symbol: {price, change, time}}  the site adds Jeff's basis (data/site.json) to these
   dtn       {location_id: [{label, commodity, symbol, cash, basis}]}  DTN's own bid, for /admin reference only
-  quote_time  latest futures trade time on the page (Central), when the page carries it
+  futures_sources  {symbol: "dtn"|"boards"|"yahoo"|"agsist"|"ace"}  where each published price came from
+  futures_source   "dtn" when every contract came from DTN, "mixed" when some did, else the backups joined by +
+  dtn_futures      the last price DTN itself gave per contract (the yardstick for backups); never a backup price
+  quote_time  Central wall time the prices are as of; quote_time_source says how it was found:
+              "dtn" latest trade time in DTN's cell titles, "dtn_as_of" the page's "Price as of" stamp,
+              "backup" the backup feed's own time, "run" this run's time (DTN printed no time at all)
+  A contract past its last trading day (data/cbot.json) is never published: its row shows a dash.
   checked     last time the harvester ran successfully (heartbeat, at least hourly)
 
 How DTN hides numbers: cash and basis cells are printed as displayNumber(x, 2) where
@@ -199,6 +206,14 @@ def central(title):
         return None
 
 
+def as_of_iso(txt):
+    """DTN's 'Price as of 10/16/26 09:30PM CDT' -> '2026-10-16T21:30:00' (Central wall time), else None."""
+    try:
+        return datetime.strptime(" ".join((txt or "").split()[:2]), "%m/%d/%y %I:%M%p").strftime("%Y-%m-%dT%H:%M:%S")
+    except ValueError:
+        return None
+
+
 def slug(name):
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
@@ -273,7 +288,12 @@ def build(src):
     if not any(k.startswith("@C") for k in futures) or not any(k.startswith("@S") for k in futures):
         raise ValueError("no corn or no soybean contract survived the checks: %s; problems: %s" % (sorted(futures), problems))
     times = [f["time"] for f in futures.values() if f.get("time")]
-    return {"quote_time": max(times) if times else None, "dtn_as_of": as_of, "futures": futures, "dtn": dtn}
+    if times:
+        qt, qs = max(times), "dtn"  # latest trade time in DTN's cell titles
+    else:
+        qt = as_of_iso(as_of)  # the page's own "Price as of" stamp
+        qs = "dtn_as_of" if qt else None
+    return {"quote_time": qt, "quote_time_source": qs, "dtn_as_of": as_of, "futures": futures, "dtn": dtn}
 
 
 ROOTS = {"@C": "ZC", "@S": "ZS", "@W": "ZW"}
@@ -689,20 +709,28 @@ def assemble(old, wanted, site, now, fetch=None, backup=None, cal=None):
         print(dtn_down, file=sys.stderr)
         dtn_now = {}
         fut, per, notes = backup(wanted, last_dtn)
-        src = source_label(per)
+        src, kept = source_label(per), False
         if not any(k.startswith("@C") for k in fut) or not any(k.startswith("@S") for k in fut):
             # Market closed and the stored prices were read after the last session ended: they ARE the close
             # and cannot have moved. Keep them and record the check, so the site does not go dark all weekend.
             since, qt = closed_since(now, cal), old.get("quote_time")
-            if since and qt and old.get("futures") and datetime.strptime(qt[:19], "%Y-%m-%dT%H:%M:%S") >= since:
+            # A trade time (DTN titles, a backup's own stamp) after the close is the close. A page stamp or our
+            # own run time is only that once DTN's 10-minute delay has passed, so it needs 15 minutes of margin.
+            margin = timedelta(minutes=15) if old.get("quote_time_source") in ("run", "dtn_as_of") else timedelta(0)
+            if since and qt and old.get("futures") and datetime.strptime(qt[:19], "%Y-%m-%dT%H:%M:%S") >= since + margin:
                 print("DTN and backups unavailable; CBOT closed since %s and stored prices (%s) are that close; keeping them" % (since, qt))
                 fut, src = dict(old["futures"]), old.get("futures_source", "dtn")
                 per = dict(old.get("futures_sources") or {s: src for s in fut})
+                kept = True
                 notes = notes + ["kept the close: CBOT closed since %s" % since.strftime("%a %H:%M")]
             else:
                 raise SystemExit("DTN down and the backup feed did not cover corn and soybeans; bids.json left unchanged")
         times = [f["time"] for f in fut.values() if f.get("time")]
-        data = {"quote_time": max(times) if times else None, "dtn_as_of": None, "futures": fut,
+        if kept:  # kept the close: keep its time too
+            qt, qs = old.get("quote_time"), old.get("quote_time_source")
+        else:
+            qt, qs = (max(times), "backup") if times else (None, None)
+        data = {"quote_time": qt, "quote_time_source": qs, "dtn_as_of": None, "futures": fut,
                 "dtn": old.get("dtn", {}), "futures_source": src,
                 "dtn_error": str(dtn_down)[:300], "backup_notes": [n[:200] for n in notes]}
         url = "backup:" + src
@@ -711,6 +739,10 @@ def assemble(old, wanted, site, now, fetch=None, backup=None, cal=None):
         if expired(s, today, cal):
             print("dropped %s: past its last trading day; the page shows a dash" % s, file=sys.stderr)
             del data["futures"][s]
+    if not data.get("quote_time"):
+        # Neither DTN's titles nor its "Price as of" stamp are on the page (true since mid October 2026): the
+        # prices are as of this run, give or take DTN's delay. Recorded as such so nobody reads it as a trade time.
+        data["quote_time"], data["quote_time_source"] = _central_iso(now.timestamp()), "run"
     data["futures_sources"] = {s: per.get(s) or "dtn" for s in sorted(data["futures"])}
     data["futures_source"] = source_label(data["futures_sources"])
     try:
