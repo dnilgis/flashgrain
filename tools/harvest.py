@@ -476,6 +476,17 @@ def _central_iso(epoch):
     return (utc + timedelta(hours=off)).strftime("%Y-%m-%dT%H:%M:%S")
 
 
+def agsist_prices(now=None):
+    """agsist's data/prices.json, refused when older than BACKUP_MAX_AGE (unless it was read after the last close)."""
+    d = _get(AGSIST)
+    now = now or datetime.now(timezone.utc)
+    fetched = datetime.strptime(d["fetched"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    since = closed_since(now)
+    if now - fetched > BACKUP_MAX_AGE and not (since and _ct(fetched) >= since):
+        raise ValueError("agsist prices.json is %s old" % (now - fetched))
+    return d, fetched
+
+
 def backup_futures(symbols, last_dtn):
     """Delayed CBOT futures for contracts DTN cannot give us: live elevator boards (via dnilgis/bids), then
     Yahoo Finance, then agsist's prices.json, then (corn only) Ace Ethanol's board.
@@ -505,11 +516,7 @@ def backup_futures(symbols, last_dtn):
     missing = [s for s in symbols if s not in got]
     if missing:  # agsist's own Yahoo pull, if it is fresh
         try:
-            d = _get(AGSIST)
-            fetched = datetime.strptime(d["fetched"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            since = closed_since()
-            if datetime.now(timezone.utc) - fetched > BACKUP_MAX_AGE and not (since and _ct(fetched) >= since):
-                raise ValueError("agsist prices.json is %s old" % (datetime.now(timezone.utc) - fetched))
+            d, fetched = agsist_prices()
             by_ticker = {q.get("ticker"): q for q in d.get("quotes", {}).values() if isinstance(q, dict)}
             for sym in missing:
                 q = by_ticker.get(yahoo_ticker(sym))
@@ -541,9 +548,10 @@ def backup_futures(symbols, last_dtn):
             print("backup ace: %s" % e, file=sys.stderr)
     if any(v.get("change") is None for v in got.values()):
         # Boards carry price but not the day's move. agsist's close minus its net change is the prior settle,
-        # which does not change during the session, so change = live price - prior settle.
+        # which does not change during the session, so change = live price - prior settle. Only from a fresh
+        # prices.json: an old one's settle is an older day's, and the arrow would show several days' move.
         try:
-            d = _get(AGSIST)
+            d, _ = agsist_prices()
             settle = {}
             for q in d.get("quotes", {}).values():
                 if isinstance(q, dict) and q.get("close") is not None and q.get("netChange") is not None:

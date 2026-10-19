@@ -183,3 +183,33 @@ class QuoteTime(unittest.TestCase):
         old_null = dict(copy.deepcopy(OLD), quote_time=None)  # the real Oct 19 file: could never keep the close
         with self.assertRaises(SystemExit):
             run(datetime(2026, 10, 24, 15, 0, tzinfo=timezone.utc), fetch=down, old=old_null)
+
+
+class ChangeArrow(unittest.TestCase):
+    """Boards give a price but no day's move; the move came from agsist's settle with no age check."""
+
+    def _run(self, fetched):
+        saved = harvest.board_futures, harvest._get
+        harvest.board_futures = lambda syms: ({"@C7H": {"price": 4.855, "change": None, "time": None}}, [])
+        prices = {"fetched": fetched, "quotes": {"zch27": {"ticker": "ZCH27.CBT", "close": 490.0, "netChange": -2.5}}}
+
+        def get(url, timeout=20):
+            if url == harvest.AGSIST:
+                return prices
+            raise OSError("offline in tests")
+        harvest._get = get
+        try:
+            with redirect_stderr(io.StringIO()):
+                return harvest.backup_futures(["@C7H"], OLD["dtn_futures"])
+        finally:
+            harvest.board_futures, harvest._get = saved
+
+    def test_fresh_settle_used(self):
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        got, _, _ = self._run(now)
+        self.assertAlmostEqual(got["@C7H"]["change"], 4.855 - 4.925, places=5)
+
+    def test_stale_settle_ignored(self):
+        got, _, notes = self._run("2026-01-05T15:00:00Z")
+        self.assertIsNone(got["@C7H"]["change"], "no arrow beats a wrong arrow")
+        self.assertTrue(any("change from agsist" in n and "old" in n for n in notes))
