@@ -131,3 +131,27 @@ test('key expiry: warns from 14 days out, quiet before, says expired after', () 
   assert.equal(A.keyState('2026-11-03', '2026-10-19').level, 'ok');
   assert.equal(A.keyState('2026-10-18', '2026-10-19').level, 'expired');
 });
+
+const CAL = fx('admin-cbot.json');
+test('contract calendar: file dates, and the CME rule agrees with them (verdict 1)', () => {
+  assert.deepEqual(A.contractDates('@S6X', CAL), { fnd: '2026-10-30', ltd: '2026-11-13' });
+  for (const s of Object.keys(CAL.contracts)) assert.deepEqual(A.contractDates(s, { holidays: CAL.holidays, contracts: {} }), CAL.contracts[s], s);
+  assert.equal(A.dayWords('2026-10-30'), 'Fri Oct 30');
+  assert.equal(A.nextContract('@S6X'), '@S7F');
+  assert.equal(A.nextContract('@C6Z'), '@C7H');
+  assert.equal(A.nextContract('@S7U'), '@S7X');
+});
+
+test('roll: Fall 26 soybeans on Nov 26 futures, real dates', () => {
+  assert.equal(A.rollState('@S6X', '2026-10-19', CAL), null);                    // 9 business days out
+  assert.equal(A.rollState('@S6X', '2026-10-23', CAL).level, 'near');            // Oct 26-30 is 5
+  assert.equal(A.rollState('@S6X', '2026-10-22', CAL), null);
+  assert.equal(A.rollState('@S6X', '2026-10-30', CAL).level, 'notice');
+  assert.equal(A.rollState('@S6X', '2026-11-13', CAL).level, 'notice');          // last trade day itself
+  assert.equal(A.rollState('@S6X', '2026-11-14', CAL).level, 'expired');
+  assert.equal(A.rollState('@C6Z', '2026-11-20', CAL).level, 'near');            // Thanksgiving Nov 26 not counted
+  assert.equal(A.rollState('@C6Z', '2026-11-19', CAL), null);
+  // keep cash the same: -0.75 on Nov 12.535 -> Jan 12.665 gives -0.88
+  assert.equal(A.rollBasis(-0.75, 12.535, 12.665), -0.88);
+  assert.equal(A.rollBasis(-0.75, 12.535, null), null);
+});

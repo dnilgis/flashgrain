@@ -71,6 +71,40 @@ var FGA = (function () {
     return mo ? y * 12 + mo : NaN;
   }
 
+  // ---------- contract calendar: first notice (FND) and last trade (LTD), from data/cbot.json ----------
+  // cal: { holidays: ["YYYY-MM-DD"], contracts: { "@S6X": { fnd, ltd } } }. A contract the file lacks falls back to
+  // the CME rule: FND = last business day of the month before; LTD = business day before the 15th.
+  function symYM(sym) { var m = /^(@[A-Z]+)(\d)([FGHJKMNQUVXZ])$/.exec(sym || ''); return m ? { pfx: m[1], y: 2020 + +m[2], m: CODEMON[m[3]] } : null; }
+  function iso(y, m, d) { var t = new Date(Date.UTC(y, m - 1, d)); return t.toISOString().slice(0, 10); }
+  function isBiz(d, hol) { var w = new Date(d + 'T00:00:00Z').getUTCDay(); return w > 0 && w < 6 && (hol || []).indexOf(d) < 0; }
+  function addDays(d, n) { var t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); }
+  function contractDates(sym, cal) {
+    var c = cal && cal.contracts && cal.contracts[sym];
+    if (c && c.fnd && c.ltd) return { fnd: c.fnd, ltd: c.ltd };
+    var p = symYM(sym), hol = cal && cal.holidays || [];
+    if (!p) return null;
+    var ltd = iso(p.y, p.m, 14); while (!isBiz(ltd, hol)) ltd = addDays(ltd, -1);
+    var fnd = addDays(iso(p.y, p.m, 1), -1); while (!isBiz(fnd, hol)) fnd = addDays(fnd, -1);
+    return { fnd: fnd, ltd: ltd };
+  }
+  function bizBetween(a, b, hol) { var n = 0; for (var d = addDays(a, 1); d <= b; d = addDays(d, 1)) if (isBiz(d, hol)) n++; return n; }
+  // null, or { level: 'near' (5 business days or less before FND) | 'notice' (FND to LTD) | 'expired' (after LTD) }
+  function rollState(sym, today, cal) {
+    var d = contractDates(sym, cal); if (!d) return null;
+    var lv = today > d.ltd ? 'expired' : today >= d.fnd ? 'notice' : bizBetween(today, d.fnd, cal && cal.holidays) <= 5 ? 'near' : null;
+    return lv ? { level: lv, fnd: d.fnd, ltd: d.ltd } : null;
+  }
+  // the next listed contract of the same crop: @S6X -> @S7F, @C6Z -> @C7H
+  function nextContract(sym) {
+    var p = symYM(sym), L = p && LISTED[p.pfx]; if (!L) return null;
+    var ms = Object.keys(L).map(Number).sort(function (a, b) { return a - b; }), hit = ms.filter(function (x) { return x > p.m; })[0], y = p.y;
+    if (!hit) { hit = ms[0]; y++; }
+    return p.pfx + (y % 10) + L[hit];
+  }
+  // new basis that keeps cash where it is: basis + (old futures - new futures)
+  function rollBasis(b, oldF, newF) { return isNum(b) && isNum(oldF) && isNum(newF) ? r2(b + oldF - newF) : null; }
+  function dayWords(d) { var t = new Date(d + 'T12:00:00Z'); return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][t.getUTCDay()] + ' ' + MON[t.getUTCMonth()] + ' ' + t.getUTCDate(); }
+
   // ---------- price review: every cash change, and every number that looks like a typo ----------
   // D, O: new and saved site.json. locs: [{id, name}] that post bids. same: Granton uses Thorp basis.
   // fut(sym) -> futures price or null. Returns { lines: [cash changes], warn: [check these], off: [rows taken down] }.
@@ -115,7 +149,7 @@ var FGA = (function () {
           if (isNum(b0) && Math.abs(b - b0) > JUMP + 1e-9) warn.push(who + ': ' + basisTxt(b) + ' is ' + centsTxt(b - b0) + (b > b0 ? ' higher' : ' lower') + ' than ' + locs[0].name + ' ' + basisTxt(b0) + '.');
         }
         if (isNum(fNew) && (b !== ob || moved || !wasOn)) {
-          var was = wasOn && isNum(ob) && isNum(fOld) ? '$' + money(fOld + ob) : 'new';
+          var was = !wasOn ? 'new' : isNum(ob) && isNum(fOld) ? '$' + money(fOld + ob) : 'no price';
           lines.push(who + ': cash ' + was + ' to $' + money(fNew + b) + ' (basis ' + basisTxt(b) + ')');
         }
       });
@@ -200,7 +234,7 @@ var FGA = (function () {
 
   return { parseBasis: parseBasis, textToHours: textToHours, hoursParts: hoursParts, hhmm: hhmm, hoursAsk: hoursAsk, hoursWords: hoursWords, clockWords: clockWords,
     money: money, basisTxt: basisTxt, centsTxt: centsTxt, symName: symName, labelMonth: labelMonth, review: review,
-    merge3: merge3, pathWords: pathWords, errWords: errWords, expiryFromHeader: expiryFromHeader, futuresSources: futuresSources, cropOf: cropOf, keyState: keyState,
+    merge3: merge3, pathWords: pathWords, errWords: errWords, expiryFromHeader: expiryFromHeader, futuresSources: futuresSources, cropOf: cropOf, keyState: keyState, contractDates: contractDates, rollState: rollState, nextContract: nextContract, rollBasis: rollBasis, dayWords: dayWords,
     MON: MON, CODEMON: CODEMON, LISTED: LISTED };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = FGA;
@@ -278,10 +312,11 @@ if (typeof window !== 'undefined' && window.document) (function () {
     store('fg-token', $('remember').checked ? $('token').value.trim() : null);
     store('fg-key-exp', $('key-exp').value || null);
     status('Loading…');
-    Promise.all([gh('/contents/' + PATH + ref()), gh('/contents/data/bids.json' + ref()).catch(function () { return null; })])
+    var opt = function (path) { return gh('/contents/' + path + ref()).then(function (j) { return JSON.parse(b64dec(j.content)); }).catch(function () { return null; }); };
+    Promise.all([gh('/contents/' + PATH + ref()), opt('data/bids.json'), opt('data/cbot.json')])
       .then(function (r) {
         SHA = r[0].sha; S = JSON.parse(b64dec(r[0].content)); ORIG = clone(S);
-        BIDS = r[1] ? JSON.parse(b64dec(r[1].content)) : null;
+        BIDS = r[1]; CAL = r[2] || { holidays: [], contracts: {} }; // no file yet: the CME rule alone
         hoursCache = {};
         return loadFutures().then(function () { draw(); $('editor').hidden = false; setDirty(false); });
       }).then(function () {
@@ -338,7 +373,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
   // the nearest listed contract at or after the delivery month (corn H K N U Z, soybeans F H K N Q U X);
   // Fall = Dec corn / Nov soybeans. Overridable per row under "Edit rows".
   var MON = FGA.MON, LISTED = FGA.LISTED;
-  var FUT = {}, CAT = [], SAME = true;
+  var FUT = {}, CAT = [], SAME = true, CAL = { holidays: [], contracts: {} };
   function contractFor(pfx, y, m) {
     var ms = Object.keys(LISTED[pfx]).map(Number);
     for (var k = 0; k < 2; k++) { var hit = ms.filter(function (x) { return k || x >= m; })[0]; if (hit) return pfx + ((y + k) % 10) + LISTED[pfx][hit]; }
@@ -396,6 +431,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
     $('bids-list').innerHTML = h;
     $('bids-list').classList.toggle('same', SAME);
     $('bids-list').querySelectorAll('.bl-row').forEach(function (row) { previewRow(row); markRow(row); });
+    drawRoll();
     $('fut-asof').textContent = 'Symbol: @C corn, @S soybeans, the year digit (6 = 2026), then the month letter: F Jan, H Mar, K May, N Jul, Q Aug, U Sep, X Nov, Z Dec.';
   }
   function previewRow(row) {
@@ -418,6 +454,50 @@ if (typeof window !== 'undefined' && window.document) (function () {
       var inp = row.querySelector('[data-b]');
       previewRow(row); if (!inp.value) inp.focus();
     }
+    drawRoll();
+  });
+
+  // ---------- contract roll: a card for every row on the site whose futures are near first notice or past it ----------
+  function centralToday() { return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' }); }
+  function drawRoll() {
+    $('cards').querySelectorAll('[data-card^="roll-"]').forEach(function (c) { c.remove(); });
+    var today = centralToday();
+    $('bids-list').querySelectorAll('.bl-row').forEach(function (row) {
+      if (!$('bl' + row.dataset.c).checked) return;
+      var p = CAT[+row.dataset.c], sym = row.querySelector('[data-f=symbol]').value.trim().toUpperCase(), st = FGA.rollState(sym, today, CAL);
+      if (!st) return;
+      var nx = FGA.nextContract(sym), what = '<b>' + esc(p.label + ' ' + p.commodity.toLowerCase()) + '</b> use ' + esc(FGA.symName(sym)) + ' futures';
+      var html = st.level === 'expired'
+        ? what + ', which stopped trading ' + esc(FGA.dayWords(st.ltd)) + '. The site shows a dash for this row until you move it.'
+        : what + '. First notice ' + esc(FGA.dayWords(st.fnd)) + ', last trade ' + esc(FGA.dayWords(st.ltd)) + '.';
+      html += nx ? ' Move to ' + esc(FGA.symName(nx)) + '?' : '';
+      card('roll-' + row.dataset.c, st.level === 'expired' ? 'stop' : 'warn', html, nx ? [['Move to ' + FGA.symName(nx), function () { moveRow(row, nx); }]] : []);
+    });
+  }
+  // Switch a row to the next contract and suggest the basis that keeps cash where it is. Jeff confirms it.
+  function moveRow(row, nx) {
+    var symIn = row.querySelector('[data-f=symbol]'), old = symIn.value.trim().toUpperCase(), fo = futFor(old), fn = futFor(nx);
+    symIn.value = nx;
+    var note = row.querySelector('.bl-sugg'); if (note) note.remove();
+    var ins = row.querySelectorAll('[data-b]'), first = null, said = '';
+    ins.forEach(function (inp, li) {
+      if (SAME && li) return;
+      var b = parseBasis(inp.value), nb = FGA.rollBasis(b, fo && fo.price, fn && fn.price);
+      if (nb === null) return;
+      inp.value = nb.toFixed(2); inp.classList.add('sugg'); first = first || inp;
+      if (!said) said = FGA.basisTxt(nb) + ' keeps cash at $' + FG.money(fo.price + b) + ' (' + FGA.symName(nx) + ' is ' + FGA.centsTxt(fn.price - fo.price) + (fn.price >= fo.price ? ' over ' : ' under ') + FGA.symName(old) + ')';
+    });
+    note = document.createElement('span'); note.className = 'bl-sugg';
+    note.textContent = said ? 'Suggested basis ' + said + '. Check it before you publish.'
+      : !fn ? 'No ' + FGA.symName(nx) + ' price yet, so no suggested basis. Set it yourself; the site shows a dash until a price comes in.'
+      : 'No ' + FGA.symName(old) + ' price to compare, so no suggested basis. Set it yourself.';
+    row.appendChild(note);
+    previewRow(row); markRow(row); setDirty(true); keepDraft(); drawRoll();
+    row.scrollIntoView({ block: 'center' }); (first || ins[0]).focus({ preventScroll: true });
+  }
+  $('bids-list').addEventListener('input', function (e) {
+    if (e.target.classList.contains('sugg')) { e.target.classList.remove('sugg'); var n = e.target.closest('.bl-row').querySelector('.bl-sugg'); if (n && !e.target.closest('.bl-row').querySelector('.sugg')) n.remove(); }
+    if (e.target.dataset.f === 'symbol') drawRoll();
   });
   $('bids-list').addEventListener('input', function (e) { var row = e.target.closest('.bl-row'); if (row) { previewRow(row); markRow(row); } });
   $('bids-list').addEventListener('change', function (e) { var row = e.target.closest('.bl-row') || $('bids-list').querySelector('.bl-row[data-c="' + e.target.dataset.c + '"]'); if (row) markRow(row); });
@@ -442,7 +522,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
     row.querySelector('[data-f=symbol]').value = o ? o.symbol : p.defSymbol;
     row.querySelectorAll('[data-b]').forEach(function (inp) { var b = o && o.basis ? o.basis[inp.dataset.b] : undefined; inp.value = FG.num(b) ? b.toFixed(2) : ''; inp.classList.remove('bad', 'sugg'); });
     var note = row.querySelector('.bl-sugg'); if (note) note.remove();
-    previewRow(row); markRow(row); recheckDirty(); if (typeof drawRoll === 'function') drawRoll();
+    previewRow(row); markRow(row); recheckDirty(); drawRoll();
     row.querySelector('[data-b]').focus();
   }
   // dirty means the form differs from what the site has, not just that a key was pressed
@@ -723,7 +803,12 @@ if (typeof window !== 'undefined' && window.document) (function () {
 
   // ---------- save ----------
   function priceReview(D) {
-    return FGA.review(D, ORIG, bidLocs(D), SAME, function (sym) { var f = futFor(sym); return f ? f.price : null; });
+    var rv = FGA.review(D, ORIG, bidLocs(D), SAME, function (sym) { var f = futFor(sym); return f ? f.price : null; });
+    $('bids-list').querySelectorAll('.bl-row').forEach(function (row) { // a suggested basis left as suggested
+      var p = CAT[+row.dataset.c], i = row.querySelector('.sugg');
+      if (i && $('bl' + row.dataset.c).checked) rv.warn.unshift(p.commodity + ' ' + p.label + ': basis ' + i.value + ' is the suggested one for the new contract. Is it what you want to pay?');
+    });
+    return rv;
   }
 
   // In-page review sheet instead of confirm(): Back has the focus, Publish only arms after a moment so the tap
