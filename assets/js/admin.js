@@ -418,6 +418,12 @@ if (typeof window !== 'undefined' && window.document) (function () {
     });
     return out;
   }
+  function monthsOut(ym) { var n = nowYM(); return (+ym.slice(0, 4) - +n.slice(0, 4)) * 12 + (+ym.slice(5, 7) - +n.slice(5, 7)); }
+  $('bids-list').addEventListener('click', function (e) {
+    var b = e.target.closest('.bl-more'); if (!b) return;
+    var crop = b.closest('.bl-crop'), open = !crop.classList.contains('more');
+    crop.classList.toggle('more', open); b.setAttribute('aria-expanded', String(open)); b.textContent = open ? 'Fewer months' : 'More months';
+  });
   function futFor(sym) { return FUT[sym] || null; }
   function drawBids() {
     var locs = bidLocs(); CAT = buildCatalog();
@@ -431,8 +437,10 @@ if (typeof window !== 'undefined' && window.document) (function () {
       h += '<div class="bl-crop"><h3 class="bl-grp" id="g-' + esc(c) + '">' + esc(c) + '</h3>'
         + '<div class="bl-chips" role="group" aria-labelledby="g-' + esc(c) + '">' + items.map(function (x) {
           var on = !!(x.p.row && x.p.row.show);
-          return '<label class="chip"><input type="checkbox" id="bl' + x.i + '" data-f="show" data-c="' + x.i + '"' + (on ? ' checked' : '') + '><span>' + esc(x.p.label) + '</span><span class="vh"> ' + esc(c) + ', show on site</span></label>';
-        }).join('') + '</div>'
+          // 15 months a crop is a lot to scan: Falls and the next 6 months show, later months fold away unless on
+          var later = !/^Fall /.test(x.p.label) && x.p.until && monthsOut(x.p.until) >= 6;
+          return '<label class="chip' + (later ? ' later' : '') + '"><input type="checkbox" id="bl' + x.i + '" data-f="show" data-c="' + x.i + '"' + (on ? ' checked' : '') + '><span>' + esc(x.p.label) + '</span><span class="vh"> ' + esc(c) + ', show on site</span></label>';
+        }).join('') + '<button class="chip bl-more" type="button" aria-expanded="false">More months</button></div>'
         + '<div class="bl-rows">' + items.map(function (x) {
           var p = x.p, r = p.row || {}, f = futFor(p.symbol);
           return '<div class="bl-row' + (r.show ? ' on' : '') + '" data-c="' + x.i + '">'

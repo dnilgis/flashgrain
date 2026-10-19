@@ -306,3 +306,8 @@ body.admin .bl-loc .num.sugg{outline:2px dashed var(--flash);outline-offset:-2px
 .bl-near:empty{display:none}
 .bl-near b{color:var(--ink);font-weight:500}
 @media(min-width:760px){.bl-near{grid-column:2/-1}.bl-sugg{grid-column:2/-1}}
+
+/* month chips: later months fold away unless on or asked for */
+.bl-crop:not(.more) .chip.later:not(:has(input:checked)){display:none}
+.chip.bl-more{background:transparent;border-style:dashed;color:var(--ink2);font-size:1rem}
+.bl-crop:not(:has(.chip.later)) .bl-more{display:none}
