@@ -203,7 +203,9 @@
   var FALLBACK_TEL = '715-653-6585';
   function phone() { return (SITE && SITE.business && SITE.business.phone) || FALLBACK_TEL; }
   function callMsg(lead) {
-    var m = $('feed-msg'); m.hidden = false;
+    // The message sits in its own row at the top of the board, where the cash prices would be, so showing it
+    // only pushes down what is below the board (no layout jump above the fold).
+    var m = $('feed-msg'); $('msg-body').hidden = false;
     m.innerHTML = esc(lead) + ' Call <a href="tel:' + esc(phone().replace(/\D/g, '')) + '">' + esc(phone()) + '</a> for today’s bid.';
   }
   function feedState() {
@@ -272,10 +274,10 @@
       html += '</tbody>';
     });
     var table = board.parentNode;
-    [].slice.call(table.querySelectorAll('tbody')).forEach(function (t) { t.remove(); });
+    [].slice.call(table.querySelectorAll('tbody:not(#msg-body)')).forEach(function (t) { t.remove(); });
     if (!html) html = '<tbody><tr><td colspan="4" class="pend">No bids posted. Call ' + esc(phone()) + '.</td></tr></tbody>';
     table.insertAdjacentHTML('beforeend', html);
-    board = table.querySelector('tbody');
+    board = table.querySelector('tbody:not(#msg-body)');
 
     // flash: cash cells whose value moved since the last refresh, and the stamp when the quote time moved
     var flash = flashNext; flashNext = false;
@@ -288,7 +290,7 @@
     if (flash && q && lastQuote && q !== lastQuote) { st.classList.remove('tick'); void st.offsetWidth; st.classList.add('tick'); }
     if (q) lastQuote = q;
 
-    if (feed === 'ok') { $('feed-msg').hidden = true; $('feed-msg').innerHTML = ''; }
+    if (feed === 'ok') { $('msg-body').hidden = true; $('feed-msg').innerHTML = ''; }
     else callMsg('Cash prices are hidden until the futures feed is back.');
     $('bids-note').textContent = 'Cash = CBOT futures + basis, $/bu. ' + (months.length ? months.join(', ') + ' futures. ' : '')
       + (anyExpired ? 'Expired = that futures contract has stopped trading. Call for a bid. ' : '') + (SITE.bids.footnote || '');

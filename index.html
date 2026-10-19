@@ -103,12 +103,12 @@
     <h2 id="bids-h"><span id="bids-loc">Thorp</span> Cash bids</h2>
     <p class="bids-meta"><span class="stamp" id="stamp"><i aria-hidden="true"></i><span id="asof">Loading</span></span><span class="open" id="open"></span><span id="basis-set"></span></p>
   </div>
-  <p class="feed-msg" id="feed-msg" role="status" hidden></p>
-  <div class="seg" role="group" aria-label="Choose location" id="seg"></div>
+  <div class="seg" role="group" aria-label="Choose location" id="seg"><button type="button" data-id="thorp" aria-pressed="true">Thorp</button><button type="button" data-id="granton" aria-pressed="false">Granton</button></div>
   <table class="board">
     <caption class="vh">Cash bids by delivery period</caption>
     <colgroup><col style="width:30%"><col style="width:28%"><col style="width:20%"><col class="fut" style="width:22%"></colgroup>
     <thead><tr><th scope="col">Delivery</th><th scope="col">Cash $/bu</th><th scope="col">Basis</th><th scope="col" class="fut">Futures</th></tr></thead>
+    <tbody id="msg-body" hidden><tr><td colspan="4" class="msgc"><p class="feed-msg" id="feed-msg" role="status"></p></td></tr></tbody>
     <tbody id="board">
       <tr class="grp"><th scope="rowgroup" colspan="4" class="c">&nbsp;</th></tr>
       <tr><th scope="row" class="c sub">&nbsp;</th><td class="cash"><span class="pend">&mdash;</span></td><td><span class="pend">&mdash;</span></td><td class="fut"><span class="pend">&mdash;</span></td></tr>

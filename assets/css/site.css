@@ -49,9 +49,9 @@ main{container:page/inline-size}
 /* bids */
 .bids{padding:26px 0 0}
 .bids-head h2{font-size:clamp(2.75rem,7vw,4rem)}
-.bids-meta{display:flex;flex-wrap:wrap;gap:4px 0;margin:10px 0 0;min-height:1.5em;font-family:var(--mono);font-size:1.0625rem;line-height:1.45;color:var(--ink2)}
+.bids-meta{display:flex;flex-wrap:wrap;gap:4px 0;margin:10px 0 0;min-height:1.45em;font-family:var(--mono);font-size:1.0625rem;line-height:1.45;color:var(--ink2)}
 @media(min-width:560px){.bids-meta>span:not(:empty)+span:not(:empty)::before{content:"\00b7";margin:0 8px;color:var(--ink2)}}
-@media(max-width:559px){.bids-meta{flex-direction:column}}
+@media(max-width:559px){.bids-meta{flex-direction:column;min-height:calc(3 * 1.45em + 8px)}}
 .stamp i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mute);margin-right:7px;vertical-align:1px}
 .stamp.live i{background:var(--flash);animation:p 2.4s infinite}
 .stamp.warn{color:var(--flash)}
@@ -84,7 +84,10 @@ td.cash.tick{animation:tickcash 2.6s steps(1,end)}
 .board .c{font-family:var(--cond);font-size:2rem;font-weight:800;text-transform:uppercase;line-height:1;text-align:left;letter-spacing:0;color:var(--ink)}
 .board .c.sub{font-size:1.5rem;font-weight:600}
 .board tr.grp th{border-top:3px solid var(--ink);border-bottom:0;padding:16px 0 2px}
-.board tbody:first-of-type tr.grp th{border-top:0;padding-top:10px}
+.board #msg-body+tbody tr.grp th{border-top:0;padding-top:10px}
+.board tbody[hidden]{display:none!important}
+.board td.msgc{text-align:left;padding:4px 0 14px;font-family:var(--sans);font-size:1rem;border-bottom:0}
+.board td.msgc .feed-msg{margin:0}
 .board td.cash{font-size:clamp(2rem,6vw,2.75rem);font-weight:700;color:var(--flash)}
 .board .pend{color:var(--mute);font-weight:500}
 .up,.dn,.fl{display:inline-block;min-width:4.5ch;text-align:right;font-size:.85em;margin-left:6px}
