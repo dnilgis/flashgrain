@@ -169,9 +169,12 @@
     setCalendar: setCalendar, calReady: calReady, contractDates: contractDates, holiday: holiday, earlyClose: earlyClose, expired: expired, quote: quote, ymd: ymd };
 
   // ---------- page ----------
+  // The bolt plays on every load, except for people who asked their device for less motion: then it never shows.
   var strike = document.getElementById('strike');
   if (strike) {
-    setTimeout(function () { if (strike.parentNode) strike.remove(); }, 1300);
+    var still = false; try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    if (still) strike.remove();
+    else setTimeout(function () { if (strike.parentNode) strike.remove(); }, 1300);
   }
   var board = document.getElementById('board');
   if (!board) return;
