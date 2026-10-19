@@ -200,7 +200,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
       if (link) { var a = document.createElement('a'); a.href = link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = ' See the change →'; e.appendChild(a); }
     });
   }
-  function setDirty(v) { dirty = v; $('dirty').textContent = v ? 'Unsaved changes' : ''; }
+  function setDirty(v) { dirty = v; $('dirty').textContent = v ? 'Unsaved changes' : ''; $('discard').hidden = !v; }
   function store(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
   function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -330,7 +330,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
       var pfx = PREFIX[c.toLowerCase()], list = [];
       for (var k = 0; k < 3; k++) { var y = y0 + k; list.push({ label: 'Fall ' + (y % 100), until: y + '-12', sort: y + '-11b', symbol: pfx + (y % 10) + (pfx === '@C' ? 'Z' : 'X') }); }
       for (var j = 0; j < 12; j++) { var mm = (m0 - 1 + j) % 12 + 1, yy = y0 + Math.floor((m0 - 1 + j) / 12), u = yy + '-' + ('0' + mm).slice(-2); list.push({ label: MON[mm - 1] + ' ' + (yy % 100), until: u, sort: u, symbol: contractFor(pfx, yy, mm) }); }
-      list.forEach(function (p) { p.commodity = c; p.key = c + '|' + p.label; p.row = have[p.key] || null; if (p.row) { p.symbol = p.row.symbol || p.symbol; delete have[p.key]; } });
+      list.forEach(function (p) { p.commodity = c; p.key = c + '|' + p.label; p.row = have[p.key] || null; p.defSymbol = p.symbol; if (p.row) { p.symbol = p.row.symbol || p.symbol; delete have[p.key]; } });
       S.bids.rows.forEach(function (r) { // kept rows with labels the catalog does not generate (custom, or not yet expired)
         var k = r.commodity + '|' + r.label; if (r.commodity !== c || !have[k]) return;
         var u = FG.labelUntil(r.label); if (u && u < now) return; // past: dropped
@@ -366,12 +366,12 @@ if (typeof window !== 'undefined' && window.document) (function () {
               return '<span class="bl-loc' + (li ? ' follow' : '') + '"><span class="bl-ln">' + esc(l.name) + '</span>'
                 + '<input class="num" data-b="' + esc(l.id) + '" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="-0.60" value="' + (FG.num(b) ? b.toFixed(2) : '') + '" aria-label="' + esc(l.name + ' basis, ' + c + ' ' + p.label) + '">'
                 + '<span class="bl-cash" data-p="' + esc(l.id) + '"></span></span>';
-            }).join('') + '</span></div>';
+            }).join('') + '<button class="a-btn sm bl-undo" type="button" hidden>Back to saved</button></span></div>';
         }).join('') + '<p class="bl-none">Nothing on. Tap a month above to post it.</p></div></div>';
     });
     $('bids-list').innerHTML = h;
     $('bids-list').classList.toggle('same', SAME);
-    $('bids-list').querySelectorAll('.bl-row').forEach(previewRow);
+    $('bids-list').querySelectorAll('.bl-row').forEach(function (row) { previewRow(row); markRow(row); });
     $('fut-asof').textContent = 'Symbol: @C corn, @S soybeans, the year digit (6 = 2026), then the month letter: F Jan, H Mar, K May, N Jul, Q Aug, U Sep, X Nov, Z Dec.';
   }
   function previewRow(row) {
@@ -391,7 +391,46 @@ if (typeof window !== 'undefined' && window.document) (function () {
       previewRow(row); if (!inp.value) inp.focus();
     }
   });
-  $('bids-list').addEventListener('input', function (e) { var row = e.target.closest('.bl-row'); if (row) previewRow(row); });
+  $('bids-list').addEventListener('input', function (e) { var row = e.target.closest('.bl-row'); if (row) { previewRow(row); markRow(row); } });
+  $('bids-list').addEventListener('change', function (e) { var row = e.target.closest('.bl-row') || $('bids-list').querySelector('.bl-row[data-c="' + e.target.dataset.c + '"]'); if (row) markRow(row); });
+  $('bids-list').addEventListener('click', function (e) { if (e.target.classList.contains('bl-undo')) undoRow(e.target.closest('.bl-row')); });
+
+  // ---------- undo: one row back to what the site has, or every change thrown away ----------
+  function savedRow(p) { return (ORIG.bids.rows || []).filter(function (r) { return r.commodity === p.commodity && r.label === p.label; })[0] || null; }
+  function rowChanged(row) {
+    var p = CAT[+row.dataset.c], o = savedRow(p), ins = row.querySelectorAll('[data-b]');
+    if ($('bl' + row.dataset.c).checked !== !!(o && o.show)) return true;
+    if (row.querySelector('[data-f=symbol]').value.trim().toUpperCase() !== (o ? o.symbol : p.defSymbol)) return true;
+    for (var li = 0; li < ins.length; li++) {
+      var v = (SAME && li ? ins[0] : ins[li]).value.trim(), was = o && o.basis ? o.basis[ins[li].dataset.b] : undefined;
+      if (v === '' ? FG.num(was) : parseBasis(v) !== was) return true;
+    }
+    return false;
+  }
+  function markRow(row) { row.querySelector('.bl-undo').hidden = !rowChanged(row); }
+  function undoRow(row) {
+    var p = CAT[+row.dataset.c], o = savedRow(p), on = !!(o && o.show);
+    $('bl' + row.dataset.c).checked = on; row.classList.toggle('on', on);
+    row.querySelector('[data-f=symbol]').value = o ? o.symbol : p.defSymbol;
+    row.querySelectorAll('[data-b]').forEach(function (inp) { var b = o && o.basis ? o.basis[inp.dataset.b] : undefined; inp.value = FG.num(b) ? b.toFixed(2) : ''; inp.classList.remove('bad', 'sugg'); });
+    var note = row.querySelector('.bl-sugg'); if (note) note.remove();
+    previewRow(row); markRow(row); recheckDirty(); if (typeof drawRoll === 'function') drawRoll();
+    row.querySelector('[data-b]').focus();
+  }
+  // dirty means the form differs from what the site has, not just that a key was pressed
+  function recheckDirty() {
+    if (!S) return;
+    var d = collect(true).draft;
+    if (JSON.stringify(d) === JSON.stringify(ORIG)) { setDirty(false); dropDraft(); } else setDirty(true);
+  }
+  $('discard').onclick = function () {
+    sheet({ title: 'Throw away every change?', html: '<p>Everything you changed since loading goes back to what the site has now. Nothing is published.</p>', ok: 'Throw away', back: 'Keep them', danger: true })
+      .then(function (yes) {
+        if (!yes) return;
+        S = clone(ORIG); draw(); setDirty(false); dropDraft(); problems(null); closeCard('draft');
+        status('Changes thrown away. This is what the site has.');
+      });
+  };
   $('same').onchange = function () { SAME = this.checked; $('bids-list').classList.toggle('same', SAME); $('bids-list').querySelectorAll('.bl-row').forEach(previewRow); setDirty(true); };
   $('edit-rows').onclick = function () {
     var on = !$('bids-list').classList.contains('editing');
@@ -618,6 +657,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
     clearTimeout(draftTimer);
     draftTimer = setTimeout(function () {
       if (!S || !dirty) return;
+      recheckDirty(); if (!dirty) return;
       store(DRAFT, JSON.stringify({ at: new Date().toISOString(), repo: $('repo').value.trim(), branch: $('branch').value.trim(), base: ORIG, draft: collect(true).draft }));
     }, 400);
   }

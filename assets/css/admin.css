@@ -283,3 +283,7 @@ body.admin .a-reft .ref{white-space:normal}
 .a-probs{flex-basis:100%;margin:0;padding:0;list-style:none;max-height:40vh;overflow-y:auto}
 .a-prob{display:block;width:100%;text-align:left;min-height:44px;padding:8px 10px;margin:4px 0 0;background:transparent;color:var(--ink);border:1px solid #ff5a4f;font:500 1rem var(--sans);cursor:pointer}
 @media(min-width:1200px){body.admin .a-bar:has(.a-probs:not([hidden])){flex-wrap:wrap}}
+
+/* undo */
+.bl-undo{font-size:1rem}
+body.admin .a-bids .bl-undo,body.admin .bl-loc~.bl-undo{min-height:44px}
