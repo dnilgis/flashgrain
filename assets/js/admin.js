@@ -192,7 +192,8 @@ if (typeof window !== 'undefined' && window.document) (function () {
 
   $('load').onclick = function () {
     if (!$('token').value.trim()) return status('Paste your GitHub key first.', true);
-    if (dirty && !confirm('You have unsaved changes. Load the saved version and throw them away?')) return;
+    if (dirty) return sheet({ title: 'Throw away your changes?', html: '<p>You have changes that are not published. Loading again throws them away.</p>', ok: 'Throw away and load', back: 'Keep my changes', danger: true })
+      .then(function (yes) { if (yes) { setDirty(false); $('load').onclick(); } });
     store('fg-repo', $('repo').value.trim()); store('fg-branch', $('branch').value.trim());
     store('fg-token', $('remember').checked ? $('token').value.trim() : null);
     store('fg-key-exp', $('key-exp').value || null);
@@ -537,6 +538,35 @@ if (typeof window !== 'undefined' && window.document) (function () {
     return FGA.review(D, ORIG, bidLocs(D), SAME, function (sym) { var f = futFor(sym); return f ? f.price : null; });
   }
 
+  // In-page review sheet instead of confirm(): Back has the focus, Publish only arms after a moment so the tap
+  // that opened the sheet cannot land on it. Resolves true for the main button, false for Back or Escape.
+  var sheetDone = null;
+  function sheet(o) {
+    var d = $('sheet'), ok = $('sheet-ok');
+    if (sheetDone) sheetDone(false);
+    $('sheet-title').textContent = o.title; $('sheet-body').innerHTML = o.html;
+    ok.textContent = o.ok; $('sheet-back').textContent = o.back || 'Back';
+    ok.className = 'cta' + (o.danger ? ' danger' : ''); ok.disabled = true; setTimeout(function () { ok.disabled = false; }, 600);
+    if (d.showModal) d.showModal(); else d.setAttribute('open', '');
+    $('sheet-back').focus(); d.querySelector('.sheet-in').scrollTop = 0;
+    return new Promise(function (res) {
+      sheetDone = function (v) { sheetDone = null; if (d.close) d.close(); else d.removeAttribute('open'); res(v); };
+      ok.onclick = function () { sheetDone(true); };
+      $('sheet-back').onclick = function () { sheetDone(false); };
+      d.oncancel = function (e) { e.preventDefault(); sheetDone(false); };
+    });
+  }
+  var PARTS = [['notices', 'Alert bar'], ['notice_until', 'Alert bar'], ['lime', 'Lime'], ['business', 'Contact'], ['portal_url', 'Contact'], ['references', 'Nearby bids'], ['locations', 'Hours and locations']];
+  function reviewHtml(D, rv) {
+    var li = function (a) { return a.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join(''); }, h = '';
+    if (rv.warn.length) h += '<h3 class="sh-h">Check these first</h3><ul class="sh-warn">' + li(rv.warn) + '</ul>';
+    if (rv.lines.length || rv.off.length) h += '<h3 class="sh-h">Going on the site</h3><ul class="sh-lines">' + li(rv.lines.concat(rv.off)) + '</ul>';
+    var also = []; PARTS.forEach(function (p) { if (JSON.stringify(D[p[0]]) !== JSON.stringify(ORIG[p[0]]) && also.indexOf(p[1]) < 0) also.push(p[1]); });
+    if (D.bids.footnote !== ORIG.bids.footnote && also.indexOf('Footnote') < 0) also.push('Footnote');
+    if (also.length) h += '<p class="sh-also">Also changing: ' + esc(also.join(', ')) + '.</p>';
+    return h;
+  }
+
   $('save').onclick = function () {
     if (saving) return;
     var c = collect();
@@ -544,11 +574,12 @@ if (typeof window !== 'undefined' && window.document) (function () {
     var D = c.draft;
     if (JSON.stringify(D) === JSON.stringify(ORIG)) { setDirty(false); return status('Nothing to save. The site already has this version.'); }
     var rv = priceReview(D);
-    if (rv.warn.length || rv.lines.length) {
-      var msg = (rv.warn.length ? 'CHECK THESE FIRST:\n' + rv.warn.join('\n') + '\n\n' : '') + (rv.lines.length ? 'Price changes going live:\n' + rv.lines.concat(rv.off).join('\n') + '\n\n' : '') + 'Save to the site?';
-      if (!confirm(msg)) return status('Not saved.');
-    }
-    if (rv.lines.length) D.bids.basis_set = new Date().toISOString();
+    if (!rv.warn.length && !rv.lines.length && !rv.off.length) return publish(D, rv);
+    sheet({ title: rv.warn.length ? 'Check before publishing' : 'Publish these prices?', html: reviewHtml(D, rv), ok: 'Publish', back: 'Back' })
+      .then(function (yes) { if (yes) publish(D, rv); else status('Not published. Your changes are still here.'); });
+  };
+  function publish(D, rv) {
+    if (rv.lines.length || rv.off.length) D.bids.basis_set = new Date().toISOString();
     var body = JSON.stringify(D, null, 2) + '\n';
     if (body === JSON.stringify(ORIG, null, 2) + '\n') { setDirty(false); return status('Nothing to save. The site already has this version.'); }
     saving = true; $('save').disabled = true; $('editor').inert = true; status('Saving…');
@@ -566,7 +597,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
       })
       .catch(function (e) { status('Save failed: ' + e.message + '. Your edits are still on this page.', true); })
       .then(function () { saving = false; $('save').disabled = false; $('editor').inert = false; });
-  };
+  }
   $('download').onclick = function () {
     var c = collect(); if (c.bad.length) return status(c.bad[0], true);
     var a = document.createElement('a');

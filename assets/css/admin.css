@@ -248,3 +248,20 @@ body.admin .a-reft .ref{white-space:normal}
 .a-ask-q b{color:var(--flash)}
 .a-ask .a-actions{margin:8px 0 0}
 .a-ask .a-pick{min-height:48px;font-size:1.25rem}
+
+/* review sheet (replaces confirm): warnings in yellow, big Publish and Back */
+.sheet{padding:0;border:3px solid var(--ink);background:var(--bg);color:var(--ink);width:min(640px,calc(100vw - 16px));max-width:none;max-height:calc(100dvh - 16px);margin:auto}
+.sheet::backdrop{background:rgba(0,0,0,.75)}
+.sheet-in{padding:16px;overflow-y:auto;max-height:calc(100dvh - 22px)}
+.sheet h2{font-size:1.75rem;margin:0 0 10px}
+.sh-h{font-family:var(--mono);font-size:1rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);margin:12px 0 6px;font-weight:500}
+.sheet ul{margin:0;padding:0;list-style:none}
+.sheet li{padding:8px 10px;border-bottom:1px solid var(--line);font-size:1.0625rem;line-height:1.35}
+.sh-warn li{background:var(--flash);color:#0b0b0b;font-weight:600;border-bottom:2px solid var(--bg)}
+.sh-lines li{font-family:var(--mono);font-size:1rem}
+.sh-also{color:var(--ink2);margin:10px 0 0}
+.sheet-acts{display:flex;gap:12px;justify-content:space-between;margin-top:18px;position:sticky;bottom:-16px;background:var(--bg);padding:10px 0 4px}
+.sheet-acts button{min-height:56px;flex:1 1 0;margin:0;font-size:1.375rem;cursor:pointer}
+.sheet-acts .cta{border:0}
+.sheet-acts .cta:disabled{opacity:.5}
+.sheet-acts .cta.danger{background:var(--ink)}
