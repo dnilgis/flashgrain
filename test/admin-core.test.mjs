@@ -22,3 +22,11 @@ test('documented hours rule unchanged: 8-5 is 8 AM to 5 PM, 8-12 is 8 to noon', 
   assert.equal(A.textToHours('Call'), 'call');
   assert.equal(A.textToHours('open late'), null);
 });
+
+test('hours "7-9" and "6-10" are asked, not guessed (reviewer C3)', () => {
+  assert.deepEqual(A.hoursAsk('7-9'), { am: '07:00-09:00', pm: '07:00-21:00' });
+  assert.deepEqual(A.hoursAsk('6-10'), { am: '06:00-10:00', pm: '06:00-22:00' });
+  assert.equal(A.hoursWords(A.hoursAsk('7-9').pm), '7 AM to 9 PM');
+  // documented readings stay silent
+  for (const t of ['8-5', '8-12', '7a-9p', '7-9a', '7:30-4:30', '6-5', 'call', 'closed', '8-17']) assert.equal(A.hoursAsk(t), null, t);
+});

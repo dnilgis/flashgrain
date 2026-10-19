@@ -32,7 +32,25 @@ var FGA = (function () {
     if (!(p.o >= 0 && p.c > p.o && p.c <= 1440)) return null;
     return hhmm(p.o) + '-' + hhmm(p.c);
   }
-  return { parseBasis: parseBasis, textToHours: textToHours, hoursParts: hoursParts, hhmm: hhmm };
+  // "7-9", "6-10": a bare closing hour that lands 4 hours or less after opening, still in the morning. The documented
+  // rule reads it as a short morning; it is more often an evening close typed without the PM. Ask, never guess.
+  function hoursAsk(t) {
+    var p = hoursParts(t);
+    if (!p || typeof p === 'string' || !p.bareClose || p.shifted || p.openPM) return null;
+    if (!(p.o >= 0 && p.c > p.o && p.c < 720 && p.c - p.o <= 240 && p.c + 720 <= 1440)) return null;
+    return { am: hhmm(p.o) + '-' + hhmm(p.c), pm: hhmm(p.o) + '-' + hhmm(p.c + 720) };
+  }
+  // 420 -> "7 AM", 750 -> "12:30 PM", 1440 -> "midnight"
+  function clockWords(m) {
+    if (m === 1440 || m === 0) return 'midnight';
+    var h = Math.floor(m / 60), mm = m % 60;
+    return (h % 12 || 12) + (mm ? ':' + ('0' + mm).slice(-2) : '') + (h < 12 ? ' AM' : ' PM');
+  }
+  function hoursWords(v) { // "07:00-21:00" -> "7 AM to 9 PM"
+    var m = /^(\d\d):(\d\d)-(\d\d):(\d\d)$/.exec(v || '');
+    return m ? clockWords(+m[1] * 60 + +m[2]) + ' to ' + clockWords(+m[3] * 60 + +m[4]) : v === 'call' ? 'Call' : v === 'closed' ? 'Closed' : '';
+  }
+  return { parseBasis: parseBasis, textToHours: textToHours, hoursParts: hoursParts, hhmm: hhmm, hoursAsk: hoursAsk, hoursWords: hoursWords, clockWords: clockWords };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = FGA;
 
@@ -295,7 +313,30 @@ if (typeof window !== 'undefined' && window.document) (function () {
         }).join('') + '</tr>';
       }).join('') + '</tbody>';
     $('hours').querySelectorAll('input').forEach(function (inp) {
-      inp.addEventListener('blur', function () { var v = textToHours(inp.value); if (v) inp.value = hoursToText(v); });
+      inp.addEventListener('blur', function () {
+        var ask = FGA.hoursAsk(inp.value);
+        if (ask) return askHours(inp, ask);
+        if ($('hours-ask').dataset.for === inp.dataset.loc + inp.dataset.d) { $('hours-ask').hidden = true; $('hours-ask').dataset.for = ''; }
+        var v = textToHours(inp.value); if (v) inp.value = hoursToText(v);
+      });
+    });
+    $('hours-ask').hidden = true; $('hours-ask').dataset.for = '';
+  }
+  function hoursName(inp) { var l = S.locations.filter(function (x) { return x.id === inp.dataset.loc; })[0]; return (l ? l.name : '') + ' ' + FG.DAYN[inp.dataset.d]; }
+  // Ask in the page which reading Jeff meant, big, with one button per reading. Saving waits until he picks.
+  function askHours(inp, ask) {
+    var box = $('hours-ask'), raw = inp.value.trim();
+    box.dataset.for = inp.dataset.loc + inp.dataset.d;
+    box.innerHTML = '<p class="a-ask-q">' + esc(hoursName(inp)) + ': <b>' + esc(raw) + '</b>. Which one?</p><div class="a-actions">'
+      + '<button class="a-btn a-pick" type="button" data-v="' + ask.pm + '">' + esc(FGA.hoursWords(ask.pm)) + '</button>'
+      + '<button class="a-btn a-pick" type="button" data-v="' + ask.am + '">' + esc(FGA.hoursWords(ask.am)) + '</button></div>';
+    box.hidden = false;
+    box.querySelectorAll('.a-pick').forEach(function (b) {
+      b.onclick = function () {
+        inp.value = hoursToText(b.dataset.v); inp.classList.remove('bad'); setDirty(true);
+        box.innerHTML = '<p class="a-ask-q">' + esc(hoursName(inp)) + ': <b>' + esc(FGA.hoursWords(b.dataset.v)) + '</b></p>';
+        box.dataset.for = '';
+      };
     });
   }
 
@@ -353,6 +394,8 @@ if (typeof window !== 'undefined' && window.document) (function () {
     $('hours').querySelectorAll('input[data-loc]').forEach(function (inp) {
       var l = D.locations.filter(function (x) { return x.id === inp.dataset.loc; })[0];
       if (!l || !l.hours) return;
+      var ask = FGA.hoursAsk(inp.value);
+      if (ask) { flag(inp, l.name + ' ' + FG.DAYN[inp.dataset.d] + ': is "' + inp.value.trim() + '" ' + FGA.hoursWords(ask.pm) + ' or ' + FGA.hoursWords(ask.am) + '? Tap one under the hours.'); if ($('hours-ask').hidden) askHours(inp, ask); return; }
       var v = textToHours(inp.value);
       if (!v) { flag(inp, l.name + ' ' + FG.DAYN[inp.dataset.d] + ': "' + inp.value + '" is not hours. Type 8-5, call or closed.'); return; }
       l.hours[inp.dataset.d] = v;

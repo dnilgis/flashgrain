@@ -241,3 +241,10 @@ body.admin .a-reft .ref{white-space:normal}
 .a-steps{margin:6px 0 4px;padding-left:1.4em;line-height:1.45}
 .a-steps li{margin:4px 0}
 .a-keyhelp{margin-top:4px}
+
+/* hours: ask which reading when "7-9" could be morning or evening */
+.a-ask{margin:8px 0 0;padding:10px 12px;border:2px solid var(--flash);max-width:520px}
+.a-ask-q{margin:0;font-family:var(--cond);font-size:1.5rem;font-weight:800;text-transform:uppercase;line-height:1.1}
+.a-ask-q b{color:var(--flash)}
+.a-ask .a-actions{margin:8px 0 0}
+.a-ask .a-pick{min-height:48px;font-size:1.25rem}
