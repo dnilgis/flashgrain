@@ -620,6 +620,72 @@ def harvest_refs():
         raise SystemExit(1)
 
 
+def assemble(old, wanted, site, now, fetch=None, backup=None, cal=None):
+    """One harvest, without touching the network or the disk: the dict written to data/bids.json.
+    old: the current bids.json; wanted: every symbol a shown row needs; fetch() -> (build() result, url) or
+    SystemExit when DTN is down; backup(symbols, last_dtn) -> backup_futures() result. Raises SystemExit
+    when nothing safe can be written."""
+    fetch, backup = fetch or globals()["fetch"], backup or backup_futures
+    today = _ct(now).date()
+    gone = [s for s in wanted if expired(s, today, cal)]
+    wanted = [s for s in wanted if s not in gone]
+    for s in gone:
+        print("%s is past its last trading day (%s): no quote fetched; the page shows a dash until the row moves to the next contract"
+              % (s, (cbot(cal).get("contracts") or {}).get(s, {}).get("ltd")), file=sys.stderr)
+    try:
+        data, url = fetch()
+        extra = [s for s in wanted if s not in data["futures"]]
+        if extra:
+            fut, src, notes = backup(extra, old.get("dtn_futures"))
+            data["futures"].update(fut)
+            if fut:
+                data["extra_futures_source"] = src
+                print("DTN board lacks %s; filled %s from %s" % (", ".join(extra), ", ".join(sorted(fut)) or "none", src))
+            if notes:
+                data["backup_notes"] = [n[:200] for n in notes]
+    except SystemExit as dtn_down:
+        print(dtn_down, file=sys.stderr)
+        fut, src, notes = backup(wanted, old.get("dtn_futures") or old.get("futures"))
+        if not any(k.startswith("@C") for k in fut) or not any(k.startswith("@S") for k in fut):
+            # Market closed and the stored prices were read after the last session ended: they ARE the close
+            # and cannot have moved. Keep them and record the check, so the site does not go dark all weekend.
+            since, qt = closed_since(now, cal), old.get("quote_time")
+            if since and qt and old.get("futures") and datetime.strptime(qt[:19], "%Y-%m-%dT%H:%M:%S") >= since:
+                print("DTN and backups unavailable; CBOT closed since %s and stored prices (%s) are that close; keeping them" % (since, qt))
+                fut, src = dict(old["futures"]), old.get("futures_source", "dtn")
+                notes = notes + ["kept the close: CBOT closed since %s" % since.strftime("%a %H:%M")]
+            else:
+                raise SystemExit("DTN down and the backup feed did not cover corn and soybeans; bids.json left unchanged")
+        times = [f["time"] for f in fut.values() if f.get("time")]
+        data = {"quote_time": max(times) if times else None, "dtn_as_of": None, "futures": fut,
+                "dtn": old.get("dtn", {}), "futures_source": src,
+                "dtn_error": str(dtn_down)[:300], "backup_notes": [n[:200] for n in notes]}
+        url = "backup:" + src
+        print("DTN down; using backup futures from %s for %s" % (src, ", ".join(sorted(fut))))
+    for s in sorted(data["futures"]):  # a quote for an expired contract is the final settle, not a price to bid on
+        if expired(s, today, cal):
+            print("dropped %s: past its last trading day; the page shows a dash" % s, file=sys.stderr)
+            del data["futures"][s]
+    try:
+        for l in site.get("locations", []):
+            if l.get("bids") and l.get("id") not in data["dtn"]:
+                print("warning: %s posts bids on the site but DTN has no rows for it (DTN has: %s)"
+                      % (l.get("id"), ", ".join(sorted(data["dtn"]))), file=sys.stderr)
+    except Exception as e:
+        print("warning: could not compare with site.json:", e, file=sys.stderr)
+    same = old.get("futures") == data["futures"] and old.get("dtn") == data["dtn"]
+    # bids.json is written on EVERY run, so `checked` (the time the site shows) moves every 10 minutes even
+    # when prices do not. The site's own "not updating" warning reads the same field.
+    stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    data.setdefault("futures_source", "dtn")
+    if data["futures_source"] == "dtn":
+        data["dtn_futures"] = data["futures"]
+    else:
+        data["dtn_futures"] = old.get("dtn_futures") or old.get("futures")
+    print("wrote", "check (no price change)" if same else "new prices", data["quote_time"])
+    return {"checked": stamp, "updated": stamp if not same else old.get("updated", stamp), "source": url, **data}
+
+
 def main():
     if len(sys.argv) >= 2 and sys.argv[1] == "--refs":
         harvest_refs()
@@ -636,68 +702,19 @@ def main():
         old = json.load(open(OUT))
     except Exception:
         old = {}
-    try:  # every contract a shown row needs, including months DTN's own board does not post
+    try:
         site = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "site.json")))
+    except Exception as e:
+        print("warning: could not read site.json:", e, file=sys.stderr)
+        site = {}
+    try:  # every contract a shown row needs, including months DTN's own board does not post
         wanted = sorted({r["symbol"] for r in site["bids"]["rows"] if r.get("show") and r.get("symbol")})
     except Exception:
         wanted = sorted((old.get("futures") or {}).keys())
-    try:
-        data, url = fetch()
-        extra = [s for s in wanted if s not in data["futures"]]
-        if extra:
-            fut, src, notes = backup_futures(extra, old.get("dtn_futures"))
-            data["futures"].update(fut)
-            if fut:
-                data["extra_futures_source"] = src
-                print("DTN board lacks %s; filled %s from %s" % (", ".join(extra), ", ".join(sorted(fut)) or "none", src))
-            if notes:
-                data["backup_notes"] = [n[:200] for n in notes]
-    except SystemExit as dtn_down:
-        print(dtn_down, file=sys.stderr)
-        fut, src, notes = backup_futures(wanted, old.get("dtn_futures") or old.get("futures"))
-        if not any(k.startswith("@C") for k in fut) or not any(k.startswith("@S") for k in fut):
-            # Market closed and the stored prices were read after the last session ended: they ARE the close
-            # and cannot have moved. Keep them and record the check, so the site does not go dark all weekend.
-            since, qt = closed_since(), old.get("quote_time")
-            if since and qt and old.get("futures") and datetime.strptime(qt[:19], "%Y-%m-%dT%H:%M:%S") >= since:
-                print("DTN and backups unavailable; CBOT closed since %s and stored prices (%s) are that close; keeping them" % (since, qt))
-                fut, src = old["futures"], old.get("futures_source", "dtn")
-                notes = notes + ["kept the close: CBOT closed since %s" % since.strftime("%a %H:%M")]
-            else:
-                raise SystemExit("DTN down and the backup feed did not cover corn and soybeans; bids.json left unchanged")
-        times = [f["time"] for f in fut.values() if f.get("time")]
-        data = {"quote_time": max(times) if times else None, "dtn_as_of": None, "futures": fut,
-                "dtn": old.get("dtn", {}), "futures_source": src,
-                "dtn_error": str(dtn_down)[:300], "backup_notes": [n[:200] for n in notes]}
-        url = "backup:" + src
-        print("DTN down; using backup futures from %s for %s" % (src, ", ".join(sorted(fut))))
-    try:
-        site = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "site.json")))
-        for l in site.get("locations", []):
-            if l.get("bids") and l.get("id") not in data["dtn"]:
-                print("warning: %s posts bids on the site but DTN has no rows for it (DTN has: %s)"
-                      % (l.get("id"), ", ".join(sorted(data["dtn"]))), file=sys.stderr)
-    except Exception as e:
-        print("warning: could not compare with site.json:", e, file=sys.stderr)
-    now = datetime.now(timezone.utc)
-    same = old.get("futures") == data["futures"] and old.get("dtn") == data["dtn"]
-    try:
-        fresh = now - datetime.strptime(old.get("checked", ""), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc) < HEARTBEAT
-    except (ValueError, TypeError):
-        fresh = False
-    # bids.json is written on EVERY run, so `checked` (the time the site shows) moves every 10 minutes even
-    # when prices do not. The site's own "not updating" warning reads the same field.
-    stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-    data.setdefault("futures_source", "dtn")
-    if data["futures_source"] == "dtn":
-        data["dtn_futures"] = data["futures"]
-    else:
-        data["dtn_futures"] = old.get("dtn_futures") or old.get("futures")
-    out = {"checked": stamp, "updated": stamp if not same else old.get("updated", stamp), "source": url, **data}
+    out = assemble(old, wanted, site, datetime.now(timezone.utc))
     with open(OUT, "w") as f:
         json.dump(out, f, indent=1)
         f.write("\n")
-    print("wrote", "check (no price change)" if same else "new prices", data["quote_time"])
 
 
 if __name__ == "__main__":
