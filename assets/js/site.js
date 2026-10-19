@@ -24,6 +24,13 @@
     return signed ? (v > 0 ? 'up ' + s : v < 0 ? 'down ' + s : 'unchanged') : s;
   }
   function monthOf(sym) { var m = /([A-Z])(\d)?$/.exec(sym || ''); return m ? MONTH[m[1]] : ''; }
+  // "@C6Z" -> "Dec 26" (DTN symbols carry the last digit of the year; contracts run at most a few years out).
+  function contractName(sym, d) {
+    var m = /(\d)([FGHJKMNQUVXZ])$/.exec(sym || ''); if (!m) return monthOf(sym);
+    var y = +(d || new Date()).toLocaleDateString('en-CA', { timeZone: TZ }).slice(0, 4), yy = y - y % 10 + +m[1];
+    if (yy < y - 1) yy += 10; else if (yy > y + 8) yy -= 10;
+    return MONTH[m[2]] + ' ' + String(yy).slice(2);
+  }
   function parseH(h) {
     var m = /^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$/.exec(h || '');
     if (m) return { o: +m[1] * 60 + +m[2], c: +m[3] * 60 + +m[4] };
@@ -85,13 +92,13 @@
     var n = central(), i = DAYS.indexOf(n.day), today = parseH(loc.hours[n.day]), name = bare ? '' : esc(loc.name) + ' ';
     if (bare) {
       if (today === 'call') return '<b>Call ahead</b> today';
-      if (today.o != null && n.min >= today.o && n.min < today.c) return '<b class="on">Open now</b> until ' + clock(today.c);
+      if (today.o != null && n.min >= today.o && n.min < today.c) return '<b class="on">Open now</b> until ' + clock(today.c) + ' CT';
     }
     if (today === 'call') return '<b>' + name + '</b>call ahead to deliver';
-    if (today.o != null && n.min >= today.o && n.min < today.c) return '<b class="on">' + name + 'open now</b> until ' + clock(today.c);
+    if (today.o != null && n.min >= today.o && n.min < today.c) return '<b class="on">' + name + 'open now</b> until ' + clock(today.c) + ' CT';
     for (var k = 0; k < 7; k++) {
       var d = DAYS[(i + k) % 7], p = parseH(loc.hours[d]), when = k === 0 ? 'today' : k === 1 ? 'tomorrow' : DAYN[d];
-      if (p.o != null && (k > 0 || n.min < p.o)) return '<b>' + name + 'closed</b> · opens ' + when + ' ' + clock(p.o);
+      if (p.o != null && (k > 0 || n.min < p.o)) return '<b>' + name + 'closed</b> · opens ' + when + ' ' + clock(p.o) + ' CT';
       if (p === 'call' && k > 0) return '<b>' + name + 'closed today</b> · call ahead ' + when;
     }
     return '<b>' + name + 'closed</b>';
@@ -165,7 +172,7 @@
     } catch (e) {}
   }
 
-  window.FG = { labelUntil: labelUntil, cbotOpen: cbotOpen, ageMin: ageMin, closeLabel: closeLabel, DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, num: num,
+  window.FG = { labelUntil: labelUntil, cbotOpen: cbotOpen, ageMin: ageMin, closeLabel: closeLabel, DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, contractName: contractName, num: num,
     setCalendar: setCalendar, calReady: calReady, contractDates: contractDates, holiday: holiday, earlyClose: earlyClose, expired: expired, quote: quote, ymd: ymd };
 
   // ---------- page ----------
@@ -232,18 +239,20 @@
       var downAt = BIDS.checked || BIDS.updated, longAgo = ageMin(downAt) > 24 * 60;
       txt = 'Bids not updating since ' + new Date(Date.parse(downAt)).toLocaleString('en-US', longAgo
         ? { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }
-        : { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' });
+        : { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' }) + ' CT';
     }
     else {
       // Lead with when the harvester last checked (every 10 minutes). Closed market: say whose close the prices are.
-      var chk = new Date(Date.parse(BIDS.checked || BIDS.updated)).toLocaleString('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' });
+      // Today: "Futures checked 1:50 PM CT"; another day keeps its weekday.
+      var chkD = new Date(Date.parse(BIDS.checked || BIDS.updated)), sameDay = ymd(chkD) === ymd();
+      var chk = chkD.toLocaleString('en-US', sameDay ? { timeZone: TZ, hour: 'numeric', minute: '2-digit' } : { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: '2-digit' }) + ' CT';
       var cl = !market && BIDS.quote_time ? closeLabel(BIDS.quote_time) : '';
-      txt = 'Checked ' + chk + (market ? '' : ' · CBOT closed' + (/close$/.test(cl) ? ', prices at ' + cl : ''));
+      txt = 'Futures checked ' + chk + (market ? '' : ' · CBOT closed' + (/close$/.test(cl) ? ', prices at ' + cl : ''));
     }
     $('asof').textContent = txt;
     st.className = 'stamp' + (feed === 'ok' && market ? ' live' : '') + (feed !== 'ok' ? ' warn' : '');
     var bset = SITE.bids.basis_set ? new Date(SITE.bids.basis_set) : null;
-    $('basis-set').textContent = bset && !isNaN(bset) ? 'Basis set ' + bset.toLocaleString('en-US', { timeZone: TZ, weekday: 'short', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+    $('basis-set').textContent = bset && !isNaN(bset) ? 'Basis set ' + bset.toLocaleString('en-US', { timeZone: TZ, weekday: 'short', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' CT' : '';
 
     // rows grouped by commodity in first-appearance order
     var groups = [], by = {};
@@ -254,25 +263,25 @@
       if (!by[r.commodity]) { by[r.commodity] = []; groups.push(r.commodity); }
       by[r.commodity].push(r);
     });
-    var html = '', months = [], anyExpired = false;
+    var html = '', anyExpired = false, anyMissing = false;
     groups.forEach(function (c) {
       html += '<tbody><tr class="grp"><th scope="rowgroup" colspan="4" class="c">' + esc(c) + '</th></tr>';
       by[c].forEach(function (r) {
         var f = quote(r.symbol, BIDS && BIDS.futures), b = r.basis ? r.basis[current] : null, gone = expired(r.symbol);
         var hasB = num(b), hasF = !!f, show = hasB && hasF && feed === 'ok';
-        var m = monthOf(r.symbol); if (m && months.indexOf(c + ': ' + m) < 0) months.push(c + ': ' + m);
-        if (gone) anyExpired = true;
+        var m = monthOf(r.symbol);
+        if (gone) anyExpired = true; else if (!hasF) anyMissing = true;
         var ch = hasF && num(f.change) ? '<span class="' + (f.change > 0 ? 'up' : f.change < 0 ? 'dn' : 'fl') + '" aria-hidden="true">' + cents8(f.change, true) + '</span>' : '';
         var dash = '<span class="pend" aria-label="not available">—</span>';
         // Phones under 400px hide the futures column; the same quote shows small under the cash instead.
-        var mini = hasF ? '<span class="fmini"><span class="vh">' + esc(m + ' futures ' + cents8Words(f.price) + (num(f.change) ? ', ' + cents8Words(f.change, true) : '')) + '</span><span aria-hidden="true">' + esc(m) + ' ' + cents8(f.price) + ch + '</span></span>'
-          : gone ? '<span class="fmini">' + esc(m) + ' futures expired</span>' : '';
+        var mini = hasF ? '<span class="fmini"><span class="vh">' + esc(m + ' futures ' + cents8Words(f.price) + (num(f.change) ? ', ' + cents8Words(f.change, true) : '')) + '</span><span aria-hidden="true">' + esc(contractName(r.symbol)) + ' ' + cents8(f.price) + ch + '</span></span>'
+          : gone ? '<span class="fmini">' + esc(contractName(r.symbol)) + ' futures expired</span>' : '';
         var k = current + '|' + r.commodity + '|' + r.label, val = show ? '$' + money(f.price + b) : '';
-        html += '<tr><th scope="row" class="c sub">' + esc(r.label) + '</th>'
+        html += '<tr><th scope="row" class="c sub">' + esc(r.label) + (m ? '<span class="cmo">' + esc(contractName(r.symbol)) + ' futures</span>' : '') + '</th>'
           + '<td class="cash" data-k="' + esc(k) + '" data-v="' + esc(val) + '">' + (show ? val : dash) + mini + '</td>'
           + '<td>' + (hasB ? basis(b) : dash) + '</td>'
           + '<td class="fut"' + (hasF ? ' aria-label="' + esc(m + ' futures ' + cents8Words(f.price) + (num(f.change) ? ', ' + cents8Words(f.change, true) : '')) + '"' : '') + '>'
-          + (hasF ? '<span aria-hidden="true">' + cents8(f.price) + '</span>' + ch : gone ? '<span class="pend">' + esc(m) + ' expired</span>' : dash) + '</td></tr>';
+          + (hasF ? '<span aria-hidden="true">' + cents8(f.price) + '</span>' + ch : gone ? '<span class="pend">' + esc(contractName(r.symbol)) + ' expired</span>' : dash) + '</td></tr>';
       });
       html += '</tbody>';
     });
@@ -295,7 +304,9 @@
 
     if (feed === 'ok') { $('msg-body').hidden = true; $('feed-msg').innerHTML = ''; }
     else callMsg('Cash prices are hidden until the futures feed is back.');
-    $('bids-note').textContent = 'Cash = CBOT futures + basis, $/bu. ' + (months.length ? months.join(', ') + ' futures. ' : '')
+    // Each row names its own contract now, so no crop-wide "Corn: Dec" line that a Fall 27 row would contradict.
+    $('bids-note').textContent = 'Cash = CBOT futures + basis, $/bu. '
+      + (anyMissing && feed === 'ok' ? 'A dash = no futures price right now. Call for a bid. ' : '')
       + (anyExpired ? 'Expired = that futures contract has stopped trading. Call for a bid. ' : '') + (SITE.bids.footnote || '');
   }
 
@@ -320,7 +331,7 @@
         var s = l.hours ? summary(l.hours) : '', now = l.hours ? openState(l, true) : '';
         var url = mapUrl(l), note = l.note && s.toLowerCase().indexOf(l.note.toLowerCase()) < 0 ? l.note : '';
         return '<li class="loc"><div class="loc-top"><b>' + esc(l.name) + '</b>' + (now ? '<span class="loc-now">' + now + '</span>' : '') + '</div>'
-          + (l.address || s ? '<p class="loc-info">' + [l.address, s].filter(Boolean).map(esc).join(' · ') + '</p>' : '')
+          + (l.address || s ? '<p class="loc-info">' + [l.address, /\d/.test(s) ? s + ' CT' : s].filter(Boolean).map(esc).join(' · ') + '</p>' : '')
           + (note ? '<p class="loc-note">' + esc(note) + '</p>' : '')
           + '<p class="loc-acts">' + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">Directions<span class="vh"> to ' + esc(l.name) + ', opens Google Maps</span></a>' : '')
           + '<a href="tel:' + tel + '">Call<span class="vh"> about ' + esc(l.name) + '</span></a></p></li>';
@@ -400,7 +411,7 @@
               var pp = p.probabilityOfPrecipitation && p.probabilityOfPrecipitation.value;
               return '<li><b>' + name + '</b><span>' + esc(p.shortForecast) + '</span><em><small>' + (pp ? n0(pp) + '%' : '') + '</small>' + (d.day ? n0(d.day.temperature) + '&deg;' : '') + (d.night ? ' <span class="lo">/ ' + n0(d.night.temperature) + '&deg;</span>' : '') + '</em></li>';
             }).join('');
-            var when = obs && obs.timestamp ? new Date(obs.timestamp).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }) : '';
+            var when = obs && obs.timestamp ? new Date(obs.timestamp).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }) + ' CT' : '';
             el.className = '';
             el.innerHTML = '<div class="wx-now"><div class="t">' + t + '<sup>&deg;F</sup></div><div class="c">' + esc(cond) + '</div><div class="d">Wind ' + esc(wdir) + ' ' + esc(wnd) + (rh ? ' &middot; ' + rh : '') + (when ? ' &middot; Thorp, as of ' + when : '') + '</div></div>'
               + '<div class="wx-hr" tabindex="0" role="region" aria-label="Hourly forecast, next 12 hours. Scrolls sideways.">' + h + '</div><ul class="wx-days">' + dl + '</ul>'

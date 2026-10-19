@@ -85,3 +85,13 @@ test("closeLabel: harvester run time (quote_time_source run) over weekends, holi
   assert.equal(FG.closeLabel(null), "", "null quote_time breaks nothing");
   assert.equal(loadFG().closeLabel("2026-10-24T09:10:00"), "Fri close", "no calendar: as before");
 });
+
+test("contractName: each row names its own contract (Fall 27 corn is Dec 27, not 'Dec')", () => {
+  const FG = loadFG();
+  const now = new Date("2026-10-19T19:00:00Z");
+  assert.equal(FG.contractName("@C6Z", now), "Dec 26");
+  assert.equal(FG.contractName("@C7Z", now), "Dec 27");
+  assert.equal(FG.contractName("@S8X", now), "Nov 28");
+  assert.equal(FG.contractName("@C0H", new Date("2029-12-01T18:00:00Z")), "Mar 30", "decade roll");
+  assert.equal(FG.contractName("@C9Z", new Date("2030-01-05T18:00:00Z")), "Dec 29", "last year's contract stays last year");
+});
