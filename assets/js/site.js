@@ -400,7 +400,7 @@
             var when = obs && obs.timestamp ? new Date(obs.timestamp).toLocaleTimeString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }) : '';
             el.className = '';
             el.innerHTML = '<div class="wx-now"><div class="t">' + t + '<sup>&deg;F</sup></div><div class="c">' + esc(cond) + '</div><div class="d">Wind ' + esc(wdir) + ' ' + esc(wnd) + (rh ? ' &middot; ' + rh : '') + (when ? ' &middot; Thorp, as of ' + when : '') + '</div></div>'
-              + '<div class="wx-hr">' + h + '</div><ul class="wx-days">' + dl + '</ul>'
+              + '<div class="wx-hr" tabindex="0" role="region" aria-label="Hourly forecast, next 12 hours. Scrolls sideways.">' + h + '</div><ul class="wx-days">' + dl + '</ul>'
               + (radar ? '<div class="wx-radar"><img alt="Radar loop, ' + esc(radar) + '" loading="lazy" decoding="async" src="https://radar.weather.gov/ridge/standard/' + esc(radar) + '_loop.gif"></div>' : '')
               + '<p class="wx-cap"><span>National Weather Service, ' + esc(pt.gridId) + ' office' + (radar ? ' &middot; radar ' + esc(radar) : '') + '</span><a href="' + NWS + '" target="_blank" rel="noopener">Full forecast &rarr;</a></p>';
             // No inline onerror (the page's CSP blocks inline handlers): a radar loop that fails to load is removed.

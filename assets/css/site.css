@@ -165,6 +165,7 @@ section h2{font-size:clamp(2rem,4.4vw,2.75rem);margin-bottom:10px}
 .wx-cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:1rem;color:var(--ink2);margin:10px 0 0}
 .wx-cap a{color:var(--ink2);display:inline-block;padding:12px 0;margin:-12px 0}
 .wx-err{font-family:var(--mono);font-size:1.0625rem;color:var(--ink2);padding:16px 0}
+.wx-err a{display:inline-block;min-height:44px;padding:12px 0;line-height:20px}
 
 /* footer */
 footer{margin-top:56px;border-top:3px solid var(--ink);padding:16px 0 44px;font-family:var(--mono);font-size:1.0625rem;color:var(--ink2);line-height:1.6}
