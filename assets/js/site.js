@@ -297,11 +297,12 @@
   }
 
   function render() {
-    var biz = SITE.business, tel = (biz.phone || '').replace(/\D/g, '');
     safe(function () {
+      // No phone in site.json (or no business block at all): keep the number printed in the HTML, never an empty tel: link.
+      var biz = SITE.business || {}, tel = phone().replace(/\D/g, '');
       document.querySelectorAll('[data-tel]').forEach(function (a) { a.href = 'tel:' + tel; });
       var call = document.querySelector('.call');
-      if (call) call.innerHTML = esc(biz.phone) + '<span><span class="vh">, </span>' + esc(biz.phone_note) + '</span>';
+      if (call) call.innerHTML = esc(phone()) + (biz.phone_note ? '<span><span class="vh">, </span>' + esc(biz.phone_note) + '</span>' : '');
     });
     safe(function () {
       // Alert bar. notice_until (YYYY-MM-DD, Central) hides it after that day without anyone remembering to.
@@ -311,7 +312,7 @@
       $('alert').hidden = !list.length;
     });
     safe(function () {
-      var biz = SITE.business || {}, tel = String(biz.phone || '715-653-6585').replace(/\D/g, '');
+      var tel = phone().replace(/\D/g, '');
       $('loc-list').innerHTML = SITE.locations.map(function (l) {
         var s = l.hours ? summary(l.hours) : '', now = l.hours ? openState(l, true) : '';
         var url = mapUrl(l), note = l.note && s.toLowerCase().indexOf(l.note.toLowerCase()) < 0 ? l.note : '';
