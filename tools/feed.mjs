@@ -58,7 +58,7 @@ export function build(site, bids, locId, now, FG) {
     const u = FG.labelUntil(r.label);
     if (u && u < ymNow) continue; // delivery period over: off the page, off the feed
     if (pastLtd(FG, r.symbol, now)) continue; // contract past its last trading day: a dash on the page, off the feed
-    const f = bids.futures && bids.futures[r.symbol];
+    const f = typeof FG.quote === "function" ? FG.quote(r.symbol, bids.futures, now) : bids.futures && bids.futures[r.symbol]; // the page's own rule
     const b = r.basis ? r.basis[locId] : null;
     if (typeof b !== "number" || !isFinite(b) || !f || typeof f.price !== "number" || !isFinite(f.price)) continue;
     out.push({ commodity: r.commodity, delivery: r.label, basis: Number(FG.basis(b)), cashPrice: Number(FG.money(f.price + b)) });
