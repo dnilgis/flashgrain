@@ -119,7 +119,35 @@
   }
   function ageMin(isoZ) { var t = Date.parse(isoZ || ''); return isNaN(t) ? Infinity : (Date.now() - t) / 60000; }
 
-  window.FG = { labelUntil: labelUntil, cbotOpen: cbotOpen, ageMin: ageMin, closeLabel: closeLabel, DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, num: num };
+  // ---------- CBOT calendar (data/cbot.json, written by tools/cbot_calendar.py) ----------
+  // Holidays, early closes, first notice (fnd) and last trading day (ltd) per contract. Missing file = no calendar:
+  // nothing expires and only the weekly hours apply, as before the file existed. tools/feed.mjs sets FG_CBOT first.
+  var CAL = null;
+  function setCalendar(c) { CAL = c && typeof c === 'object' ? c : null; return CAL; }
+  if (window.FG_CBOT) setCalendar(window.FG_CBOT);
+  function ymd(d) { return (d || new Date()).toLocaleDateString('en-CA', { timeZone: TZ }); } // Central date, YYYY-MM-DD
+  function contractDates(sym) { return CAL && CAL.contracts && CAL.contracts[sym] || null; }
+  // A contract is expired from the Central day after its last trading day. Its last price is a final settle,
+  // not a market: a cash bid built on it would be a guess.
+  function expired(sym, d) { var c = contractDates(sym); return !!(c && /^\d{4}-\d{2}-\d{2}$/.test(c.ltd || '') && ymd(d) > c.ltd); }
+  // The futures quote a row may use, or null: no quote, no price, or the contract has expired. The page and
+  // tools/feed.mjs both go through this, so a row is dashed on the page exactly when it leaves the feed.
+  function quote(sym, futures, d) {
+    var f = futures && futures[sym];
+    if (!f || !num(f.price) || expired(sym, d)) return null;
+    return f;
+  }
+  var calReady = Promise.resolve(CAL);
+  if (!CAL && typeof fetch === 'function') {
+    try {
+      // site.js sits in assets/js/, the calendar in data/: works from / and from /admin/ alike.
+      var calUrl = new URL('../../data/cbot.json', (document.currentScript && document.currentScript.src) || location.href).href;
+      calReady = fetch(calUrl).then(function (r) { return r.ok ? r.json() : null; }).then(setCalendar, function () { return null; });
+    } catch (e) {}
+  }
+
+  window.FG = { labelUntil: labelUntil, cbotOpen: cbotOpen, ageMin: ageMin, closeLabel: closeLabel, DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, num: num,
+    setCalendar: setCalendar, calReady: calReady, contractDates: contractDates, expired: expired, quote: quote, ymd: ymd };
 
   // ---------- page ----------
   var strike = document.getElementById('strike');
@@ -194,13 +222,14 @@
       if (!by[r.commodity]) { by[r.commodity] = []; groups.push(r.commodity); }
       by[r.commodity].push(r);
     });
-    var html = '', months = [];
+    var html = '', months = [], anyExpired = false;
     groups.forEach(function (c) {
       html += '<tbody><tr class="grp"><th scope="rowgroup" colspan="4" class="c">' + esc(c) + '</th></tr>';
       by[c].forEach(function (r) {
-        var f = BIDS && BIDS.futures && BIDS.futures[r.symbol], b = r.basis ? r.basis[current] : null;
-        var hasB = num(b), hasF = f && num(f.price), show = hasB && hasF && feed === 'ok';
+        var f = quote(r.symbol, BIDS && BIDS.futures), b = r.basis ? r.basis[current] : null, gone = expired(r.symbol);
+        var hasB = num(b), hasF = !!f, show = hasB && hasF && feed === 'ok';
         var m = monthOf(r.symbol); if (m && months.indexOf(c + ': ' + m) < 0) months.push(c + ': ' + m);
+        if (gone) anyExpired = true;
         var ch = hasF && num(f.change) ? '<span class="' + (f.change > 0 ? 'up' : f.change < 0 ? 'dn' : 'fl') + '" aria-hidden="true">' + cents8(f.change, true) + '</span>' : '';
         var dash = '<span class="pend" aria-label="not available">—</span>';
         var k = current + '|' + r.commodity + '|' + r.label, val = show ? '$' + money(f.price + b) : '';
@@ -208,7 +237,7 @@
           + '<td class="cash" data-k="' + esc(k) + '" data-v="' + esc(val) + '">' + (show ? val : dash) + '</td>'
           + '<td>' + (hasB ? basis(b) : dash) + '</td>'
           + '<td class="fut"' + (hasF ? ' aria-label="' + esc(m + ' futures ' + cents8Words(f.price) + (num(f.change) ? ', ' + cents8Words(f.change, true) : '')) + '"' : '') + '>'
-          + (hasF ? '<span aria-hidden="true">' + cents8(f.price) + '</span>' + ch : dash) + '</td></tr>';
+          + (hasF ? '<span aria-hidden="true">' + cents8(f.price) + '</span>' + ch : gone ? '<span class="pend">' + esc(m) + ' expired</span>' : dash) + '</td></tr>';
       });
       html += '</tbody>';
     });
@@ -231,7 +260,8 @@
 
     if (feed === 'ok') { $('feed-msg').hidden = true; $('feed-msg').innerHTML = ''; }
     else callMsg('Cash prices are hidden until the futures feed is back.');
-    $('bids-note').textContent = 'Cash = CBOT futures + basis, $/bu. ' + (months.length ? months.join(', ') + ' futures. ' : '') + (SITE.bids.footnote || '');
+    $('bids-note').textContent = 'Cash = CBOT futures + basis, $/bu. ' + (months.length ? months.join(', ') + ' futures. ' : '')
+      + (anyExpired ? 'Expired = that futures contract has stopped trading. Call for a bid. ' : '') + (SITE.bids.footnote || '');
   }
 
   function render() {
@@ -286,7 +316,7 @@
 
   var failedAt = null;
   function load() {
-    return Promise.all([getJSON('data/site.json'), getJSON('data/bids.json').catch(function () { return BIDS || null; })])
+    return Promise.all([getJSON('data/site.json'), getJSON('data/bids.json').catch(function () { return BIDS || null; }), calReady])
       .then(function (r) {
         if (SITE && BIDS && r[1] && (r[1].checked !== BIDS.checked || JSON.stringify(r[1].futures) !== JSON.stringify(BIDS.futures))) flashNext = true;
         SITE = r[0]; BIDS = r[1]; failedAt = null;
