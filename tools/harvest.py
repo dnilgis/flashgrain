@@ -324,24 +324,65 @@ def _ct(utc):
     return datetime.strptime(_central_iso(utc.timestamp()), "%Y-%m-%dT%H:%M:%S")
 
 
-def closed_since(now_utc=None):
+CBOT_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "cbot.json")
+_CAL = None
+
+
+def cbot(cal=None):
+    """data/cbot.json (holidays, early closes, contract dates). Missing file: no holidays, nothing expires."""
+    global _CAL
+    if cal is not None:
+        return cal
+    if _CAL is None:
+        try:
+            _CAL = json.load(open(CBOT_FILE))
+        except Exception as e:
+            print("warning: no CBOT calendar (%s); holidays and expiry not checked" % e, file=sys.stderr)
+            _CAL = {}
+    return _CAL
+
+
+def sessions(day, cal=None):
+    """CBOT corn/soy sessions for trade date `day` (a date), as (start, end) naive Central datetimes.
+    Overnight 7:00 PM the evening before to 7:45 AM, day 8:30 AM to 1:20 PM (or the early close).
+    No sessions on weekends or holidays. The day after Thanksgiving has no overnight session."""
+    cal = cbot(cal)
+    hol = set(cal.get("holidays") or [])
+    if day.weekday() >= 5 or day.isoformat() in hol:
+        return []
+    at = lambda d, hh, mm: datetime(d.year, d.month, d.day, hh, mm)
+    early = (cal.get("early_close") or {}).get(day.isoformat())
+    hh, mm = (int(x) for x in early.split(":")) if early else (13, 20)
+    prev = day - timedelta(days=1)
+    out = []
+    if not (early and prev.isoformat() in hol):
+        out.append((at(prev, 19, 0), at(day, 7, 45)))
+    out.append((at(day, 8, 30), at(day, hh, mm)))
+    return out
+
+
+def closed_since(now_utc=None, cal=None):
     """If CBOT corn/soy is closed right now, the Central wall time its last session ended; else None.
-    Sessions: Sun-Fri 7:00 PM - 7:45 AM and Mon-Fri 8:30 AM - 1:20 PM Central. Holidays not modelled.
+    Sessions: Sun-Fri 7:00 PM - 7:45 AM and Mon-Fri 8:30 AM - 1:20 PM Central, with the exchange
+    holidays and early closes in data/cbot.json.
     While closed, a price read after this moment IS the close and stays right until the market reopens."""
     n = _ct(now_utc or datetime.now(timezone.utc))
-    d, m = n.weekday(), n.hour * 60 + n.minute  # Mon=0 .. Sun=6
-    day = lambda back, hh, mm: (n - timedelta(days=back)).replace(hour=hh, minute=mm, second=0, microsecond=0)
-    if d <= 4 and 465 <= m < 510:
-        return day(0, 7, 45)                     # morning break between overnight and day session
-    if d <= 4 and 800 <= m < 1140 and d != 4:
-        return day(0, 13, 20)                    # Mon-Thu afternoon, reopens 7 PM
-    if d == 4 and m >= 800:
-        return day(0, 13, 20)                    # Friday after the close
-    if d == 5:
-        return day(1, 13, 20)                    # Saturday
-    if d == 6 and m < 1140:
-        return day(2, 13, 20)                    # Sunday before 7 PM
-    return None
+    ends = []
+    for back in range(-1, 12):
+        for start, end in sessions(n.date() - timedelta(days=back), cal):
+            if start <= n < end:
+                return None
+            if end <= n:
+                ends.append(end)
+    return max(ends) if ends else None
+
+
+def expired(sym, today, cal=None):
+    """True from the day after the contract's last trading day (Central date). Unknown contract: False."""
+    c = (cbot(cal).get("contracts") or {}).get(sym)
+    return bool(c and c.get("ltd") and today.isoformat() > c["ltd"])
+
+
 SANITY = 0.15  # a backup price more than 15% from the last DTN price for that contract is refused
 
 
