@@ -610,7 +610,7 @@ def pick_ref(src, ref):
         rows.append({"label": d["label"], "cash": round(d["cash"], 4), "basis": round(d["basis"], 4),
                      "futures_month": d["symbol"], "futures": d["futures"], "time": d.get("time")})
     if not rows:
-        crop = ref["commodity"].lower()
+        crop = {"soybeans": "soybean"}.get(ref["commodity"].lower(), ref["commodity"].lower())
         if not locs:
             msg = "their board showed no %s bids (no bid table on the page)." % crop
         elif want:
