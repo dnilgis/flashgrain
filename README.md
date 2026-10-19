@@ -43,8 +43,17 @@ Jeff sets basis only here. Since 2026-10-07 he no longer posts bids to DTN; DTN 
 target-offer portal (www.flashgrains.com) and its board is still where the harvester reads futures.
 Third-party widgets (DTN's included) only ever go on the site inside an iframe, never as a script on our
 own pages: a script on flshgrn.com could read the admin key a browser has remembered.
-Every admin save lists the cash prices it will change and warns on a positive basis, a basis more
-than 25 cents from the last saved value (typo guard), or a shown row with no futures quote.
+Every admin save opens a review sheet that lists the cash prices it will change, with Back focused and
+Publish a deliberate tap. It warns on a positive basis, a basis more than 25 cents from the last saved
+value or, for a month just turned on or a changed contract, from the nearest shown month of the same
+crop (typo guard, in cents with the cash effect), and on a shown row with no futures quote.
+Also in /admin: unpublished edits are kept on the device and offered back; each changed row has "Back to
+saved" and the save bar has "Discard all changes"; a save that collides with another device keeps both
+sets of changes when they touched different boxes and asks only on a real clash; hours like "7-9" ask
+"7 AM to 9 PM?"; each row shows the nearby elevator's bid for the same month; a yellow card warns 5
+business days before a shown row's contract hits first notice, and one tap moves it to the next contract
+with a suggested basis that keeps cash the same (Jeff confirms). With Remember ticked the panel loads by
+itself. Download (a copy of site.json) is under Advanced.
 
 What the public page does when data is old:
 - Harvester heartbeat (`checked`) older than 2 hours: cash column hidden, "Bids not updating" shown, call prompt.
@@ -124,7 +133,7 @@ member of (or to his account), then follow the same steps.
 2. Name: `flashgrain admin`. Expiration: 90 days (GitHub emails before it expires).
 3. Repository access: Only select repositories > `flashgrain`.
 4. Permissions > Repository permissions > Contents: Read and write. Leave everything else at No access.
-5. Generate, copy, paste into flshgrn.com/admin, tick Remember, Load.
+5. Generate, copy, paste into flshgrn.com/admin, tick Remember, Load. Next time the panel loads by itself.
 
 Lost the device? Delete the token on that same GitHub page. The panel stops saving instantly.
 
