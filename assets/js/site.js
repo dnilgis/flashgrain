@@ -54,16 +54,30 @@
   }
   function central(d) {
     var o = {};
-    new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false })
+    new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: 'numeric', hour12: false })
       .formatToParts(d || new Date()).forEach(function (p) { o[p.type] = p.value; });
-    return { day: o.weekday.toLowerCase().slice(0, 3), min: (+o.hour % 24) * 60 + +o.minute };
+    return { day: o.weekday.toLowerCase().slice(0, 3), min: (+o.hour % 24) * 60 + +o.minute, ymd: o.year + '-' + o.month + '-' + o.day };
   }
-  // CBOT corn/soy: Sun-Fri 7:00 PM - 7:45 AM and Mon-Fri 8:30 AM - 1:20 PM Central. Exchange holidays not modelled.
+  function addDays(s, n) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3] + n, 12)).toISOString().slice(0, 10); }
+  function dowOf(s) { return (new Date(s + 'T12:00:00Z').getUTCDay() + 6) % 7; } // index into DAYS (mon = 0)
+  function holiday(s) { return !!(CAL && CAL.holidays && CAL.holidays.indexOf(s) >= 0); }
+  // Minutes after midnight that grains close on an early-close day ("12:05" -> 725), or null.
+  function earlyClose(s) { var m = /^(\d{1,2}):(\d{2})$/.exec(CAL && CAL.early_close && CAL.early_close[s] || ''); return m ? +m[1] * 60 + +m[2] : null; }
+  function dayClose(s) { var e = earlyClose(s); return e == null ? 800 : Math.min(800, e); }
+  // The overnight session that opens at 7 PM on Central date s trades for the next day. None on Fri/Sat, none
+  // into a holiday, and none on a holiday night before an early-close day (Thanksgiving: no Thursday night).
+  function eveningOpen(s) {
+    var i = dowOf(s), next = addDays(s, 1);
+    if (!(i === 6 || i <= 3) || holiday(next)) return false;
+    return !(holiday(s) && earlyClose(next) != null);
+  }
+  // CBOT corn/soy: Sun-Fri 7:00 PM - 7:45 AM and Mon-Fri 8:30 AM - 1:20 PM Central, less the holidays and early
+  // closes in data/cbot.json. No calendar file: weekly hours only.
   function cbotOpen(d) {
     var n = central(d), i = DAYS.indexOf(n.day), wk = i <= 4;
-    if (wk && n.min >= 510 && n.min < 800) return true;
-    if (wk && n.min < 465) return true;
-    if ((n.day === 'sun' || i <= 3) && n.min >= 1140) return true;
+    if (wk && !holiday(n.ymd) && n.min >= 510 && n.min < dayClose(n.ymd)) return true;
+    if (wk && n.min < 465 && eveningOpen(addDays(n.ymd, -1))) return true;
+    if (n.min >= 1140 && eveningOpen(n.ymd)) return true;
     return false;
   }
   function openState(loc, bare) {
@@ -98,14 +112,19 @@
     var wd = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
     return wd + ' ' + clock(+m[4] * 60 + +m[5]);
   }
-  // With CBOT shut, a stamp read after the 1:20 PM close (or over the weekend) is the day's close, not a
-  // trade at that minute: the backup feed stamps when it READ the price. Say "Fri close" instead of "Fri 4:25 PM".
+  // With CBOT shut, a stamp read after the close (or over a weekend or holiday) is the last close, not a trade
+  // at that minute: the backup feed, and the harvester's run time (quote_time_source "run"), stamp when the price
+  // was READ. Say "Fri close" instead of "Fri 4:25 PM". Inside a session it is a plain wall time.
   function closeLabel(iso) {
     var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || '');
     if (!m) return '';
-    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)), dow = d.getUTCDay(), min = +m[4] * 60 + +m[5];
-    if (dow === 6 || (dow === 0 && min < 1140)) { d.setUTCDate(d.getUTCDate() - (dow === 6 ? 1 : 2)); return d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) + ' close'; }
-    if (dow >= 1 && dow <= 5 && min >= 800 && min < 1140) return d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) + ' close';
+    var s = m[1] + '-' + m[2] + '-' + m[3], min = +m[4] * 60 + +m[5], i = dowOf(s);
+    var name = function (x) { return new Date(x + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) + ' close'; };
+    var lastDay = function (x) { for (var k = 0; k < 10 && (dowOf(x) > 4 || holiday(x)); k++) x = addDays(x, -1); return x; };
+    if (min >= 1140 && eveningOpen(s)) return wall(iso);
+    if (i > 4 || holiday(s)) return name(lastDay(s));
+    if (min < 465) return eveningOpen(addDays(s, -1)) ? wall(iso) : name(lastDay(addDays(s, -1)));
+    if (min >= dayClose(s)) return name(s);
     return wall(iso);
   }
   // "Oct 26" -> "2026-10"; "Fall 26" -> "2026-12" (harvest runs to year end). Unknown labels never expire.
@@ -147,7 +166,7 @@
   }
 
   window.FG = { labelUntil: labelUntil, cbotOpen: cbotOpen, ageMin: ageMin, closeLabel: closeLabel, DAYS: DAYS, DAYN: DAYN, money: money, basis: basis, cents8: cents8, summary: summary, parseH: parseH, esc: esc, monthOf: monthOf, num: num,
-    setCalendar: setCalendar, calReady: calReady, contractDates: contractDates, expired: expired, quote: quote, ymd: ymd };
+    setCalendar: setCalendar, calReady: calReady, contractDates: contractDates, holiday: holiday, earlyClose: earlyClose, expired: expired, quote: quote, ymd: ymd };
 
   // ---------- page ----------
   var strike = document.getElementById('strike');
