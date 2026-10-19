@@ -384,6 +384,45 @@ def expired(sym, today, cal=None):
 
 
 SANITY = 0.15  # a backup price more than 15% from the last DTN price for that contract is refused
+BAND = {"@C": 1.00, "@S": 2.00}  # ... or more than this many dollars from it (several days' limit moves)
+NEIGHBOUR = 0.30  # a backup-only contract more than 30% from the nearest DTN contract of the same crop is refused
+
+
+def contract_index(sym):
+    """@C6Z -> year * 12 + month, for finding a contract's nearest neighbour. None if not a contract."""
+    t = yahoo_ticker(sym)
+    m = t and re.match(r"^Z[A-Z]([FGHJKMNQUVXZ])(\d\d)\.CBT$", t)
+    return m and (2000 + int(m.group(2))) * 12 + "FGHJKMNQUVXZ".index(m.group(1))
+
+
+def sanity(sym, price, last_dtn):
+    """Why a backup price must be refused, or None. Against the last DTN price for the same contract (15% and a
+    dollar band); a contract DTN never quoted is held against its nearest DTN neighbour of the same crop, loosely,
+    which still catches cents-for-dollars, the wrong crop and the wrong contract."""
+    last_dtn = last_dtn or {}
+    ref = (last_dtn.get(sym) or {}).get("price")
+    if ref:
+        if abs(price - ref) / ref > SANITY or abs(price - ref) > BAND.get(sym[:2], 1.00):
+            return "%s refused: %.4f vs last DTN %.4f" % (sym, price, ref)
+        return None
+    me = contract_index(sym)
+    near = sorted((abs(contract_index(k) - me), k) for k, v in last_dtn.items()
+                  if k[:2] == sym[:2] and k != sym and isinstance((v or {}).get("price"), (int, float)) and contract_index(k) and me)
+    if near:
+        k = near[0][1]
+        n = last_dtn[k]["price"]
+        if abs(price - n) / n > NEIGHBOUR:
+            return "%s refused: %.4f vs DTN %s %.4f (nearest contract)" % (sym, price, k, n)
+    return None
+
+
+def source_label(per):
+    """{sym: source} -> futures_source: "dtn" only when every contract came from DTN, the backup names joined
+    with + when none did (as before), "mixed" when some did."""
+    names = sorted({x for v in per.values() for x in (v or "").split("+") if x})
+    if not names or names == ["dtn"]:
+        return "dtn"
+    return "mixed" if "dtn" in names else "+".join(names)
 
 
 def yahoo_ticker(sym, today=None):
@@ -420,13 +459,12 @@ def _central_iso(epoch):
 def backup_futures(symbols, last_dtn):
     """Delayed CBOT futures for contracts DTN cannot give us: live elevator boards (via dnilgis/bids), then
     Yahoo Finance, then agsist's prices.json, then (corn only) Ace Ethanol's board.
-    Returns ({symbol: {price, change, time}}, source) for the symbols it could get and verify."""
-    got, used, notes = {}, set(), []
+    Returns ({symbol: {price, change, time}}, {symbol: source}, notes) for the symbols it could get and verify."""
+    got, src, notes = {}, {}, []
     try:  # live elevator boards first: they update all day, and GitHub's runners can always reach them
         got, bnotes = board_futures(symbols)
         notes += bnotes
-        if got:
-            used.add("boards")
+        src.update((k, "boards") for k in got)
     except Exception as e:
         notes.append("boards: %s" % e)
     for sym in [x for x in symbols if x not in got]:  # Yahoo, contract by contract
@@ -440,7 +478,7 @@ def backup_futures(symbols, last_dtn):
                 continue
             got[sym] = {"price": round(px / 100, 5), "change": round((px - prev) / 100, 5) if prev is not None else None,
                         "time": _central_iso(meta["regularMarketTime"]) if meta.get("regularMarketTime") else None}
-            used.add("yahoo")
+            src[sym] = "yahoo"
         except Exception as e:
             notes.append("yahoo %s: %s" % (t, e))
             print("backup yahoo %s (%s): %s" % (sym, t, e), file=sys.stderr)
@@ -459,7 +497,7 @@ def backup_futures(symbols, last_dtn):
                     got[sym] = {"price": round(q["close"] / 100, 5),
                                 "change": round(q["netChange"] / 100, 5) if q.get("netChange") is not None else None,
                                 "time": _central_iso(fetched.timestamp())}
-                    used.add("agsist")
+                    src[sym] = "agsist"
         except Exception as e:
             notes.append("agsist: %s" % e)
             print("backup agsist: %s" % e, file=sys.stderr)
@@ -477,7 +515,7 @@ def backup_futures(symbols, last_dtn):
                 sym = m and m.group(1) in code and "@C%s%s" % (m.group(2)[-1], code[m.group(1)])
                 if sym in missing and isinstance(r.get("futures"), (int, float)) and sym not in got:
                     got[sym] = {"price": round(r["futures"], 5), "change": None, "time": _central_iso(chk.timestamp())}
-                    used.add("ace")
+                    src[sym] = "ace"
         except Exception as e:
             notes.append("ace: %s" % e)
             print("backup ace: %s" % e, file=sys.stderr)
@@ -496,13 +534,13 @@ def backup_futures(symbols, last_dtn):
                     v["change"] = round(v["price"] - ps, 5)
         except Exception as e:
             notes.append("change from agsist: %s" % e)
-    for sym in list(got):  # refuse anything that disagrees wildly with the last DTN price (units, wrong contract)
-        ref = (last_dtn or {}).get(sym, {}).get("price")
-        if ref and abs(got[sym]["price"] - ref) / ref > SANITY:
-            notes.append("%s refused: %.4f vs last DTN %.4f" % (sym, got[sym]["price"], ref))
-            print("backup %s refused: %.4f vs last DTN %.4f" % (sym, got[sym]["price"], ref), file=sys.stderr)
-            del got[sym]
-    return got, "+".join(sorted(used)) or None, notes
+    for sym in list(got):  # refuse anything that disagrees wildly with DTN (units, wrong contract)
+        why = sanity(sym, got[sym]["price"], last_dtn)
+        if why:
+            notes.append(why)
+            print("backup " + why, file=sys.stderr)
+            del got[sym], src[sym]
+    return got, src, notes
 
 
 def fetch():
@@ -632,20 +670,26 @@ def assemble(old, wanted, site, now, fetch=None, backup=None, cal=None):
     for s in gone:
         print("%s is past its last trading day (%s): no quote fetched; the page shows a dash until the row moves to the next contract"
               % (s, (cbot(cal).get("contracts") or {}).get(s, {}).get("ltd")), file=sys.stderr)
+    last_dtn = old.get("dtn_futures") or (old.get("futures") if old.get("futures_source", "dtn") == "dtn" else None) or {}
     try:
         data, url = fetch()
+        per = {s: "dtn" for s in data["futures"]}
+        dtn_now = dict(data["futures"])
         extra = [s for s in wanted if s not in data["futures"]]
         if extra:
-            fut, src, notes = backup(extra, old.get("dtn_futures"))
+            fut, bsrc, notes = backup(extra, dict(last_dtn, **dtn_now))
             data["futures"].update(fut)
+            per.update(bsrc)
             if fut:
-                data["extra_futures_source"] = src
+                src = data["extra_futures_source"] = source_label(bsrc)
                 print("DTN board lacks %s; filled %s from %s" % (", ".join(extra), ", ".join(sorted(fut)) or "none", src))
             if notes:
                 data["backup_notes"] = [n[:200] for n in notes]
     except SystemExit as dtn_down:
         print(dtn_down, file=sys.stderr)
-        fut, src, notes = backup(wanted, old.get("dtn_futures") or old.get("futures"))
+        dtn_now = {}
+        fut, per, notes = backup(wanted, last_dtn)
+        src = source_label(per)
         if not any(k.startswith("@C") for k in fut) or not any(k.startswith("@S") for k in fut):
             # Market closed and the stored prices were read after the last session ended: they ARE the close
             # and cannot have moved. Keep them and record the check, so the site does not go dark all weekend.
@@ -653,6 +697,7 @@ def assemble(old, wanted, site, now, fetch=None, backup=None, cal=None):
             if since and qt and old.get("futures") and datetime.strptime(qt[:19], "%Y-%m-%dT%H:%M:%S") >= since:
                 print("DTN and backups unavailable; CBOT closed since %s and stored prices (%s) are that close; keeping them" % (since, qt))
                 fut, src = dict(old["futures"]), old.get("futures_source", "dtn")
+                per = dict(old.get("futures_sources") or {s: src for s in fut})
                 notes = notes + ["kept the close: CBOT closed since %s" % since.strftime("%a %H:%M")]
             else:
                 raise SystemExit("DTN down and the backup feed did not cover corn and soybeans; bids.json left unchanged")
@@ -666,6 +711,8 @@ def assemble(old, wanted, site, now, fetch=None, backup=None, cal=None):
         if expired(s, today, cal):
             print("dropped %s: past its last trading day; the page shows a dash" % s, file=sys.stderr)
             del data["futures"][s]
+    data["futures_sources"] = {s: per.get(s) or "dtn" for s in sorted(data["futures"])}
+    data["futures_source"] = source_label(data["futures_sources"])
     try:
         for l in site.get("locations", []):
             if l.get("bids") and l.get("id") not in data["dtn"]:
@@ -677,11 +724,9 @@ def assemble(old, wanted, site, now, fetch=None, backup=None, cal=None):
     # bids.json is written on EVERY run, so `checked` (the time the site shows) moves every 10 minutes even
     # when prices do not. The site's own "not updating" warning reads the same field.
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-    data.setdefault("futures_source", "dtn")
-    if data["futures_source"] == "dtn":
-        data["dtn_futures"] = data["futures"]
-    else:
-        data["dtn_futures"] = old.get("dtn_futures") or old.get("futures")
+    # The last price DTN itself gave for each contract: the yardstick backups are checked against. Never a backup price.
+    data["dtn_futures"] = {s: v for s, v in dict(last_dtn, **{k: v for k, v in dtn_now.items() if k in data["futures"]}).items()
+                           if not expired(s, today, cal)}
     print("wrote", "check (no price change)" if same else "new prices", data["quote_time"])
     return {"checked": stamp, "updated": stamp if not same else old.get("updated", stamp), "source": url, **data}
 
