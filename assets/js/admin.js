@@ -157,8 +157,12 @@ var FGA = (function () {
   }
   // ["bids","rows","Corn|Fall 26","basis","thorp"] -> "Corn Fall 26, basis, thorp"
   function pathWords(path) {
-    return path.filter(function (x) { return ['bids', 'rows', 'locations', 'references', 'business', 'lime'].indexOf(x) < 0; })
-      .map(function (x) { return String(x).replace('|', ' '); }).join(', ') || 'the whole file';
+    var cap = function (x) { x = String(x).replace('|', ' ').replace(/_/g, ' '); return x.charAt(0).toUpperCase() + x.slice(1); };
+    var p = path.filter(function (x) { return ['bids', 'rows', 'locations', 'references', 'business', 'lime'].indexOf(x) < 0; }), out = [];
+    for (var i = 0; i < p.length; i++) {
+      if ((p[i] === 'basis' || p[i] === 'hours') && i + 1 < p.length) { out.push(cap(p[i + 1]) + ' ' + p[i]); i++; } else out.push(cap(p[i]));
+    }
+    return out.join(', ') || 'The whole file';
   }
 
   // ---------- errors in plain words ----------
@@ -672,24 +676,39 @@ if (typeof window !== 'undefined' && window.document) (function () {
   };
   function publish(D, rv) {
     if (rv.lines.length || rv.off.length) D.bids.basis_set = new Date().toISOString();
-    var body = JSON.stringify(D, null, 2) + '\n';
-    if (body === JSON.stringify(ORIG, null, 2) + '\n') { setDirty(false); return status('Nothing to save. The site already has this version.'); }
+    if (JSON.stringify(D) === JSON.stringify(ORIG)) { setDirty(false); return status('Nothing to save. The site already has this version.'); }
     saving = true; $('save').disabled = true; $('editor').inert = true; status('Saving…');
-    gh('/contents/' + PATH, { method: 'PUT', body: JSON.stringify({ message: 'admin: update site.json', content: b64enc(body), sha: SHA, branch: $('branch').value.trim() }) })
-      .then(function (j) {
-        SHA = j.content.sha; S = D; ORIG = clone(D); setDirty(false); dropDraft(); drawBids();
-        status('Saved ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '. The site shows it in 1–3 minutes; pages already open update within 5.', false, j.commit && j.commit.html_url);
-      })
-      .catch(function (e) {
-        if (e.status !== 409) return saveFailed(e);
-        return gh('/contents/' + PATH + ref()).then(function (cur) {
-          if (b64dec(cur.content) === body) { SHA = cur.sha; S = D; ORIG = clone(D); setDirty(false); return status('Saved.'); }
-          status('Someone saved a different version since you loaded. Your edits are still on this page. Note them, press Load, and enter them again.', true);
-        });
-      })
-      .catch(saveFailed)
-      .then(function () { saving = false; $('save').disabled = false; $('editor').inert = false; });
+    put(D, false, 0).catch(saveFailed).then(function () { saving = false; $('save').disabled = false; $('editor').inert = false; });
   }
+  // One PUT. On 409 (someone saved since this page loaded) fetch their version and merge: fields only one side
+  // changed are kept from that side and the merge is saved at once. Only a box both changed is asked about.
+  function put(D, merged, tries) {
+    var body = JSON.stringify(D, null, 2) + '\n';
+    return gh('/contents/' + PATH, { method: 'PUT', body: JSON.stringify({ message: 'admin: update site.json', content: b64enc(body), sha: SHA, branch: $('branch').value.trim() }) })
+      .then(function (j) {
+        SHA = j.content.sha; S = D; ORIG = clone(D); setDirty(false); dropDraft(); if (merged) draw(); else drawBids();
+        status('Saved ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + (merged ? ', with the other save kept too' : '') + '. The site shows it in 1–3 minutes; pages already open update within 5.', false, j.commit && j.commit.html_url);
+      }, function (e) {
+        if (e.status !== 409 || tries > 2) throw e;
+        return gh('/contents/' + PATH + ref()).then(function (cur) {
+          var text = b64dec(cur.content), base = ORIG, theirs = JSON.parse(text);
+          if (text === body) { SHA = cur.sha; S = D; ORIG = clone(D); setDirty(false); dropDraft(); return status('Saved.'); }
+          SHA = cur.sha; ORIG = theirs;
+          var m = FGA.merge3(base, D, theirs, false);
+          if (!m.clashes.length) { status('Someone else saved too. Adding your changes to theirs…'); return put(m.merged, true, tries + 1); }
+          var li = m.clashes.map(function (c) { return '<li>' + esc(FGA.pathWords(c.path)) + ': yours <b>' + esc(show(c.mine)) + '</b>, theirs <b>' + esc(show(c.theirs)) + '</b></li>'; }).join('');
+          $('editor').inert = false;
+          return sheet({ title: 'Someone else changed the same boxes', html: '<p>Since you loaded, another save changed these too:</p><ul class="sh-warn">' + li + '</ul><p class="sh-also">Everything else from both saves is kept either way.</p>', ok: 'Publish mine', back: 'Keep theirs' })
+            .then(function (mine) {
+              $('editor').inert = true;
+              if (mine) return put(FGA.merge3(base, D, theirs, true).merged, true, tries + 1);
+              S = m.merged; draw(); setDirty(JSON.stringify(S) !== JSON.stringify(ORIG)); keepDraft();
+              status(dirty ? 'Kept theirs. Your other changes are on the page, not published yet: press Save to site.' : 'Kept theirs. Nothing else to publish.');
+            });
+        });
+      });
+  }
+  function show(v) { return v === undefined ? '(none)' : typeof v === 'number' ? FGA.basisTxt(v) : typeof v === 'string' ? v : JSON.stringify(v); }
   function saveFailed(e) {
     status(FGA.errWords(e, 'save') + ' Your changes are kept on this device.', true);
     if (e.status === 401) { $('connect').hidden = false; $('token').value = ''; store('fg-token', null); $('token').focus(); }

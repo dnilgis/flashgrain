@@ -107,7 +107,8 @@ test('merge: rows matched by crop and month; a real clash is reported, not guess
   row(mine, 'Soybeans', 'Fall 28').show = false;
   const m = A.merge3(base, mine, theirs);
   assert.equal(m.clashes.length, 1);
-  assert.equal(A.pathWords(m.clashes[0].path), 'Corn Fall 26, basis, thorp');
+  assert.equal(A.pathWords(m.clashes[0].path), 'Corn Fall 26, Thorp basis');
+  assert.equal(A.pathWords(['locations', 'thorp', 'hours', 'mon']), 'Thorp, Mon hours');
   assert.equal(row(m.merged, 'Corn', 'Fall 26').basis.thorp, -0.62);       // theirs unless told otherwise
   assert.equal(row(A.merge3(base, mine, theirs, true).merged, 'Corn', 'Fall 26').basis.thorp, -0.58);
   assert.ok(row(m.merged, 'Corn', 'Nov 26'));                              // their new row kept
