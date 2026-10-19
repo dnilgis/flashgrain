@@ -105,6 +105,24 @@ var FGA = (function () {
   function rollBasis(b, oldF, newF) { return isNum(b) && isNum(oldF) && isNum(newF) ? r2(b + oldF - newF) : null; }
   function dayWords(d) { var t = new Date(d + 'T12:00:00Z'); return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][t.getUTCDay()] + ' ' + MON[t.getUTCMonth()] + ' ' + t.getUTCDate(); }
 
+  // ---------- nearby bids next to Jeff's own row ----------
+  // refs: [{ name, commodity, rows: [{label: "Oct 2026", cash, basis, futures_month: "Dec 26 Corn"}] }].
+  // The same delivery month first; Fall falls back to the first month on the same futures contract.
+  var MC = { Jan: 'F', Mar: 'H', May: 'K', Jul: 'N', Aug: 'Q', Sep: 'U', Nov: 'X', Dec: 'Z' };
+  function refSym(fm) { var m = /^(\w{3}) (\d\d) (Corn|Soybeans)$/.exec(fm || ''); return m && MC[m[1]] ? (m[3] === 'Corn' ? '@C' : '@S') + m[2].slice(-1) + MC[m[1]] : ''; }
+  function nearbyFor(row, refs) {
+    var out = [], me = labelMonth(row.label);
+    (refs || []).forEach(function (ref) {
+      if (!ref || ref.commodity !== row.commodity) return;
+      var rows = (ref.rows || []).filter(function (x) { return isNum(x.cash); });
+      var hit = rows.filter(function (x) { return labelMonth(x.label) === me && refSym(x.futures_month) === row.symbol; })[0]
+        || rows.filter(function (x) { return labelMonth(x.label) === me; })[0]
+        || rows.filter(function (x) { return refSym(x.futures_month) === row.symbol; })[0];
+      if (hit) out.push({ name: ref.name, label: hit.label, cash: hit.cash, basis: hit.basis });
+    });
+    return out;
+  }
+
   // ---------- price review: every cash change, and every number that looks like a typo ----------
   // D, O: new and saved site.json. locs: [{id, name}] that post bids. same: Granton uses Thorp basis.
   // fut(sym) -> futures price or null. Returns { lines: [cash changes], warn: [check these], off: [rows taken down] }.
@@ -234,7 +252,7 @@ var FGA = (function () {
 
   return { parseBasis: parseBasis, textToHours: textToHours, hoursParts: hoursParts, hhmm: hhmm, hoursAsk: hoursAsk, hoursWords: hoursWords, clockWords: clockWords,
     money: money, basisTxt: basisTxt, centsTxt: centsTxt, symName: symName, labelMonth: labelMonth, review: review,
-    merge3: merge3, pathWords: pathWords, errWords: errWords, expiryFromHeader: expiryFromHeader, futuresSources: futuresSources, cropOf: cropOf, keyState: keyState, contractDates: contractDates, rollState: rollState, nextContract: nextContract, rollBasis: rollBasis, dayWords: dayWords,
+    merge3: merge3, pathWords: pathWords, errWords: errWords, expiryFromHeader: expiryFromHeader, futuresSources: futuresSources, cropOf: cropOf, keyState: keyState, contractDates: contractDates, rollState: rollState, nextContract: nextContract, rollBasis: rollBasis, dayWords: dayWords, nearbyFor: nearbyFor,
     MON: MON, CODEMON: CODEMON, LISTED: LISTED };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = FGA;
@@ -330,7 +348,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
   $('change-key').onclick = function () { $('connect').hidden = !$('connect').hidden; if (!$('connect').hidden) $('token').focus(); };
 
   // ---------- status strip ----------
-  var REFST = {};
+  var REFST = {}, REFDATA = [];
   var SRC = { dtn: 'DTN', boards: 'elevator boards', agsist: 'AGSIST', yahoo: 'Yahoo', ace: 'Ace' };
   function chip(cls, html) { return '<li class="' + cls + '">' + html + '</li>'; }
   function drawChips() {
@@ -425,7 +443,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
               return '<span class="bl-loc' + (li ? ' follow' : '') + '"><span class="bl-ln">' + esc(l.name) + '</span>'
                 + '<input class="num" data-b="' + esc(l.id) + '" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="-0.60" value="' + (FG.num(b) ? b.toFixed(2) : '') + '" aria-label="' + esc(l.name + ' basis, ' + c + ' ' + p.label) + '">'
                 + '<span class="bl-cash" data-p="' + esc(l.id) + '"></span></span>';
-            }).join('') + '<button class="a-btn sm bl-undo" type="button" hidden>Back to saved</button></span></div>';
+            }).join('') + '<button class="a-btn sm bl-undo" type="button" hidden>Back to saved</button></span><span class="bl-near"></span></div>';
         }).join('') + '<p class="bl-none">Nothing on. Tap a month above to post it.</p></div></div>';
     });
     $('bids-list').innerHTML = h;
@@ -446,6 +464,13 @@ if (typeof window !== 'undefined' && window.document) (function () {
     // not DTN, or only a preview the site does not have: say so next to the price
     var per = BIDS && BIDS.futures_sources, src = f && f.from ? f.from + ', preview only' : per && per[sym] && per[sym] !== 'dtn' ? (SRC[per[sym]] || per[sym]) + ', not DTN' : '';
     row.querySelector('.bl-src').textContent = src ? ' ' + src : '';
+    // nearby elevators' bid for the same month, and how Jeff's cash sits against it
+    var mine = f && FG.num(parseBasis(first.value)) ? f.price + parseBasis(first.value) : null;
+    row.querySelector('.bl-near').innerHTML = FGA.nearbyFor({ commodity: p.commodity, label: p.label, symbol: sym }, REFDATA).map(function (n) {
+      var d = FG.num(mine) ? Math.round((mine - n.cash) * 100) : null;
+      return '<span>' + esc(n.name.split(' ')[0] + ' ' + n.label.replace(/ 20(\d\d)$/, ' $1')) + ' <b>$' + FG.money(n.cash) + '</b>' + (FG.num(n.basis) ? ' (' + FG.basis(n.basis) + ')' : '')
+        + (d === null ? '' : d === 0 ? ', same as yours' : ', yours ' + FGA.centsTxt(d / 100) + (d > 0 ? ' over' : ' under')) + '</span>';
+    }).join('');
   }
   $('bids-list').addEventListener('change', function (e) {
     if (e.target.dataset.f !== 'show') return;
@@ -652,6 +677,8 @@ if (typeof window !== 'undefined' && window.document) (function () {
           var bad = d.error && (!d.checked || d.error_at > d.checked) ? ' Last try ' + when(d.error_at) + ' failed: ' + d.error : '';
           if (el()) el().textContent = ok + bad;
           REFST[r.id] = !!(rows.length && !bad); drawChips();
+          REFDATA = REFDATA.filter(function (x) { return x.id !== r.id; }).concat([{ id: r.id, name: r.name, commodity: r.commodity, rows: rows }]);
+          $('bids-list').querySelectorAll('.bl-row').forEach(previewRow);
           var box = document.querySelector('[data-rt="' + r.id + '"]'), row = function (x) {
             return '<tr><td>' + esc(x.label) + '</td><td class="prev">' + (FG.num(x.cash) ? '$' + FG.money(x.cash) : '—') + '</td><td>' + (FG.num(x.basis) ? FG.basis(x.basis) : '—') + '</td><td class="ref">' + esc(x.futures_month || '') + '</td></tr>';
           };

@@ -155,3 +155,11 @@ test('roll: Fall 26 soybeans on Nov 26 futures, real dates', () => {
   assert.equal(A.rollBasis(-0.75, 12.535, 12.665), -0.88);
   assert.equal(A.rollBasis(-0.75, 12.535, null), null);
 });
+
+test('nearby bids beside the basis: same month, Fall on the same futures (real Ace board Oct 19)', () => {
+  const ace = { name: 'Ace Ethanol', commodity: 'Corn', rows: fx('admin-ref-ace.json').rows };
+  assert.deepEqual(A.nearbyFor({ commodity: 'Corn', label: 'Fall 26', symbol: '@C6Z' }, [ace]), [{ name: 'Ace Ethanol', label: 'Nov 2026', cash: 4.17, basis: -0.5 }]);
+  assert.deepEqual(A.nearbyFor({ commodity: 'Corn', label: 'Jan 27', symbol: '@C7H' }, [ace]), [{ name: 'Ace Ethanol', label: 'Jan 2027', cash: 4.24, basis: -0.57 }]);
+  assert.deepEqual(A.nearbyFor({ commodity: 'Soybeans', label: 'Fall 26', symbol: '@S6X' }, [ace]), []);
+  assert.deepEqual(A.nearbyFor({ commodity: 'Corn', label: 'Fall 26', symbol: '@C6Z' }, [{ name: 'Northside Elevator', commodity: 'Corn', rows: [] }]), []);
+});

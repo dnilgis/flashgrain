@@ -300,3 +300,9 @@ body.admin .a-bids .bl-undo,body.admin .bl-loc~.bl-undo{min-height:44px}
 /* roll: a suggested basis is marked until Jeff types over it */
 body.admin .bl-loc .num.sugg{outline:2px dashed var(--flash);outline-offset:-2px}
 .bl-sugg{grid-column:1/-1;font-size:1rem;color:var(--flash);padding:2px 0 4px}
+
+/* nearby elevators' bid under each row */
+.bl-near{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:0 14px;font-family:var(--mono);font-size:1rem;color:var(--ink2)}
+.bl-near:empty{display:none}
+.bl-near b{color:var(--ink);font-weight:500}
+@media(min-width:760px){.bl-near{grid-column:2/-1}.bl-sugg{grid-column:2/-1}}
