@@ -273,8 +273,13 @@ body.admin .a-reft .ref{white-space:normal}
 .a-card p{margin:0;font-size:1.0625rem;line-height:1.35}
 .a-card b{font-family:var(--mono)}
 .a-card.warn{border-color:var(--flash)}
-.a-card.bad{border-color:#ff5a4f;background:#2a0d0b}
+.a-card.stop{border-color:#ff5a4f;background:#2a0d0b}
 .a-card .a-actions{margin:8px 0 0}
 .a-card .a-main{background:var(--flash);color:#0b0b0b;border-color:var(--flash)}
-.a-card.bad .a-main{background:#ff5a4f;border-color:#ff5a4f}
+.a-card.stop .a-main{background:#ff5a4f;border-color:#ff5a4f}
 .a-card .sugg{display:block;margin-top:4px;color:var(--ink2)}
+
+/* every problem listed at the save button, each one jumps to its box */
+.a-probs{flex-basis:100%;margin:0;padding:0;list-style:none;max-height:40vh;overflow-y:auto}
+.a-prob{display:block;width:100%;text-align:left;min-height:44px;padding:8px 10px;margin:4px 0 0;background:transparent;color:var(--ink);border:1px solid #ff5a4f;font:500 1rem var(--sans);cursor:pointer}
+@media(min-width:1200px){body.admin .a-bar:has(.a-probs:not([hidden])){flex-wrap:wrap}}

@@ -408,10 +408,12 @@ if (typeof window !== 'undefined' && window.document) (function () {
       var ins = row.querySelectorAll('[data-b]'), firstV = ins[0] ? ins[0].value.trim() : '';
       ins.forEach(function (inp, li) {
         var v = SAME && li ? firstV : inp.value.trim(), id = inp.dataset.b;
-        if (v === '') { delete r.basis[id]; if (show && locIds.indexOf(id) >= 0) flag(inp, p.commodity + ' ' + p.label + ': turned on but no basis.'); return; }
+        // with one basis for both yards the second box is hidden: report the first box, once
+        var fl = SAME && li ? function () {} : flag, who = (SAME ? '' : inp.closest('.bl-loc').querySelector('.bl-ln').textContent + ' ') + p.commodity + ' ' + p.label;
+        if (v === '') { delete r.basis[id]; if (show && locIds.indexOf(id) >= 0) fl(inp, who + ': turned on but no basis.'); return; }
         var n = parseBasis(v);
-        if (!FG.num(n)) { flag(inp, 'Basis "' + v + '" is not a number.'); return; }
-        if (Math.abs(n) > 3) { flag(inp, 'Basis "' + v + '" is outside -3.00 to +3.00.'); return; }
+        if (!FG.num(n)) { fl(inp, who + ': basis "' + v + '" is not a number.'); return; }
+        if (Math.abs(n) > 3) { fl(inp, who + ': basis "' + v + '" is outside -3.00 to +3.00.'); return; }
         r.basis[id] = n;
       });
       if (show || p.row) {
@@ -538,9 +540,9 @@ if (typeof window !== 'undefined' && window.document) (function () {
 
   // ---------- read the form into a draft; S is only replaced when the draft is valid ----------
   function collect(quiet) { // quiet: read only, leave the red outlines alone (for the draft)
-    var D = clone(S), bad = [];
+    var D = clone(S), bad = [], els = [];
     if (!quiet) document.querySelectorAll('.bad').forEach(function (e) { e.classList.remove('bad'); });
-    var flag = function (el, why) { if (!quiet) el.classList.add('bad'); bad.push(why); };
+    var flag = function (el, why) { if (!quiet) el.classList.add('bad'); bad.push(why); els.push(el); };
 
     readHours(D, flag, quiet);
     $('locs').querySelectorAll('.a-loc').forEach(function (div) {
@@ -569,17 +571,39 @@ if (typeof window !== 'undefined' && window.document) (function () {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(D.business.email)) flag($('email'), 'Email address does not look right.');
     D.portal_url = $('portal').value.trim();
     if (!/^https:\/\/\S+$/.test(D.portal_url)) flag($('portal'), 'Portal link must start with https://');
-    if (!locIds.length) bad.push('At least one location has to post bids.');
-    if (!D.locations.some(function (l) { return l.hours; })) bad.push('At least one location needs hours.');
-    return { draft: D, bad: bad };
+    if (!locIds.length) { bad.push('At least one location has to post bids.'); els.push(null); }
+    if (!D.locations.some(function (l) { return l.hours; })) { bad.push('At least one location needs hours.'); els.push(null); }
+    return { draft: D, bad: bad, els: els };
+  }
+  // Every problem in a list at the save button, each one a tap away; the first box is scrolled to and focused.
+  function problems(c, go) {
+    var ul = $('problems');
+    if (!c || !c.bad.length) { ul.innerHTML = ''; ul.hidden = true; return; }
+    var ord = c.bad.map(function (w, i) { return i; }).sort(function (i, j) { // page order, top to bottom
+      var a = c.els[i], b = c.els[j]; if (!a || !b) return a ? -1 : b ? 1 : i - j;
+      return a === b ? i - j : a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+    });
+    c = { bad: ord.map(function (i) { return c.bad[i]; }), els: ord.map(function (i) { return c.els[i]; }) };
+    status(c.bad.length === 1 ? 'One thing to fix before saving:' : c.bad.length + ' things to fix before saving:', true);
+    ul.innerHTML = c.bad.map(function (w, i) { return '<li><button type="button" class="a-prob" data-i="' + i + '">' + esc(w) + '</button></li>'; }).join('');
+    ul.hidden = false;
+    ul.querySelectorAll('.a-prob').forEach(function (b) { b.onclick = function () { reveal(c.els[+b.dataset.i]); }; });
+    if (go) reveal(c.els.filter(Boolean)[0]);
+  }
+  function reveal(el) {
+    if (!el) return;
+    for (var d = el.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) d.open = true;
+    if (el.matches('.sym') && !$('bids-list').classList.contains('editing')) $('edit-rows').click();
+    var crop = el.closest('.bl-crop'); if (crop) crop.classList.add('more');
+    el.scrollIntoView({ block: 'center' }); el.focus({ preventScroll: true });
   }
   function apply(op) {
     var c = collect();
-    if (c.bad.length) { status(c.bad[0] + (c.bad.length > 1 ? ' (+' + (c.bad.length - 1) + ' more)' : ''), true); return false; }
+    if (c.bad.length) { problems(c, false); return false; }
     S = c.draft; if (op) op(); setDirty(true);
     // Clear an old error AFTER the current click lands: clearing it now shrinks the sticky save bar between
     // mousedown and mouseup (blur fires 'change' first), the Save button moves, and the click is lost.
-    if ($('status2').classList.contains('err')) setTimeout(function () { if (!saving && $('status2').classList.contains('err') && !collect().bad.length) status(''); }, 300);
+    if ($('status2').classList.contains('err')) setTimeout(function () { if (!saving && $('status2').classList.contains('err') && !collect().bad.length) { status(''); problems(null); } }, 300);
     return true;
   }
 
@@ -666,7 +690,8 @@ if (typeof window !== 'undefined' && window.document) (function () {
   $('save').onclick = function () {
     if (saving) return;
     var c = collect();
-    if (c.bad.length) return status(c.bad[0] + (c.bad.length > 1 ? ' (+' + (c.bad.length - 1) + ' more)' : ''), true);
+    if (c.bad.length) return problems(c, true);
+    problems(null);
     var D = c.draft;
     if (JSON.stringify(D) === JSON.stringify(ORIG)) { setDirty(false); return status('Nothing to save. The site already has this version.'); }
     var rv = priceReview(D);
@@ -714,7 +739,7 @@ if (typeof window !== 'undefined' && window.document) (function () {
     if (e.status === 401) { $('connect').hidden = false; $('token').value = ''; store('fg-token', null); $('token').focus(); }
   }
   $('download').onclick = function () {
-    var c = collect(); if (c.bad.length) return status(c.bad[0], true);
+    var c = collect(); if (c.bad.length) return problems(c, true);
     var a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(c.draft, null, 2) + '\n'], { type: 'application/json' }));
     a.download = 'site.json'; a.click();
