@@ -1,19 +1,19 @@
 {
- "checked": "2026-10-21T01:50:08Z",
- "updated": "2026-10-21T01:50:08Z",
+ "checked": "2026-10-21T02:00:11Z",
+ "updated": "2026-10-21T02:00:11Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-10-20T20:50:08",
+ "quote_time": "2026-10-20T21:00:11",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.6175,
-   "change": -0.0025,
+   "price": 4.615,
+   "change": -0.005,
    "time": null
   },
   "@C7Z": {
-   "price": 5.03,
-   "change": 0.0,
+   "price": 5.0275,
+   "change": -0.0025,
    "time": null
   },
   "@C8Z": {
@@ -22,8 +22,8 @@
    "time": null
   },
   "@S6X": {
-   "price": 12.4825,
-   "change": 0.0,
+   "price": 12.475,
+   "change": -0.0075,
    "time": null
   },
   "@S7X": {
@@ -138,13 +138,13 @@
  "futures_source": "dtn",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.6175,
-   "change": -0.0025,
+   "price": 4.615,
+   "change": -0.005,
    "time": null
   },
   "@C7Z": {
-   "price": 5.03,
-   "change": 0.0,
+   "price": 5.0275,
+   "change": -0.0025,
    "time": null
   },
   "@C8Z": {
@@ -153,8 +153,8 @@
    "time": null
   },
   "@S6X": {
-   "price": 12.4825,
-   "change": 0.0,
+   "price": 12.475,
+   "change": -0.0075,
    "time": null
   },
   "@S7X": {
