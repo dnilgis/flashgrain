@@ -1,40 +1,40 @@
 {
- "checked": "2026-10-21T12:20:11Z",
- "updated": "2026-10-21T12:20:11Z",
- "source": "backup:agsist+boards",
- "quote_time": "2026-10-21T07:16:12",
- "quote_time_source": "backup",
+ "checked": "2026-10-21T12:30:10Z",
+ "updated": "2026-10-21T12:30:10Z",
+ "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
+ "quote_time": "2026-10-21T07:30:10",
+ "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.585,
-   "change": -0.035,
-   "time": "2026-10-21T07:09:17"
+   "price": 4.58,
+   "change": -0.04,
+   "time": null
   },
   "@C7Z": {
-   "price": 5.0025,
-   "change": -0.0275,
-   "time": "2026-10-21T07:09:17"
+   "price": 5.0,
+   "change": -0.03,
+   "time": null
+  },
+  "@C8Z": {
+   "price": 5.0075,
+   "change": -0.03,
+   "time": null
   },
   "@S6X": {
-   "price": 12.43,
-   "change": -0.0525,
-   "time": "2026-10-21T07:09:17"
+   "price": 12.4175,
+   "change": -0.065,
+   "time": null
   },
   "@S7X": {
    "price": 12.3325,
    "change": -0.05,
-   "time": "2026-10-21T07:09:17"
-  },
-  "@C8Z": {
-   "price": 5.01,
-   "change": -0.0275,
-   "time": "2026-10-21T07:16:12"
+   "time": null
   },
   "@S8X": {
-   "price": 12.0075,
-   "change": -0.025,
-   "time": "2026-10-21T07:16:12"
+   "price": 12.02,
+   "change": 0.0,
+   "time": null
   }
  },
  "dtn": {
@@ -43,7 +43,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.99,
+    "cash": 3.98,
     "basis": -0.6
    },
    {
@@ -64,7 +64,7 @@
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S6X",
-    "cash": 11.68,
+    "cash": 11.67,
     "basis": -0.75
    },
    {
@@ -87,7 +87,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.99,
+    "cash": 3.98,
     "basis": -0.6
    },
    {
@@ -108,7 +108,7 @@
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S6X",
-    "cash": 11.68,
+    "cash": 11.67,
     "basis": -0.75
    },
    {
@@ -127,39 +127,34 @@
    }
   ]
  },
- "futures_source": "agsist+boards",
- "dtn_error": "all fetches failed; bids.json left unchanged. last error: https://flashgrains.com/index.cfm?show=11&mid=3: <urlopen error timed out>",
- "backup_notes": [
-  "yahoo ZCZ28.CBT: HTTP Error 429: Too Many Requests",
-  "yahoo ZSX28.CBT: HTTP Error 429: Too Many Requests"
- ],
  "futures_sources": {
-  "@C6Z": "boards",
-  "@C7Z": "boards",
-  "@C8Z": "agsist",
-  "@S6X": "boards",
-  "@S7X": "boards",
-  "@S8X": "agsist"
+  "@C6Z": "dtn",
+  "@C7Z": "dtn",
+  "@C8Z": "dtn",
+  "@S6X": "dtn",
+  "@S7X": "dtn",
+  "@S8X": "dtn"
  },
+ "futures_source": "dtn",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.585,
-   "change": -0.035,
+   "price": 4.58,
+   "change": -0.04,
    "time": null
   },
   "@C7Z": {
-   "price": 5.0025,
-   "change": -0.0275,
+   "price": 5.0,
+   "change": -0.03,
    "time": null
   },
   "@C8Z": {
-   "price": 5.01,
-   "change": -0.0275,
+   "price": 5.0075,
+   "change": -0.03,
    "time": null
   },
   "@S6X": {
-   "price": 12.43,
-   "change": -0.0525,
+   "price": 12.4175,
+   "change": -0.065,
    "time": null
   },
   "@S7X": {
