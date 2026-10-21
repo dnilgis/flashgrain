@@ -1,10 +1,10 @@
 {
- "checked": "2026-10-21T20:30:10Z",
+ "checked": "2026-10-21T20:40:12Z",
  "updated": "2026-10-21T18:32:14Z",
- "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-10-21T15:30:10",
- "quote_time_source": "run",
- "dtn_as_of": null,
+ "source": "https://www.flashgrains.com/index.cfm",
+ "quote_time": "2026-10-21T15:40:00",
+ "quote_time_source": "dtn_as_of",
+ "dtn_as_of": "10/21/26 03:40PM CDT",
  "futures": {
   "@C6Z": {
    "price": 4.6325,
