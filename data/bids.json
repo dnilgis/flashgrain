@@ -1,29 +1,29 @@
 {
- "checked": "2026-10-21T15:00:12Z",
- "updated": "2026-10-21T15:00:12Z",
+ "checked": "2026-10-21T15:10:09Z",
+ "updated": "2026-10-21T15:10:09Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-10-21T10:00:12",
+ "quote_time": "2026-10-21T10:10:09",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.5775,
-   "change": -0.0425,
+   "price": 4.585,
+   "change": -0.035,
    "time": null
   },
   "@C7Z": {
-   "price": 4.9925,
-   "change": -0.0375,
+   "price": 4.99,
+   "change": -0.04,
    "time": null
   },
   "@C8Z": {
-   "price": 5.015,
-   "change": -0.0225,
+   "price": 5.0075,
+   "change": -0.03,
    "time": null
   },
   "@S6X": {
-   "price": 12.4275,
-   "change": -0.055,
+   "price": 12.425,
+   "change": -0.0575,
    "time": null
   },
   "@S7X": {
@@ -43,7 +43,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.98,
+    "cash": 3.99,
     "basis": -0.6
    },
    {
@@ -57,7 +57,7 @@
     "label": "Fall 28",
     "commodity": "Corn",
     "symbol": "@C8Z",
-    "cash": 4.32,
+    "cash": 4.31,
     "basis": -0.7
    },
    {
@@ -87,7 +87,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.98,
+    "cash": 3.99,
     "basis": -0.6
    },
    {
@@ -101,7 +101,7 @@
     "label": "Fall 28",
     "commodity": "Corn",
     "symbol": "@C8Z",
-    "cash": 4.32,
+    "cash": 4.31,
     "basis": -0.7
    },
    {
@@ -138,23 +138,23 @@
  "futures_source": "dtn",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.5775,
-   "change": -0.0425,
+   "price": 4.585,
+   "change": -0.035,
    "time": null
   },
   "@C7Z": {
-   "price": 4.9925,
-   "change": -0.0375,
+   "price": 4.99,
+   "change": -0.04,
    "time": null
   },
   "@C8Z": {
-   "price": 5.015,
-   "change": -0.0225,
+   "price": 5.0075,
+   "change": -0.03,
    "time": null
   },
   "@S6X": {
-   "price": 12.4275,
-   "change": -0.055,
+   "price": 12.425,
+   "change": -0.0575,
    "time": null
   },
   "@S7X": {
