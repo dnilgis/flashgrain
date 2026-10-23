@@ -1,7 +1,7 @@
 {
  "id": "ace",
- "checked": "2026-10-23T19:30:17Z",
- "updated": "2026-10-23T18:30:15Z",
+ "checked": "2026-10-23T20:00:27Z",
+ "updated": "2026-10-23T20:00:27Z",
  "source": "https://aceethanol.o.bushelsites.com/cashbidssingle-3578",
  "quote_time": null,
  "rows": [
@@ -74,20 +74,6 @@
    "basis": -0.52,
    "futures_month": "Jul 27 Corn",
    "futures": 4.855
-  },
-  {
-   "label": "Aug 2027",
-   "cash": 4.34,
-   "basis": -0.48,
-   "futures_month": "Sep 27 Corn",
-   "futures": 4.82
-  },
-  {
-   "label": "Sep 2027",
-   "cash": 4.34,
-   "basis": -0.48,
-   "futures_month": "Sep 27 Corn",
-   "futures": 4.82
   }
  ]
 }
