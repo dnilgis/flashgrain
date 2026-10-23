@@ -1,40 +1,40 @@
 {
- "checked": "2026-10-23T05:30:13Z",
- "updated": "2026-10-23T05:30:13Z",
- "source": "backup:agsist+boards",
- "quote_time": "2026-10-23T00:31:14",
- "quote_time_source": "backup",
+ "checked": "2026-10-23T05:40:10Z",
+ "updated": "2026-10-23T05:40:10Z",
+ "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
+ "quote_time": "2026-10-23T00:40:10",
+ "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
    "price": 4.6,
    "change": -0.005,
-   "time": "2026-10-23T00:18:45"
+   "time": null
   },
   "@C7Z": {
-   "price": 4.9825,
-   "change": 0.0025,
-   "time": "2026-10-23T00:18:45"
+   "price": 4.98,
+   "change": 0.0,
+   "time": null
+  },
+  "@C8Z": {
+   "price": 5.005,
+   "change": 0.0,
+   "time": null
   },
   "@S6X": {
    "price": 12.57,
    "change": 0.04,
-   "time": "2026-10-23T00:18:45"
+   "time": null
   },
   "@S7X": {
-   "price": 12.3175,
-   "change": 0.035,
-   "time": "2026-10-23T00:18:45"
-  },
-  "@C8Z": {
-   "price": 5.0025,
-   "change": -0.025,
-   "time": "2026-10-23T00:31:14"
+   "price": 12.3225,
+   "change": 0.04,
+   "time": null
   },
   "@S8X": {
-   "price": 12.03,
-   "change": 0.0925,
-   "time": "2026-10-23T00:31:14"
+   "price": 11.9625,
+   "change": 0.0,
+   "time": null
   }
  },
  "dtn": {
@@ -127,20 +127,15 @@
    }
   ]
  },
- "futures_source": "agsist+boards",
- "dtn_error": "all fetches failed; bids.json left unchanged. last error: https://flashgrains.com/index.cfm?show=11&mid=3: <urlopen error timed out>",
- "backup_notes": [
-  "yahoo ZCZ28.CBT: HTTP Error 429: Too Many Requests",
-  "yahoo ZSX28.CBT: HTTP Error 429: Too Many Requests"
- ],
  "futures_sources": {
-  "@C6Z": "boards",
-  "@C7Z": "boards",
-  "@C8Z": "agsist",
-  "@S6X": "boards",
-  "@S7X": "boards",
-  "@S8X": "agsist"
+  "@C6Z": "dtn",
+  "@C7Z": "dtn",
+  "@C8Z": "dtn",
+  "@S6X": "dtn",
+  "@S7X": "dtn",
+  "@S8X": "dtn"
  },
+ "futures_source": "dtn",
  "dtn_futures": {
   "@C6Z": {
    "price": 4.6,
@@ -148,8 +143,8 @@
    "time": null
   },
   "@C7Z": {
-   "price": 4.9825,
-   "change": 0.0025,
+   "price": 4.98,
+   "change": 0.0,
    "time": null
   },
   "@C8Z": {
@@ -163,8 +158,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 12.3175,
-   "change": 0.035,
+   "price": 12.3225,
+   "change": 0.04,
    "time": null
   },
   "@S8X": {
