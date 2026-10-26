@@ -1,19 +1,19 @@
 {
- "checked": "2026-10-26T16:30:12Z",
- "updated": "2026-10-26T16:30:12Z",
+ "checked": "2026-10-26T16:40:12Z",
+ "updated": "2026-10-26T16:40:12Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-10-26T11:30:12",
+ "quote_time": "2026-10-26T11:40:12",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.5425,
-   "change": -0.0175,
+   "price": 4.5475,
+   "change": -0.0125,
    "time": null
   },
   "@C7Z": {
-   "price": 4.935,
-   "change": -0.015,
+   "price": 4.9375,
+   "change": -0.0125,
    "time": null
   },
   "@C8Z": {
@@ -22,8 +22,8 @@
    "time": null
   },
   "@S6X": {
-   "price": 12.3775,
-   "change": -0.1875,
+   "price": 12.375,
+   "change": -0.19,
    "time": null
   },
   "@S7X": {
@@ -43,7 +43,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.94,
+    "cash": 3.95,
     "basis": -0.6
    },
    {
@@ -87,7 +87,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.94,
+    "cash": 3.95,
     "basis": -0.6
    },
    {
@@ -138,13 +138,13 @@
  "futures_source": "dtn",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.5425,
-   "change": -0.0175,
+   "price": 4.5475,
+   "change": -0.0125,
    "time": null
   },
   "@C7Z": {
-   "price": 4.935,
-   "change": -0.015,
+   "price": 4.9375,
+   "change": -0.0125,
    "time": null
   },
   "@C8Z": {
@@ -153,8 +153,8 @@
    "time": null
   },
   "@S6X": {
-   "price": 12.3775,
-   "change": -0.1875,
+   "price": 12.375,
+   "change": -0.19,
    "time": null
   },
   "@S7X": {
