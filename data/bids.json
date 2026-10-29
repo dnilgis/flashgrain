@@ -1,29 +1,29 @@
 {
- "checked": "2026-10-29T16:20:10Z",
- "updated": "2026-10-29T16:20:10Z",
+ "checked": "2026-10-29T16:30:10Z",
+ "updated": "2026-10-29T16:30:10Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-10-29T11:20:10",
+ "quote_time": "2026-10-29T11:30:10",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.5325,
-   "change": 0.015,
+   "price": 4.5225,
+   "change": 0.005,
    "time": null
   },
   "@C7Z": {
-   "price": 4.9025,
-   "change": 0.0025,
+   "price": 4.8975,
+   "change": -0.0025,
    "time": null
   },
   "@C8Z": {
-   "price": 4.945,
-   "change": 0.0025,
+   "price": 4.95,
+   "change": 0.0075,
    "time": null
   },
   "@S7F": {
-   "price": 12.355,
-   "change": -0.025,
+   "price": 12.3575,
+   "change": -0.0225,
    "time": null
   },
   "@S7X": {
@@ -37,9 +37,9 @@
    "time": null
   },
   "@S6X": {
-   "price": 12.2075,
-   "change": -0.0375,
-   "time": "2026-10-29T11:10:53"
+   "price": 12.2175,
+   "change": -0.0275,
+   "time": "2026-10-29T11:20:30"
   }
  },
  "dtn": {
@@ -48,7 +48,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.93,
+    "cash": 3.92,
     "basis": -0.6
    },
    {
@@ -92,7 +92,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.88,
+    "cash": 3.87,
     "basis": -0.65
    },
    {
@@ -145,18 +145,18 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.5325,
-   "change": 0.015,
+   "price": 4.5225,
+   "change": 0.005,
    "time": null
   },
   "@C7Z": {
-   "price": 4.9025,
-   "change": 0.0025,
+   "price": 4.8975,
+   "change": -0.0025,
    "time": null
   },
   "@C8Z": {
-   "price": 4.945,
-   "change": 0.0025,
+   "price": 4.95,
+   "change": 0.0075,
    "time": null
   },
   "@S6X": {
@@ -175,8 +175,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.355,
-   "change": -0.025,
+   "price": 12.3575,
+   "change": -0.0225,
    "time": null
   }
  }
