@@ -1,19 +1,19 @@
 {
- "checked": "2026-10-29T15:40:11Z",
- "updated": "2026-10-29T15:40:11Z",
+ "checked": "2026-10-29T15:50:09Z",
+ "updated": "2026-10-29T15:50:09Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-10-29T10:40:11",
+ "quote_time": "2026-10-29T10:50:09",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.5025,
-   "change": -0.015,
+   "price": 4.5175,
+   "change": 0.0,
    "time": null
   },
   "@C7Z": {
-   "price": 4.8875,
-   "change": -0.0125,
+   "price": 4.8925,
+   "change": -0.0075,
    "time": null
   },
   "@C8Z": {
@@ -22,13 +22,13 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.3075,
-   "change": -0.0725,
+   "price": 12.3225,
+   "change": -0.0575,
    "time": null
   },
   "@S7X": {
-   "price": 12.07,
-   "change": 0.0025,
+   "price": 12.0725,
+   "change": 0.005,
    "time": null
   },
   "@S8X": {
@@ -37,9 +37,9 @@
    "time": null
   },
   "@S6X": {
-   "price": 12.13,
-   "change": -0.115,
-   "time": "2026-10-29T10:30:32"
+   "price": 12.17,
+   "change": -0.075,
+   "time": "2026-10-29T10:38:39"
   }
  },
  "dtn": {
@@ -48,7 +48,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.9,
+    "cash": 3.92,
     "basis": -0.6
    },
    {
@@ -69,7 +69,7 @@
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.46,
+    "cash": 11.47,
     "basis": -0.85
    },
    {
@@ -92,7 +92,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.85,
+    "cash": 3.87,
     "basis": -0.65
    },
    {
@@ -113,7 +113,7 @@
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.46,
+    "cash": 11.47,
     "basis": -0.85
    },
    {
@@ -145,13 +145,13 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.5025,
-   "change": -0.015,
+   "price": 4.5175,
+   "change": 0.0,
    "time": null
   },
   "@C7Z": {
-   "price": 4.8875,
-   "change": -0.0125,
+   "price": 4.8925,
+   "change": -0.0075,
    "time": null
   },
   "@C8Z": {
@@ -165,8 +165,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 12.07,
-   "change": 0.0025,
+   "price": 12.0725,
+   "change": 0.005,
    "time": null
   },
   "@S8X": {
@@ -175,8 +175,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.3075,
-   "change": -0.0725,
+   "price": 12.3225,
+   "change": -0.0575,
    "time": null
   }
  }
