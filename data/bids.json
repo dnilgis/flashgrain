@@ -1,19 +1,19 @@
 {
- "checked": "2026-10-29T06:50:12Z",
- "updated": "2026-10-29T06:50:12Z",
+ "checked": "2026-10-29T07:00:15Z",
+ "updated": "2026-10-29T07:00:15Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-10-29T01:50:12",
+ "quote_time": "2026-10-29T02:00:15",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.53,
-   "change": 0.0125,
+   "price": 4.525,
+   "change": 0.0075,
    "time": null
   },
   "@C7Z": {
-   "price": 4.91,
-   "change": 0.01,
+   "price": 4.9075,
+   "change": 0.0075,
    "time": null
   },
   "@C8Z": {
@@ -22,13 +22,13 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.3225,
-   "change": -0.0575,
+   "price": 12.32,
+   "change": -0.06,
    "time": null
   },
   "@S7X": {
-   "price": 12.065,
-   "change": -0.0025,
+   "price": 12.06,
+   "change": -0.0075,
    "time": null
   },
   "@S8X": {
@@ -39,7 +39,7 @@
   "@S6X": {
    "price": 12.1775,
    "change": -0.0675,
-   "time": "2026-10-29T01:40:30"
+   "time": "2026-10-29T01:50:30"
   }
  },
  "dtn": {
@@ -76,7 +76,7 @@
     "label": "Fall 27",
     "commodity": "Soybeans",
     "symbol": "@S7X",
-    "cash": 11.22,
+    "cash": 11.21,
     "basis": -0.85
    },
    {
@@ -120,7 +120,7 @@
     "label": "Fall 27",
     "commodity": "Soybeans",
     "symbol": "@S7X",
-    "cash": 11.22,
+    "cash": 11.21,
     "basis": -0.85
    },
    {
@@ -145,13 +145,13 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.53,
-   "change": 0.0125,
+   "price": 4.525,
+   "change": 0.0075,
    "time": null
   },
   "@C7Z": {
-   "price": 4.91,
-   "change": 0.01,
+   "price": 4.9075,
+   "change": 0.0075,
    "time": null
   },
   "@C8Z": {
@@ -165,8 +165,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 12.065,
-   "change": -0.0025,
+   "price": 12.06,
+   "change": -0.0075,
    "time": null
   },
   "@S8X": {
@@ -175,8 +175,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.3225,
-   "change": -0.0575,
+   "price": 12.32,
+   "change": -0.06,
    "time": null
   }
  }
