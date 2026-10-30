@@ -1,40 +1,45 @@
 {
- "checked": "2026-10-30T11:10:11Z",
- "updated": "2026-10-30T11:10:11Z",
- "source": "backup:agsist+boards",
- "quote_time": "2026-10-30T06:01:21",
- "quote_time_source": "backup",
+ "checked": "2026-10-30T11:20:10Z",
+ "updated": "2026-10-30T11:20:10Z",
+ "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
+ "quote_time": "2026-10-30T06:20:10",
+ "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.495,
-   "change": -0.0175,
-   "time": "2026-10-30T06:00:29"
+   "price": 4.4975,
+   "change": -0.015,
+   "time": null
   },
   "@C7Z": {
-   "price": 4.8775,
-   "change": -0.0125,
-   "time": "2026-10-30T06:00:29"
-  },
-  "@S6X": {
-   "price": 12.2075,
-   "change": 0.01,
-   "time": "2026-10-30T06:00:29"
-  },
-  "@S7X": {
-   "price": 12.095,
-   "change": 0.0,
-   "time": "2026-10-30T06:00:29"
+   "price": 4.88,
+   "change": -0.01,
+   "time": null
   },
   "@C8Z": {
    "price": 4.925,
    "change": -0.025,
-   "time": "2026-10-30T06:01:21"
+   "time": null
+  },
+  "@S7F": {
+   "price": 12.335,
+   "change": -0.0125,
+   "time": null
+  },
+  "@S7X": {
+   "price": 12.095,
+   "change": 0.0,
+   "time": null
   },
   "@S8X": {
-   "price": 11.7625,
-   "change": -0.0575,
-   "time": "2026-10-30T06:01:21"
+   "price": 11.7825,
+   "change": 0.0,
+   "time": null
+  },
+  "@S6X": {
+   "price": 12.195,
+   "change": -0.0025,
+   "time": "2026-10-30T06:10:35"
   }
  },
  "dtn": {
@@ -64,7 +69,7 @@
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.48,
+    "cash": 11.49,
     "basis": -0.85
    },
    {
@@ -108,7 +113,7 @@
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.48,
+    "cash": 11.49,
     "basis": -0.85
    },
    {
@@ -127,29 +132,26 @@
    }
   ]
  },
- "futures_source": "agsist+boards",
- "dtn_error": "all fetches failed; bids.json left unchanged. last error: https://flashgrains.com/index.cfm?show=11&mid=3: <urlopen error timed out>",
- "backup_notes": [
-  "yahoo ZCZ28.CBT: HTTP Error 429: Too Many Requests",
-  "yahoo ZSX28.CBT: HTTP Error 429: Too Many Requests"
- ],
+ "extra_futures_source": "boards",
  "futures_sources": {
-  "@C6Z": "boards",
-  "@C7Z": "boards",
-  "@C8Z": "agsist",
+  "@C6Z": "dtn",
+  "@C7Z": "dtn",
+  "@C8Z": "dtn",
   "@S6X": "boards",
-  "@S7X": "boards",
-  "@S8X": "agsist"
+  "@S7F": "dtn",
+  "@S7X": "dtn",
+  "@S8X": "dtn"
  },
+ "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.495,
-   "change": -0.0175,
+   "price": 4.4975,
+   "change": -0.015,
    "time": null
   },
   "@C7Z": {
-   "price": 4.8775,
-   "change": -0.0125,
+   "price": 4.88,
+   "change": -0.01,
    "time": null
   },
   "@C8Z": {
@@ -173,8 +175,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.3325,
-   "change": -0.015,
+   "price": 12.335,
+   "change": -0.0125,
    "time": null
   }
  }
