@@ -1,19 +1,19 @@
 {
- "checked": "2026-10-30T00:10:10Z",
- "updated": "2026-10-30T00:10:10Z",
+ "checked": "2026-10-30T00:20:08Z",
+ "updated": "2026-10-30T00:20:08Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-10-29T19:10:10",
+ "quote_time": "2026-10-29T19:20:08",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.51,
-   "change": -0.0025,
+   "price": 4.5075,
+   "change": -0.005,
    "time": null
   },
   "@C7Z": {
-   "price": 4.89,
-   "change": 0.0,
+   "price": 4.885,
+   "change": -0.005,
    "time": null
   },
   "@C8Z": {
@@ -22,13 +22,13 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.3275,
-   "change": -0.02,
+   "price": 12.325,
+   "change": -0.0225,
    "time": null
   },
   "@S7X": {
-   "price": 12.095,
-   "change": 0.0,
+   "price": 12.09,
+   "change": -0.005,
    "time": null
   },
   "@S8X": {
@@ -39,7 +39,7 @@
   "@S6X": {
    "price": 12.205,
    "change": -0.04,
-   "time": "2026-10-29T19:01:19"
+   "time": "2026-10-29T19:17:33"
   }
  },
  "dtn": {
@@ -76,7 +76,7 @@
     "label": "Fall 27",
     "commodity": "Soybeans",
     "symbol": "@S7X",
-    "cash": 11.25,
+    "cash": 11.24,
     "basis": -0.85
    },
    {
@@ -120,7 +120,7 @@
     "label": "Fall 27",
     "commodity": "Soybeans",
     "symbol": "@S7X",
-    "cash": 11.25,
+    "cash": 11.24,
     "basis": -0.85
    },
    {
@@ -134,9 +134,9 @@
  },
  "extra_futures_source": "agsist",
  "backup_notes": [
-  "board nexus-denisonia: priced 5:29:41.422160 ago",
-  "board farmerscooperative-mccooljunction: priced 4:09:37.826779 ago",
-  "board premiercooperative1-dewey: priced 5:39:42.042390 ago",
+  "board nexus-denisonia: priced 5:39:40.388331 ago",
+  "board farmerscooperative-mccooljunction: priced 4:19:36.536229 ago",
+  "board premiercooperative1-dewey: priced 5:49:40.617459 ago",
   "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
@@ -151,13 +151,13 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.51,
-   "change": -0.0025,
+   "price": 4.5075,
+   "change": -0.005,
    "time": null
   },
   "@C7Z": {
-   "price": 4.89,
-   "change": 0.0,
+   "price": 4.885,
+   "change": -0.005,
    "time": null
   },
   "@C8Z": {
@@ -171,8 +171,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 12.095,
-   "change": 0.0,
+   "price": 12.09,
+   "change": -0.005,
    "time": null
   },
   "@S8X": {
@@ -181,8 +181,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.3275,
-   "change": -0.02,
+   "price": 12.325,
+   "change": -0.0225,
    "time": null
   }
  }
