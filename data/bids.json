@@ -1,45 +1,40 @@
 {
- "checked": "2026-10-30T11:00:12Z",
- "updated": "2026-10-30T11:00:12Z",
- "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-10-30T06:00:12",
- "quote_time_source": "run",
+ "checked": "2026-10-30T11:10:11Z",
+ "updated": "2026-10-30T11:10:11Z",
+ "source": "backup:agsist+boards",
+ "quote_time": "2026-10-30T06:01:21",
+ "quote_time_source": "backup",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
    "price": 4.495,
    "change": -0.0175,
-   "time": null
+   "time": "2026-10-30T06:00:29"
   },
   "@C7Z": {
    "price": 4.8775,
    "change": -0.0125,
-   "time": null
-  },
-  "@C8Z": {
-   "price": 4.925,
-   "change": -0.025,
-   "time": null
-  },
-  "@S7F": {
-   "price": 12.3325,
-   "change": -0.015,
-   "time": null
-  },
-  "@S7X": {
-   "price": 12.095,
-   "change": 0.0,
-   "time": null
-  },
-  "@S8X": {
-   "price": 11.7825,
-   "change": 0.0,
-   "time": null
+   "time": "2026-10-30T06:00:29"
   },
   "@S6X": {
    "price": 12.2075,
    "change": 0.01,
-   "time": "2026-10-30T05:50:28"
+   "time": "2026-10-30T06:00:29"
+  },
+  "@S7X": {
+   "price": 12.095,
+   "change": 0.0,
+   "time": "2026-10-30T06:00:29"
+  },
+  "@C8Z": {
+   "price": 4.925,
+   "change": -0.025,
+   "time": "2026-10-30T06:01:21"
+  },
+  "@S8X": {
+   "price": 11.7625,
+   "change": -0.0575,
+   "time": "2026-10-30T06:01:21"
   }
  },
  "dtn": {
@@ -132,17 +127,20 @@
    }
   ]
  },
- "extra_futures_source": "boards",
+ "futures_source": "agsist+boards",
+ "dtn_error": "all fetches failed; bids.json left unchanged. last error: https://flashgrains.com/index.cfm?show=11&mid=3: <urlopen error timed out>",
+ "backup_notes": [
+  "yahoo ZCZ28.CBT: HTTP Error 429: Too Many Requests",
+  "yahoo ZSX28.CBT: HTTP Error 429: Too Many Requests"
+ ],
  "futures_sources": {
-  "@C6Z": "dtn",
-  "@C7Z": "dtn",
-  "@C8Z": "dtn",
+  "@C6Z": "boards",
+  "@C7Z": "boards",
+  "@C8Z": "agsist",
   "@S6X": "boards",
-  "@S7F": "dtn",
-  "@S7X": "dtn",
-  "@S8X": "dtn"
+  "@S7X": "boards",
+  "@S8X": "agsist"
  },
- "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
    "price": 4.495,
