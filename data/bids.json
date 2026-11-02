@@ -1,40 +1,45 @@
 {
- "checked": "2026-11-02T04:00:12Z",
- "updated": "2026-11-02T04:00:12Z",
- "source": "backup:agsist+boards",
- "quote_time": "2026-11-01T21:50:32",
- "quote_time_source": "backup",
+ "checked": "2026-11-02T04:10:10Z",
+ "updated": "2026-11-02T04:10:10Z",
+ "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
+ "quote_time": "2026-11-01T22:10:10",
+ "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
    "price": 4.4925,
-   "change": -0.02,
-   "time": "2026-11-01T21:50:32"
+   "change": 0.015,
+   "time": null
   },
   "@C7Z": {
    "price": 4.8825,
-   "change": -0.0075,
-   "time": "2026-11-01T21:50:32"
-  },
-  "@S7X": {
-   "price": 12.115,
-   "change": 0.02,
-   "time": "2026-11-01T21:50:32"
+   "change": 0.0075,
+   "time": null
   },
   "@C8Z": {
    "price": 4.9175,
-   "change": -0.0325,
-   "time": "2026-11-01T21:46:19"
+   "change": 0.0,
+   "time": null
+  },
+  "@S7F": {
+   "price": 12.3575,
+   "change": 0.015,
+   "time": null
+  },
+  "@S7X": {
+   "price": 12.115,
+   "change": 0.025,
+   "time": null
+  },
+  "@S8X": {
+   "price": 11.8025,
+   "change": 0.0,
+   "time": null
   },
   "@S6X": {
    "price": 12.2225,
    "change": 0.025,
-   "time": "2026-11-01T21:46:19"
-  },
-  "@S8X": {
-   "price": 11.8025,
-   "change": 0.02,
-   "time": "2026-11-01T21:46:19"
+   "time": "2026-11-01T22:01:20"
   }
  },
  "dtn": {
@@ -127,22 +132,21 @@
    }
   ]
  },
- "futures_source": "agsist+boards",
- "dtn_error": "all fetches failed; bids.json left unchanged. last error: https://flashgrains.com/index.cfm?show=11&mid=3: <urlopen error timed out>",
+ "extra_futures_source": "agsist",
  "backup_notes": [
   "board @S6X: only 1 board(s) agree",
-  "yahoo ZCZ28.CBT: HTTP Error 429: Too Many Requests",
-  "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests",
-  "yahoo ZSX28.CBT: HTTP Error 429: Too Many Requests"
+  "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
-  "@C6Z": "boards",
-  "@C7Z": "boards",
-  "@C8Z": "agsist",
+  "@C6Z": "dtn",
+  "@C7Z": "dtn",
+  "@C8Z": "dtn",
   "@S6X": "agsist",
-  "@S7X": "boards",
-  "@S8X": "agsist"
+  "@S7F": "dtn",
+  "@S7X": "dtn",
+  "@S8X": "dtn"
  },
+ "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
    "price": 4.4925,
@@ -175,8 +179,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.36,
-   "change": 0.0175,
+   "price": 12.3575,
+   "change": 0.015,
    "time": null
   }
  }
