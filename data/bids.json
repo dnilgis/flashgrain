@@ -1,29 +1,29 @@
 {
- "checked": "2026-11-03T18:31:04Z",
- "updated": "2026-11-03T18:31:04Z",
+ "checked": "2026-11-03T18:43:57Z",
+ "updated": "2026-11-03T18:43:57Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-03T12:31:04",
+ "quote_time": "2026-11-03T12:43:57",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.43,
-   "change": -0.0525,
+   "price": 4.425,
+   "change": -0.0575,
    "time": null
   },
   "@C7Z": {
-   "price": 4.845,
-   "change": -0.045,
+   "price": 4.8425,
+   "change": -0.0475,
    "time": null
   },
   "@C8Z": {
-   "price": 4.905,
-   "change": -0.03,
+   "price": 4.9,
+   "change": -0.035,
    "time": null
   },
   "@S7F": {
-   "price": 12.1375,
-   "change": -0.03,
+   "price": 12.135,
+   "change": -0.0325,
    "time": null
   },
   "@S7X": {
@@ -39,7 +39,7 @@
   "@S6X": {
    "price": 12.03,
    "change": -0.0175,
-   "time": "2026-11-03T12:24:27"
+   "time": "2026-11-03T12:32:34"
   }
  },
  "dtn": {
@@ -55,14 +55,14 @@
     "label": "Fall 27",
     "commodity": "Corn",
     "symbol": "@C7Z",
-    "cash": 4.2,
+    "cash": 4.19,
     "basis": -0.65
    },
    {
     "label": "Fall 28",
     "commodity": "Corn",
     "symbol": "@C8Z",
-    "cash": 4.21,
+    "cash": 4.2,
     "basis": -0.7
    },
    {
@@ -99,14 +99,14 @@
     "label": "Fall 27",
     "commodity": "Corn",
     "symbol": "@C7Z",
-    "cash": 4.2,
+    "cash": 4.19,
     "basis": -0.65
    },
    {
     "label": "Fall 28",
     "commodity": "Corn",
     "symbol": "@C8Z",
-    "cash": 4.21,
+    "cash": 4.2,
     "basis": -0.7
    },
    {
@@ -148,18 +148,18 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.43,
-   "change": -0.0525,
+   "price": 4.425,
+   "change": -0.0575,
    "time": null
   },
   "@C7Z": {
-   "price": 4.845,
-   "change": -0.045,
+   "price": 4.8425,
+   "change": -0.0475,
    "time": null
   },
   "@C8Z": {
-   "price": 4.905,
-   "change": -0.03,
+   "price": 4.9,
+   "change": -0.035,
    "time": null
   },
   "@S6X": {
@@ -178,8 +178,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.1375,
-   "change": -0.03,
+   "price": 12.135,
+   "change": -0.0325,
    "time": null
   }
  }
