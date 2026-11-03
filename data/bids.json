@@ -1,8 +1,8 @@
 {
- "checked": "2026-11-03T19:23:41Z",
- "updated": "2026-11-03T19:23:41Z",
+ "checked": "2026-11-03T19:31:04Z",
+ "updated": "2026-11-03T19:31:04Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-03T13:23:41",
+ "quote_time": "2026-11-03T13:31:04",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
@@ -12,8 +12,8 @@
    "time": null
   },
   "@C7Z": {
-   "price": 4.8425,
-   "change": -0.0475,
+   "price": 4.84,
+   "change": -0.05,
    "time": null
   },
   "@C8Z": {
@@ -22,24 +22,24 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.135,
-   "change": -0.0325,
+   "price": 12.14,
+   "change": -0.0275,
    "time": null
   },
   "@S7X": {
-   "price": 11.915,
-   "change": -0.09,
+   "price": 11.92,
+   "change": -0.085,
    "time": null
   },
   "@S8X": {
-   "price": 11.675,
-   "change": -0.0475,
+   "price": 11.6525,
+   "change": -0.07,
    "time": null
   },
   "@S6X": {
-   "price": 12.0225,
-   "change": -0.025,
-   "time": "2026-11-03T12:47:55"
+   "price": 12.03,
+   "change": -0.0175,
+   "time": "2026-11-03T13:24:54"
   }
  },
  "dtn": {
@@ -83,7 +83,7 @@
     "label": "Fall 28",
     "commodity": "Soybeans",
     "symbol": "@S8X",
-    "cash": 10.73,
+    "cash": 10.7,
     "basis": -0.95
    }
   ],
@@ -127,7 +127,7 @@
     "label": "Fall 28",
     "commodity": "Soybeans",
     "symbol": "@S8X",
-    "cash": 10.73,
+    "cash": 10.7,
     "basis": -0.95
    }
   ]
@@ -153,8 +153,8 @@
    "time": null
   },
   "@C7Z": {
-   "price": 4.8425,
-   "change": -0.0475,
+   "price": 4.84,
+   "change": -0.05,
    "time": null
   },
   "@C8Z": {
@@ -168,18 +168,18 @@
    "time": null
   },
   "@S7X": {
-   "price": 11.915,
-   "change": -0.09,
+   "price": 11.92,
+   "change": -0.085,
    "time": null
   },
   "@S8X": {
-   "price": 11.675,
-   "change": -0.0475,
+   "price": 11.6525,
+   "change": -0.07,
    "time": null
   },
   "@S7F": {
-   "price": 12.135,
-   "change": -0.0325,
+   "price": 12.14,
+   "change": -0.0275,
    "time": null
   }
  }
