@@ -1,8 +1,8 @@
 {
- "checked": "2026-11-03T00:50:41Z",
+ "checked": "2026-11-03T01:00:12Z",
  "updated": "2026-11-03T00:50:41Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-02T18:50:41",
+ "quote_time": "2026-11-02T19:00:12",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
@@ -134,6 +134,11 @@
  },
  "extra_futures_source": "agsist",
  "backup_notes": [
+  "board adm-hoopestonil: priced 5:09:41.135872 ago",
+  "board nexus-denisonia: priced 4:37:42.279086 ago",
+  "board chsherman-glenwood: priced 5:18:10.422180 ago",
+  "board farmerscooperative-mccooljunction: priced 5:28:36.610146 ago",
+  "board premiercooperative1-dewey: priced 5:28:36.870252 ago",
   "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
