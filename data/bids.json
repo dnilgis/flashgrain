@@ -1,8 +1,8 @@
 {
- "checked": "2026-11-04T21:33:23Z",
- "updated": "2026-11-04T21:33:23Z",
+ "checked": "2026-11-04T21:40:09Z",
+ "updated": "2026-11-04T21:40:09Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-04T15:33:23",
+ "quote_time": "2026-11-04T15:40:09",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
@@ -39,7 +39,7 @@
   "@S6X": {
    "price": 11.9375,
    "change": -0.0925,
-   "time": "2026-11-04T13:14:13"
+   "time": "2026-11-04T13:47:23"
   }
  },
  "dtn": {
@@ -132,12 +132,15 @@
    }
   ]
  },
- "extra_futures_source": "yahoo",
+ "extra_futures_source": "agsist",
+ "backup_notes": [
+  "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
+ ],
  "futures_sources": {
   "@C6Z": "dtn",
   "@C7Z": "dtn",
   "@C8Z": "dtn",
-  "@S6X": "yahoo",
+  "@S6X": "agsist",
   "@S7F": "dtn",
   "@S7X": "dtn",
   "@S8X": "dtn"
