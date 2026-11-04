@@ -82,5 +82,7 @@
    "futures_month": "Sep 27 Corn",
    "futures": 4.6675
   }
- ]
+ ],
+ "error": "fetch failed: The operation was aborted due to timeout",
+ "error_at": "2026-11-04T05:31:04Z"
 }
