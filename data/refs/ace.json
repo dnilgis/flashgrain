@@ -1,86 +1,86 @@
 {
  "id": "ace",
- "checked": "2026-11-04T17:02:29Z",
- "updated": "2026-11-04T17:02:29Z",
+ "checked": "2026-11-04T17:16:29Z",
+ "updated": "2026-11-04T17:16:29Z",
  "source": "https://aceethanol.o.bushelsites.com/cashbidssingle-3578",
  "quote_time": null,
  "rows": [
   {
    "label": "Nov 2026",
-   "cash": 3.85,
+   "cash": 3.86,
    "basis": -0.6,
    "futures_month": "Dec 26 Corn",
-   "futures": 4.445
+   "futures": 4.4625
   },
   {
    "label": "Dec 2026",
-   "cash": 3.93,
+   "cash": 3.94,
    "basis": -0.52,
    "futures_month": "Dec 26 Corn",
-   "futures": 4.445
+   "futures": 4.4625
   },
   {
    "label": "Jan 2027",
-   "cash": 4.02,
+   "cash": 4.03,
    "basis": -0.57,
    "futures_month": "Mar 27 Corn",
-   "futures": 4.585
+   "futures": 4.5975
   },
   {
    "label": "Feb 2027",
-   "cash": 4.05,
+   "cash": 4.06,
    "basis": -0.54,
    "futures_month": "Mar 27 Corn",
-   "futures": 4.585
+   "futures": 4.5975
   },
   {
    "label": "Mar 2027",
-   "cash": 4.09,
+   "cash": 4.1,
    "basis": -0.5,
    "futures_month": "Mar 27 Corn",
-   "futures": 4.585
+   "futures": 4.5975
   },
   {
    "label": "Apr 2027",
-   "cash": 4.13,
+   "cash": 4.14,
    "basis": -0.54,
    "futures_month": "May 27 Corn",
-   "futures": 4.67
+   "futures": 4.6825
   },
   {
    "label": "May 2027",
-   "cash": 4.15,
+   "cash": 4.16,
    "basis": -0.52,
    "futures_month": "May 27 Corn",
-   "futures": 4.67
+   "futures": 4.6825
   },
   {
    "label": "Jun 2027",
-   "cash": 4.22,
+   "cash": 4.23,
    "basis": -0.52,
    "futures_month": "Jul 27 Corn",
-   "futures": 4.7375
+   "futures": 4.75
   },
   {
    "label": "Jul 2027",
-   "cash": 4.22,
+   "cash": 4.23,
    "basis": -0.52,
    "futures_month": "Jul 27 Corn",
-   "futures": 4.7375
+   "futures": 4.75
   },
   {
    "label": "Aug 2027",
-   "cash": 4.23,
+   "cash": 4.24,
    "basis": -0.48,
    "futures_month": "Sep 27 Corn",
-   "futures": 4.7075
+   "futures": 4.7175
   },
   {
    "label": "Sep 2027",
-   "cash": 4.23,
+   "cash": 4.24,
    "basis": -0.48,
    "futures_month": "Sep 27 Corn",
-   "futures": 4.7075
+   "futures": 4.7175
   }
  ]
 }
