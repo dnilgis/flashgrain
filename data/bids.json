@@ -1,19 +1,19 @@
 {
- "checked": "2026-11-04T19:30:12Z",
- "updated": "2026-11-04T19:30:12Z",
+ "checked": "2026-11-04T19:44:24Z",
+ "updated": "2026-11-04T19:44:24Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-04T13:30:12",
+ "quote_time": "2026-11-04T13:44:24",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.455,
-   "change": 0.03,
+   "price": 4.4425,
+   "change": 0.0175,
    "time": null
   },
   "@C7Z": {
-   "price": 4.8625,
-   "change": 0.0225,
+   "price": 4.855,
+   "change": 0.015,
    "time": null
   },
   "@C8Z": {
@@ -22,8 +22,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.04,
-   "change": -0.1,
+   "price": 12.0225,
+   "change": -0.1175,
    "time": null
   },
   "@S7X": {
@@ -37,9 +37,9 @@
    "time": null
   },
   "@S6X": {
-   "price": 11.955,
-   "change": -0.075,
-   "time": "2026-11-04T13:16:18"
+   "price": 11.9375,
+   "change": -0.0925,
+   "time": "2026-11-04T13:31:22"
   }
  },
  "dtn": {
@@ -48,7 +48,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.86,
+    "cash": 3.84,
     "basis": -0.6
    },
    {
@@ -69,7 +69,7 @@
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.19,
+    "cash": 11.17,
     "basis": -0.85
    },
    {
@@ -92,7 +92,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.81,
+    "cash": 3.79,
     "basis": -0.65
    },
    {
@@ -113,7 +113,7 @@
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.19,
+    "cash": 11.17,
     "basis": -0.85
    },
    {
@@ -148,13 +148,13 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.455,
-   "change": 0.03,
+   "price": 4.4425,
+   "change": 0.0175,
    "time": null
   },
   "@C7Z": {
-   "price": 4.8625,
-   "change": 0.0225,
+   "price": 4.855,
+   "change": 0.015,
    "time": null
   },
   "@C8Z": {
@@ -178,8 +178,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.04,
-   "change": -0.1,
+   "price": 12.0225,
+   "change": -0.1175,
    "time": null
   }
  }
