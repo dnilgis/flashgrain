@@ -1,45 +1,45 @@
 {
- "checked": "2026-11-04T01:00:11Z",
- "updated": "2026-11-04T00:50:10Z",
+ "checked": "2026-11-04T01:10:09Z",
+ "updated": "2026-11-04T01:10:09Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-03T19:00:11",
+ "quote_time": "2026-11-03T19:10:09",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.425,
-   "change": -0.0575,
+   "price": 4.415,
+   "change": -0.01,
    "time": null
   },
   "@C7Z": {
    "price": 4.84,
-   "change": -0.05,
+   "change": 0.0,
    "time": null
   },
   "@C8Z": {
    "price": 4.9,
-   "change": -0.035,
+   "change": 0.0,
    "time": null
   },
   "@S7F": {
    "price": 12.14,
-   "change": -0.0275,
+   "change": 0.0,
    "time": null
   },
   "@S7X": {
    "price": 11.92,
-   "change": -0.085,
+   "change": 0.0,
    "time": null
   },
   "@S8X": {
    "price": 11.6525,
-   "change": -0.07,
+   "change": 0.0,
    "time": null
   },
   "@S6X": {
    "price": 12.03,
    "change": -0.0175,
-   "time": "2026-11-03T18:46:26"
+   "time": "2026-11-03T19:01:21"
   }
  },
  "dtn": {
@@ -48,7 +48,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.83,
+    "cash": 3.82,
     "basis": -0.6
    },
    {
@@ -92,7 +92,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.78,
+    "cash": 3.77,
     "basis": -0.65
    },
    {
@@ -134,11 +134,9 @@
  },
  "extra_futures_source": "agsist",
  "backup_notes": [
-  "board adm-hoopestonil: priced 5:22:27.113606 ago",
-  "board nexus-denisonia: priced 4:54:07.331589 ago",
-  "board chsherman-glenwood: priced 4:54:07.511191 ago",
-  "board farmerscooperative-mccooljunction: priced 3:53:29.664400 ago",
-  "board premiercooperative1-dewey: priced 5:09:23.820620 ago",
+  "board nexus-denisonia: priced 5:04:03.715528 ago",
+  "board farmerscooperative-mccooljunction: priced 4:03:25.959801 ago",
+  "board premiercooperative1-dewey: priced 5:19:20.080110 ago",
   "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
@@ -153,18 +151,18 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.425,
-   "change": -0.0575,
+   "price": 4.415,
+   "change": -0.01,
    "time": null
   },
   "@C7Z": {
    "price": 4.84,
-   "change": -0.05,
+   "change": 0.0,
    "time": null
   },
   "@C8Z": {
    "price": 4.9,
-   "change": -0.035,
+   "change": 0.0,
    "time": null
   },
   "@S6X": {
@@ -174,17 +172,17 @@
   },
   "@S7X": {
    "price": 11.92,
-   "change": -0.085,
+   "change": 0.0,
    "time": null
   },
   "@S8X": {
    "price": 11.6525,
-   "change": -0.07,
+   "change": 0.0,
    "time": null
   },
   "@S7F": {
    "price": 12.14,
-   "change": -0.0275,
+   "change": 0.0,
    "time": null
   }
  }
