@@ -1,14 +1,14 @@
 {
- "checked": "2026-11-05T01:00:14Z",
- "updated": "2026-11-05T00:50:08Z",
+ "checked": "2026-11-05T01:10:09Z",
+ "updated": "2026-11-05T01:10:09Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-04T19:00:14",
+ "quote_time": "2026-11-04T19:10:09",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.4425,
-   "change": 0.0175,
+   "price": 4.4575,
+   "change": 0.015,
    "time": null
   },
   "@C7Z": {
@@ -23,7 +23,7 @@
   },
   "@S7F": {
    "price": 12.0225,
-   "change": -0.1175,
+   "change": 0.0,
    "time": null
   },
   "@S7X": {
@@ -39,7 +39,7 @@
   "@S6X": {
    "price": 11.9375,
    "change": -0.0925,
-   "time": "2026-11-04T18:46:18"
+   "time": "2026-11-04T19:01:20"
   }
  },
  "dtn": {
@@ -48,7 +48,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.84,
+    "cash": 3.86,
     "basis": -0.6
    },
    {
@@ -92,7 +92,7 @@
     "label": "Fall 26",
     "commodity": "Corn",
     "symbol": "@C6Z",
-    "cash": 3.79,
+    "cash": 3.81,
     "basis": -0.65
    },
    {
@@ -134,11 +134,9 @@
  },
  "extra_futures_source": "agsist",
  "backup_notes": [
-  "board adm-hoopestonil: priced 4:29:05.689558 ago",
-  "board nexus-denisonia: priced 3:37:59.829952 ago",
-  "board chsherman-glenwood: priced 4:47:42.975776 ago",
-  "board farmerscooperative-mccooljunction: priced 5:29:45.117538 ago",
-  "board premiercooperative1-dewey: priced 5:29:45.244075 ago",
+  "board nexus-denisonia: priced 3:47:53.761082 ago",
+  "board farmerscooperative-mccooljunction: priced 5:39:38.929890 ago",
+  "board premiercooperative1-dewey: priced 5:39:39.001175 ago",
   "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
@@ -153,8 +151,8 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.4425,
-   "change": 0.0175,
+   "price": 4.4575,
+   "change": 0.015,
    "time": null
   },
   "@C7Z": {
@@ -184,7 +182,7 @@
   },
   "@S7F": {
    "price": 12.0225,
-   "change": -0.1175,
+   "change": 0.0,
    "time": null
   }
  }
