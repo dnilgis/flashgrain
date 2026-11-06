@@ -1,24 +1,24 @@
 {
- "checked": "2026-11-06T01:00:13Z",
- "updated": "2026-11-06T00:50:10Z",
+ "checked": "2026-11-06T01:10:09Z",
+ "updated": "2026-11-06T01:10:09Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-05T19:00:13",
+ "quote_time": "2026-11-05T19:10:09",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
    "price": 4.4,
-   "change": -0.0425,
+   "change": 0.0,
    "time": null
   },
   "@C7Z": {
-   "price": 4.835,
-   "change": -0.02,
+   "price": 4.84,
+   "change": 0.005,
    "time": null
   },
   "@C8Z": {
    "price": 4.905,
-   "change": -0.0075,
+   "change": 0.0,
    "time": null
   },
   "@S7F": {
@@ -27,19 +27,19 @@
    "time": null
   },
   "@S7X": {
-   "price": 11.8175,
-   "change": -0.065,
+   "price": 11.825,
+   "change": 0.0075,
    "time": null
   },
   "@S8X": {
    "price": 11.62,
-   "change": -0.01,
+   "change": 0.0,
    "time": null
   },
   "@S6X": {
    "price": 11.8,
    "change": -0.1325,
-   "time": "2026-11-05T18:46:24"
+   "time": "2026-11-05T19:01:27"
   }
  },
  "dtn": {
@@ -76,7 +76,7 @@
     "label": "Fall 27",
     "commodity": "Soybeans",
     "symbol": "@S7X",
-    "cash": 10.97,
+    "cash": 10.98,
     "basis": -0.85
    },
    {
@@ -120,7 +120,7 @@
     "label": "Fall 27",
     "commodity": "Soybeans",
     "symbol": "@S7X",
-    "cash": 10.97,
+    "cash": 10.98,
     "basis": -0.85
    },
    {
@@ -134,11 +134,9 @@
  },
  "extra_futures_source": "agsist",
  "backup_notes": [
-  "board adm-hoopestonil: priced 5:29:43.279434 ago",
-  "board nexus-denisonia: priced 5:19:40.437126 ago",
-  "board chsherman-glenwood: priced 4:29:44.561272 ago",
-  "board farmerscooperative-mccooljunction: priced 5:29:43.722674 ago",
-  "board premiercooperative1-dewey: priced 5:29:43.899744 ago",
+  "board nexus-denisonia: priced 5:29:35.536738 ago",
+  "board farmerscooperative-mccooljunction: priced 5:39:38.802881 ago",
+  "board premiercooperative1-dewey: priced 5:39:38.987591 ago",
   "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
@@ -154,17 +152,17 @@
  "dtn_futures": {
   "@C6Z": {
    "price": 4.4,
-   "change": -0.0425,
+   "change": 0.0,
    "time": null
   },
   "@C7Z": {
-   "price": 4.835,
-   "change": -0.02,
+   "price": 4.84,
+   "change": 0.005,
    "time": null
   },
   "@C8Z": {
    "price": 4.905,
-   "change": -0.0075,
+   "change": 0.0,
    "time": null
   },
   "@S6X": {
@@ -173,13 +171,13 @@
    "time": null
   },
   "@S7X": {
-   "price": 11.8175,
-   "change": -0.065,
+   "price": 11.825,
+   "change": 0.0075,
    "time": null
   },
   "@S8X": {
    "price": 11.62,
-   "change": -0.01,
+   "change": 0.0,
    "time": null
   },
   "@S7F": {
