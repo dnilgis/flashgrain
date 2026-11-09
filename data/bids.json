@@ -1,45 +1,45 @@
 {
- "checked": "2026-11-09T01:00:12Z",
- "updated": "2026-11-09T00:50:09Z",
+ "checked": "2026-11-09T01:10:27Z",
+ "updated": "2026-11-09T01:10:27Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-08T19:00:12",
+ "quote_time": "2026-11-08T19:10:27",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
    "price": 4.415,
-   "change": 0.015,
+   "change": 0.0,
    "time": null
   },
   "@C7Z": {
    "price": 4.8525,
-   "change": 0.0175,
+   "change": 0.0,
    "time": null
   },
   "@C8Z": {
    "price": 4.9125,
-   "change": 0.0075,
+   "change": 0.0,
    "time": null
   },
   "@S7F": {
    "price": 11.9375,
-   "change": 0.055,
+   "change": 0.0,
    "time": null
   },
   "@S7X": {
    "price": 11.775,
-   "change": -0.0425,
+   "change": 0.0,
    "time": null
   },
   "@S8X": {
    "price": 11.6,
-   "change": -0.02,
+   "change": 0.0,
    "time": null
   },
   "@S6X": {
    "price": 11.89,
    "change": 0.08,
-   "time": "2026-11-08T18:46:32"
+   "time": "2026-11-08T19:01:14"
   }
  },
  "dtn": {
@@ -134,11 +134,9 @@
  },
  "extra_futures_source": "agsist",
  "backup_notes": [
-  "board adm-hoopestonil: priced 2 days, 3:59:24.048181 ago",
-  "board nexus-denisonia: priced 2 days, 5:19:22.127045 ago",
-  "board chsherman-glenwood: priced 1 day, 0:39:45.439714 ago",
-  "board farmerscooperative-mccooljunction: priced 2 days, 5:29:42.545960 ago",
-  "board premiercooperative1-dewey: priced 2 days, 5:29:42.742215 ago",
+  "board nexus-denisonia: priced 2 days, 5:29:38.701354 ago",
+  "board farmerscooperative-mccooljunction: priced 2 days, 5:39:58.957923 ago",
+  "board premiercooperative1-dewey: priced 2 days, 5:39:59.082300 ago",
   "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
@@ -154,17 +152,17 @@
  "dtn_futures": {
   "@C6Z": {
    "price": 4.415,
-   "change": 0.015,
+   "change": 0.0,
    "time": null
   },
   "@C7Z": {
    "price": 4.8525,
-   "change": 0.0175,
+   "change": 0.0,
    "time": null
   },
   "@C8Z": {
    "price": 4.9125,
-   "change": 0.0075,
+   "change": 0.0,
    "time": null
   },
   "@S6X": {
@@ -174,17 +172,17 @@
   },
   "@S7X": {
    "price": 11.775,
-   "change": -0.0425,
+   "change": 0.0,
    "time": null
   },
   "@S8X": {
    "price": 11.6,
-   "change": -0.02,
+   "change": 0.0,
    "time": null
   },
   "@S7F": {
    "price": 11.9375,
-   "change": 0.055,
+   "change": 0.0,
    "time": null
   }
  }
