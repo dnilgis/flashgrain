@@ -1,19 +1,19 @@
 {
- "checked": "2026-11-09T13:40:41Z",
- "updated": "2026-11-09T13:40:41Z",
+ "checked": "2026-11-09T13:50:10Z",
+ "updated": "2026-11-09T13:50:10Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-09T07:40:41",
+ "quote_time": "2026-11-09T07:50:10",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.43,
-   "change": 0.015,
+   "price": 4.4275,
+   "change": 0.0125,
    "time": null
   },
   "@C7Z": {
-   "price": 4.8475,
-   "change": -0.005,
+   "price": 4.8425,
+   "change": -0.01,
    "time": null
   },
   "@C8Z": {
@@ -22,13 +22,13 @@
    "time": null
   },
   "@S7F": {
-   "price": 11.9425,
-   "change": 0.005,
+   "price": 11.9375,
+   "change": 0.0,
    "time": null
   },
   "@S7X": {
-   "price": 11.76,
-   "change": -0.015,
+   "price": 11.755,
+   "change": -0.02,
    "time": null
   },
   "@S8X": {
@@ -39,7 +39,7 @@
   "@S6X": {
    "price": 11.89,
    "change": 0.08,
-   "time": "2026-11-09T07:31:23"
+   "time": "2026-11-09T07:46:21"
   }
  },
  "dtn": {
@@ -55,7 +55,7 @@
     "label": "Fall 27",
     "commodity": "Corn",
     "symbol": "@C7Z",
-    "cash": 4.2,
+    "cash": 4.19,
     "basis": -0.65
    },
    {
@@ -99,7 +99,7 @@
     "label": "Fall 27",
     "commodity": "Corn",
     "symbol": "@C7Z",
-    "cash": 4.2,
+    "cash": 4.19,
     "basis": -0.65
    },
    {
@@ -148,13 +148,13 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.43,
-   "change": 0.015,
+   "price": 4.4275,
+   "change": 0.0125,
    "time": null
   },
   "@C7Z": {
-   "price": 4.8475,
-   "change": -0.005,
+   "price": 4.8425,
+   "change": -0.01,
    "time": null
   },
   "@C8Z": {
@@ -168,8 +168,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 11.76,
-   "change": -0.015,
+   "price": 11.755,
+   "change": -0.02,
    "time": null
   },
   "@S8X": {
@@ -178,8 +178,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 11.9425,
-   "change": 0.005,
+   "price": 11.9375,
+   "change": 0.0,
    "time": null
   }
  }
