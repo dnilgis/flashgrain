@@ -1,40 +1,45 @@
 {
- "checked": "2026-11-10T01:16:49Z",
- "updated": "2026-11-10T01:16:49Z",
+ "checked": "2026-11-10T01:35:35Z",
+ "updated": "2026-11-10T01:35:35Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-09T19:16:49",
+ "quote_time": "2026-11-09T19:35:35",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.4075,
-   "change": 0.015,
+   "price": 4.41,
+   "change": 0.0175,
    "time": null
   },
   "@C7Z": {
-   "price": 4.835,
-   "change": 0.0025,
+   "price": 4.8375,
+   "change": 0.005,
    "time": null
   },
   "@C8Z": {
-   "price": 4.89,
-   "change": 0.0,
+   "price": 4.8975,
+   "change": 0.0075,
    "time": null
   },
   "@S7F": {
-   "price": 11.9225,
-   "change": 0.04,
+   "price": 11.92,
+   "change": 0.0375,
    "time": null
   },
   "@S7X": {
-   "price": 11.77,
-   "change": 0.025,
+   "price": 11.7675,
+   "change": 0.0225,
    "time": null
   },
   "@S8X": {
    "price": 11.5825,
    "change": 0.0,
    "time": null
+  },
+  "@S6X": {
+   "price": 11.8475,
+   "change": -0.0425,
+   "time": "2026-11-09T19:19:17"
   }
  },
  "dtn": {
@@ -57,7 +62,7 @@
     "label": "Fall 28",
     "commodity": "Corn",
     "symbol": "@C8Z",
-    "cash": 4.19,
+    "cash": 4.2,
     "basis": -0.7
    },
    {
@@ -101,7 +106,7 @@
     "label": "Fall 28",
     "commodity": "Corn",
     "symbol": "@C8Z",
-    "cash": 4.19,
+    "cash": 4.2,
     "basis": -0.7
    },
    {
@@ -127,36 +132,34 @@
    }
   ]
  },
+ "extra_futures_source": "agsist",
  "backup_notes": [
-  "board nexus-denisonia: priced 5:36:08.673113 ago",
-  "board farmerscooperative-mccooljunction: priced 5:46:17.031745 ago",
-  "board premiercooperative1-dewey: priced 5:46:17.200668 ago",
-  "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests",
-  "agsist: agsist prices.json is 5:30:31.419493 old"
+  "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
   "@C6Z": "dtn",
   "@C7Z": "dtn",
   "@C8Z": "dtn",
+  "@S6X": "agsist",
   "@S7F": "dtn",
   "@S7X": "dtn",
   "@S8X": "dtn"
  },
- "futures_source": "dtn",
+ "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.4075,
-   "change": 0.015,
+   "price": 4.41,
+   "change": 0.0175,
    "time": null
   },
   "@C7Z": {
-   "price": 4.835,
-   "change": 0.0025,
+   "price": 4.8375,
+   "change": 0.005,
    "time": null
   },
   "@C8Z": {
-   "price": 4.89,
-   "change": 0.0,
+   "price": 4.8975,
+   "change": 0.0075,
    "time": null
   },
   "@S6X": {
@@ -165,8 +168,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 11.77,
-   "change": 0.025,
+   "price": 11.7675,
+   "change": 0.0225,
    "time": null
   },
   "@S8X": {
@@ -175,8 +178,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 11.9225,
-   "change": 0.04,
+   "price": 11.92,
+   "change": 0.0375,
    "time": null
   }
  }
