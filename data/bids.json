@@ -1,19 +1,19 @@
 {
- "checked": "2026-11-10T10:10:27Z",
- "updated": "2026-11-10T10:10:27Z",
+ "checked": "2026-11-10T10:20:51Z",
+ "updated": "2026-11-10T10:20:51Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-10T04:10:27",
+ "quote_time": "2026-11-10T04:20:51",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.415,
-   "change": 0.0225,
+   "price": 4.4175,
+   "change": 0.025,
    "time": null
   },
   "@C7Z": {
-   "price": 4.8375,
-   "change": 0.005,
+   "price": 4.84,
+   "change": 0.0075,
    "time": null
   },
   "@C8Z": {
@@ -22,13 +22,13 @@
    "time": null
   },
   "@S7F": {
-   "price": 11.96,
-   "change": 0.0775,
+   "price": 11.9575,
+   "change": 0.075,
    "time": null
   },
   "@S7X": {
-   "price": 11.79,
-   "change": 0.045,
+   "price": 11.795,
+   "change": 0.05,
    "time": null
   },
   "@S8X": {
@@ -39,7 +39,7 @@
   "@S6X": {
    "price": 11.8475,
    "change": -0.0425,
-   "time": "2026-11-10T04:01:22"
+   "time": "2026-11-10T04:16:15"
   }
  },
  "dtn": {
@@ -76,7 +76,7 @@
     "label": "Fall 27",
     "commodity": "Soybeans",
     "symbol": "@S7X",
-    "cash": 10.94,
+    "cash": 10.95,
     "basis": -0.85
    },
    {
@@ -120,7 +120,7 @@
     "label": "Fall 27",
     "commodity": "Soybeans",
     "symbol": "@S7X",
-    "cash": 10.94,
+    "cash": 10.95,
     "basis": -0.85
    },
    {
@@ -148,13 +148,13 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.415,
-   "change": 0.0225,
+   "price": 4.4175,
+   "change": 0.025,
    "time": null
   },
   "@C7Z": {
-   "price": 4.8375,
-   "change": 0.005,
+   "price": 4.84,
+   "change": 0.0075,
    "time": null
   },
   "@C8Z": {
@@ -168,8 +168,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 11.79,
-   "change": 0.045,
+   "price": 11.795,
+   "change": 0.05,
    "time": null
   },
   "@S8X": {
@@ -178,8 +178,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 11.96,
-   "change": 0.0775,
+   "price": 11.9575,
+   "change": 0.075,
    "time": null
   }
  }
