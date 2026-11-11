@@ -1,8 +1,8 @@
 {
- "checked": "2026-11-11T21:30:12Z",
+ "checked": "2026-11-11T21:41:47Z",
  "updated": "2026-11-11T19:50:11Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-11T15:30:12",
+ "quote_time": "2026-11-11T15:41:47",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
@@ -134,7 +134,6 @@
  },
  "extra_futures_source": "agsist",
  "backup_notes": [
-  "board nexus-denisonia: HTTP Error 503: Service Unavailable",
   "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
