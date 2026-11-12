@@ -1,14 +1,14 @@
 {
- "checked": "2026-11-12T02:50:11Z",
- "updated": "2026-11-12T02:50:11Z",
+ "checked": "2026-11-12T03:00:20Z",
+ "updated": "2026-11-12T03:00:20Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-11T20:50:11",
+ "quote_time": "2026-11-11T21:00:20",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.4825,
-   "change": 0.0025,
+   "price": 4.48,
+   "change": 0.0,
    "time": null
   },
   "@C7Z": {
@@ -17,18 +17,18 @@
    "time": null
   },
   "@C8Z": {
-   "price": 4.9075,
-   "change": -0.0025,
+   "price": 4.8975,
+   "change": -0.0125,
    "time": null
   },
   "@S7F": {
-   "price": 12.28,
-   "change": -0.0275,
+   "price": 12.2775,
+   "change": -0.03,
    "time": null
   },
   "@S7X": {
-   "price": 11.8625,
-   "change": -0.02,
+   "price": 11.855,
+   "change": -0.0275,
    "time": null
   },
   "@S8X": {
@@ -39,7 +39,7 @@
   "@S6X": {
    "price": 12.2975,
    "change": 0.0525,
-   "time": "2026-11-11T20:31:12"
+   "time": "2026-11-11T20:49:33"
   }
  },
  "dtn": {
@@ -62,7 +62,7 @@
     "label": "Fall 28",
     "commodity": "Corn",
     "symbol": "@C8Z",
-    "cash": 4.21,
+    "cash": 4.2,
     "basis": -0.7
    },
    {
@@ -106,7 +106,7 @@
     "label": "Fall 28",
     "commodity": "Corn",
     "symbol": "@C8Z",
-    "cash": 4.21,
+    "cash": 4.2,
     "basis": -0.7
    },
    {
@@ -148,8 +148,8 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.4825,
-   "change": 0.0025,
+   "price": 4.48,
+   "change": 0.0,
    "time": null
   },
   "@C7Z": {
@@ -158,8 +158,8 @@
    "time": null
   },
   "@C8Z": {
-   "price": 4.9075,
-   "change": -0.0025,
+   "price": 4.8975,
+   "change": -0.0125,
    "time": null
   },
   "@S6X": {
@@ -168,8 +168,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 11.8625,
-   "change": -0.02,
+   "price": 11.855,
+   "change": -0.0275,
    "time": null
   },
   "@S8X": {
@@ -178,8 +178,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.28,
-   "change": -0.0275,
+   "price": 12.2775,
+   "change": -0.03,
    "time": null
   }
  }
