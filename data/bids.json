@@ -1,8 +1,8 @@
 {
- "checked": "2026-11-13T04:51:08Z",
- "updated": "2026-11-13T04:51:08Z",
+ "checked": "2026-11-13T05:02:42Z",
+ "updated": "2026-11-13T05:02:42Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-12T22:51:08",
+ "quote_time": "2026-11-12T23:02:42",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
@@ -22,13 +22,13 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.295,
-   "change": 0.105,
+   "price": 12.2925,
+   "change": 0.1025,
    "time": null
   },
   "@S7X": {
-   "price": 11.8375,
-   "change": 0.0775,
+   "price": 11.84,
+   "change": 0.08,
    "time": null
   },
   "@S8X": {
@@ -39,7 +39,7 @@
   "@S6X": {
    "price": 12.27,
    "change": -0.02,
-   "time": "2026-11-12T21:44:17"
+   "time": "2026-11-12T22:57:06"
   }
  },
  "dtn": {
@@ -69,7 +69,7 @@
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.45,
+    "cash": 11.44,
     "basis": -0.85
    },
    {
@@ -113,7 +113,7 @@
     "label": "Fall 26",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.45,
+    "cash": 11.44,
     "basis": -0.85
    },
    {
@@ -134,11 +134,11 @@
  },
  "extra_futures_source": "agsist",
  "backup_notes": [
-  "board adm-hoopestonil: priced 0:54:05.299778 ago",
-  "board nexus-denisonia: priced 0:54:05.353984 ago",
-  "board chsherman-glenwood: priced 0:54:05.401377 ago",
-  "board farmerscooperative-mccooljunction: priced 0:54:05.450313 ago",
-  "board premiercooperative1-dewey: priced 0:54:05.504387 ago",
+  "board adm-hoopestonil: priced 1:05:39.603932 ago",
+  "board nexus-denisonia: priced 1:05:39.659005 ago",
+  "board chsherman-glenwood: priced 1:05:39.706173 ago",
+  "board farmerscooperative-mccooljunction: priced 1:05:39.759842 ago",
+  "board premiercooperative1-dewey: priced 1:05:39.814695 ago",
   "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
@@ -173,8 +173,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 11.8375,
-   "change": 0.0775,
+   "price": 11.84,
+   "change": 0.08,
    "time": null
   },
   "@S8X": {
@@ -183,8 +183,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.295,
-   "change": 0.105,
+   "price": 12.2925,
+   "change": 0.1025,
    "time": null
   }
  }
