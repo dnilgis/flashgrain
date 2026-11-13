@@ -1,14 +1,14 @@
 {
- "checked": "2026-11-13T04:46:48Z",
- "updated": "2026-11-13T04:46:48Z",
+ "checked": "2026-11-13T04:51:08Z",
+ "updated": "2026-11-13T04:51:08Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-12T22:46:48",
+ "quote_time": "2026-11-12T22:51:08",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.4675,
-   "change": 0.0425,
+   "price": 4.465,
+   "change": 0.04,
    "time": null
   },
   "@C7Z": {
@@ -27,8 +27,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 11.84,
-   "change": 0.08,
+   "price": 11.8375,
+   "change": 0.0775,
    "time": null
   },
   "@S8X": {
@@ -134,11 +134,11 @@
  },
  "extra_futures_source": "agsist",
  "backup_notes": [
-  "board adm-hoopestonil: priced 0:49:45.253645 ago",
-  "board nexus-denisonia: priced 0:49:45.315510 ago",
-  "board chsherman-glenwood: priced 0:49:45.371868 ago",
-  "board farmerscooperative-mccooljunction: priced 0:49:45.432648 ago",
-  "board premiercooperative1-dewey: priced 0:49:45.498924 ago",
+  "board adm-hoopestonil: priced 0:54:05.299778 ago",
+  "board nexus-denisonia: priced 0:54:05.353984 ago",
+  "board chsherman-glenwood: priced 0:54:05.401377 ago",
+  "board farmerscooperative-mccooljunction: priced 0:54:05.450313 ago",
+  "board premiercooperative1-dewey: priced 0:54:05.504387 ago",
   "yahoo ZSX26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
@@ -153,8 +153,8 @@
  "futures_source": "mixed",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.4675,
-   "change": 0.0425,
+   "price": 4.465,
+   "change": 0.04,
    "time": null
   },
   "@C7Z": {
@@ -173,8 +173,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 11.84,
-   "change": 0.08,
+   "price": 11.8375,
+   "change": 0.0775,
    "time": null
   },
   "@S8X": {
