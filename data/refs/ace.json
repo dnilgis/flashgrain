@@ -82,5 +82,7 @@
    "futures_month": "Sep 27 Corn",
    "futures": 4.665
   }
- ]
+ ],
+ "error": "fetch failed: HTTP 503",
+ "error_at": "2026-11-16T23:20:22Z"
 }
