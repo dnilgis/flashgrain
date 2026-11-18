@@ -83,6 +83,6 @@
    "futures": 4.6275
   }
  ],
- "error": "no Corn rows for location \"\". Locations on the page: aceethanol.o.bushelsites.com. Commodities: unknown",
- "error_at": "2026-11-18T17:00:47Z"
+ "error": "fetch failed: HTTP 503",
+ "error_at": "2026-11-18T17:10:55Z"
 }
