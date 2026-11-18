@@ -1,6 +1,6 @@
 {
  "id": "ace",
- "checked": "2026-11-18T08:30:16Z",
+ "checked": "2026-11-18T09:30:33Z",
  "updated": "2026-11-17T19:30:29Z",
  "source": "https://aceethanol.o.bushelsites.com/cashbidssingle-3578",
  "quote_time": null,
@@ -82,7 +82,5 @@
    "futures_month": "Sep 27 Corn",
    "futures": 4.6825
   }
- ],
- "error": "fetch failed: The operation was aborted due to timeout",
- "error_at": "2026-11-18T09:01:07Z"
+ ]
 }
