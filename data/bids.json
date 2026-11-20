@@ -1,14 +1,14 @@
 {
- "checked": "2026-11-20T06:10:17Z",
- "updated": "2026-11-20T06:10:17Z",
+ "checked": "2026-11-20T06:24:16Z",
+ "updated": "2026-11-20T06:24:16Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-20T00:10:17",
+ "quote_time": "2026-11-20T00:24:16",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
-   "price": 4.3675,
-   "change": -0.0225,
+   "price": 4.37,
+   "change": -0.02,
    "time": null
   },
   "@C7Z": {
@@ -17,23 +17,23 @@
    "time": null
   },
   "@C8Z": {
-   "price": 4.8675,
-   "change": -0.01,
+   "price": 4.865,
+   "change": -0.0125,
    "time": null
   },
   "@S7F": {
-   "price": 12.0425,
-   "change": -0.0325,
+   "price": 12.0375,
+   "change": -0.0375,
    "time": null
   },
   "@S7X": {
-   "price": 11.6375,
-   "change": -0.0525,
+   "price": 11.635,
+   "change": -0.055,
    "time": null
   },
   "@S8X": {
-   "price": 11.4725,
-   "change": 0.0,
+   "price": 11.415,
+   "change": -0.0575,
    "time": null
   }
  },
@@ -78,7 +78,7 @@
     "label": "Fall 28",
     "commodity": "Soybeans",
     "symbol": "@S8X",
-    "cash": 10.52,
+    "cash": 10.47,
     "basis": -0.95
    }
   ],
@@ -122,7 +122,7 @@
     "label": "Fall 28",
     "commodity": "Soybeans",
     "symbol": "@S8X",
-    "cash": 10.52,
+    "cash": 10.47,
     "basis": -0.95
    }
   ]
@@ -138,8 +138,8 @@
  "futures_source": "dtn",
  "dtn_futures": {
   "@C6Z": {
-   "price": 4.3675,
-   "change": -0.0225,
+   "price": 4.37,
+   "change": -0.02,
    "time": null
   },
   "@C7Z": {
@@ -148,23 +148,23 @@
    "time": null
   },
   "@C8Z": {
-   "price": 4.8675,
-   "change": -0.01,
+   "price": 4.865,
+   "change": -0.0125,
    "time": null
   },
   "@S7X": {
-   "price": 11.6375,
-   "change": -0.0525,
+   "price": 11.635,
+   "change": -0.055,
    "time": null
   },
   "@S8X": {
-   "price": 11.4725,
-   "change": 0.0,
+   "price": 11.415,
+   "change": -0.0575,
    "time": null
   },
   "@S7F": {
-   "price": 12.0425,
-   "change": -0.0325,
+   "price": 12.0375,
+   "change": -0.0375,
    "time": null
   }
  }
