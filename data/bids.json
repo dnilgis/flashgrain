@@ -1,35 +1,40 @@
 {
- "checked": "2026-11-22T17:30:14Z",
- "updated": "2026-11-22T17:30:14Z",
- "source": "backup:agsist+boards",
- "quote_time": "2026-11-22T03:10:34",
- "quote_time_source": "backup",
+ "checked": "2026-11-22T17:40:16Z",
+ "updated": "2026-11-22T17:40:16Z",
+ "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
+ "quote_time": "2026-11-22T11:40:16",
+ "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C6Z": {
    "price": 4.345,
    "change": -0.045,
-   "time": "2026-11-22T03:10:34"
+   "time": null
   },
   "@C7Z": {
    "price": 4.7625,
    "change": -0.02,
-   "time": "2026-11-22T03:10:34"
-  },
-  "@S7X": {
-   "price": 11.71,
-   "change": 0.02,
-   "time": "2026-11-22T03:10:34"
+   "time": null
   },
   "@C8Z": {
    "price": 4.8675,
    "change": -0.01,
-   "time": "2026-11-21T01:01:11"
+   "time": null
+  },
+  "@S7F": {
+   "price": 12.2075,
+   "change": 0.1325,
+   "time": null
+  },
+  "@S7X": {
+   "price": 11.71,
+   "change": 0.02,
+   "time": null
   },
   "@S8X": {
    "price": 11.475,
    "change": 0.0025,
-   "time": "2026-11-21T01:01:11"
+   "time": null
   }
  },
  "dtn": {
@@ -122,21 +127,15 @@
    }
   ]
  },
- "futures_source": "agsist+boards",
- "dtn_error": "all fetches failed; bids.json left unchanged. last error: https://flashgrains.com/index.cfm?show=11&mid=3: <urlopen error timed out>",
- "backup_notes": [
-  "board farmerscooperative-mccooljunction: priced 2 days, 2:30:45.774446 ago",
-  "board premiercooperative1-dewey: priced 2 days, 2:30:46.133127 ago",
-  "yahoo ZCZ28.CBT: HTTP Error 429: Too Many Requests",
-  "yahoo ZSX28.CBT: HTTP Error 429: Too Many Requests"
- ],
  "futures_sources": {
-  "@C6Z": "boards",
-  "@C7Z": "boards",
-  "@C8Z": "agsist",
-  "@S7X": "boards",
-  "@S8X": "agsist"
+  "@C6Z": "dtn",
+  "@C7Z": "dtn",
+  "@C8Z": "dtn",
+  "@S7F": "dtn",
+  "@S7X": "dtn",
+  "@S8X": "dtn"
  },
+ "futures_source": "dtn",
  "dtn_futures": {
   "@C6Z": {
    "price": 4.345,
