@@ -1,8 +1,8 @@
 {
- "checked": "2026-11-24T22:30:41Z",
- "updated": "2026-11-24T22:30:41Z",
+ "checked": "2026-11-24T22:43:24Z",
+ "updated": "2026-11-24T22:43:24Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-24T16:30:41",
+ "quote_time": "2026-11-24T16:43:24",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
@@ -48,8 +48,8 @@
     "label": "Nov",
     "commodity": "Corn",
     "symbol": "@C7H",
-    "cash": 3.75,
-    "basis": -0.75
+    "cash": 3.7,
+    "basis": -0.8
    },
    {
     "label": "Fall 27",
@@ -92,8 +92,8 @@
     "label": "Nov",
     "commodity": "Corn",
     "symbol": "@C7H",
-    "cash": 3.75,
-    "basis": -0.75
+    "cash": 3.7,
+    "basis": -0.8
    },
    {
     "label": "Fall 27",
