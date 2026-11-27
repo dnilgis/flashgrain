@@ -1,19 +1,19 @@
 {
- "checked": "2026-11-27T16:20:12Z",
- "updated": "2026-11-27T16:20:12Z",
+ "checked": "2026-11-27T16:30:16Z",
+ "updated": "2026-11-27T16:30:16Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-27T10:20:12",
+ "quote_time": "2026-11-27T10:30:16",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C7H": {
-   "price": 4.6375,
-   "change": 0.0725,
+   "price": 4.64,
+   "change": 0.075,
    "time": null
   },
   "@C7Z": {
-   "price": 4.915,
-   "change": 0.07,
+   "price": 4.9175,
+   "change": 0.0725,
    "time": null
   },
   "@C8Z": {
@@ -22,13 +22,13 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.695,
-   "change": 0.255,
+   "price": 12.7075,
+   "change": 0.2675,
    "time": null
   },
   "@S7X": {
-   "price": 12.0625,
-   "change": 0.2225,
+   "price": 12.0725,
+   "change": 0.2325,
    "time": null
   },
   "@S8X": {
@@ -37,9 +37,9 @@
    "time": null
   },
   "@C6Z": {
-   "price": 4.48375,
-   "change": 0.08625,
-   "time": "2026-11-27T09:36:44"
+   "price": 4.4875,
+   "change": 0.09,
+   "time": "2026-11-27T10:16:21"
   }
  },
  "dtn": {
@@ -69,14 +69,14 @@
     "label": "Nov",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.85,
+    "cash": 11.86,
     "basis": -0.85
    },
    {
     "label": "Fall 27",
     "commodity": "Soybeans",
     "symbol": "@S7X",
-    "cash": 11.21,
+    "cash": 11.22,
     "basis": -0.85
    },
    {
@@ -113,14 +113,14 @@
     "label": "Nov",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.85,
+    "cash": 11.86,
     "basis": -0.85
    },
    {
     "label": "Fall 27",
     "commodity": "Soybeans",
     "symbol": "@S7X",
-    "cash": 11.21,
+    "cash": 11.22,
     "basis": -0.85
    },
    {
@@ -132,9 +132,17 @@
    }
   ]
  },
- "extra_futures_source": "boards",
+ "extra_futures_source": "agsist",
+ "backup_notes": [
+  "board adm-hoopestonil: priced 0:53:33.935608 ago",
+  "board nexus-denisonia: priced 0:53:34.035474 ago",
+  "board chsherman-glenwood: priced 0:53:34.130309 ago",
+  "board farmerscooperative-mccooljunction: priced 0:53:34.235399 ago",
+  "board premiercooperative1-dewey: priced 0:53:34.339116 ago",
+  "yahoo ZCZ26.CBT: HTTP Error 429: Too Many Requests"
+ ],
  "futures_sources": {
-  "@C6Z": "boards",
+  "@C6Z": "agsist",
   "@C7H": "dtn",
   "@C7Z": "dtn",
   "@C8Z": "dtn",
@@ -150,8 +158,8 @@
    "time": null
   },
   "@C7Z": {
-   "price": 4.915,
-   "change": 0.07,
+   "price": 4.9175,
+   "change": 0.0725,
    "time": null
   },
   "@C8Z": {
@@ -160,8 +168,8 @@
    "time": null
   },
   "@S7X": {
-   "price": 12.0625,
-   "change": 0.2225,
+   "price": 12.0725,
+   "change": 0.2325,
    "time": null
   },
   "@S8X": {
@@ -170,13 +178,13 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.695,
-   "change": 0.255,
+   "price": 12.7075,
+   "change": 0.2675,
    "time": null
   },
   "@C7H": {
-   "price": 4.6375,
-   "change": 0.0725,
+   "price": 4.64,
+   "change": 0.075,
    "time": null
   }
  }
