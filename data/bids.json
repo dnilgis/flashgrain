@@ -1,19 +1,19 @@
 {
- "checked": "2026-11-27T17:10:11Z",
- "updated": "2026-11-27T17:10:11Z",
+ "checked": "2026-11-27T17:20:14Z",
+ "updated": "2026-11-27T17:20:14Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-27T11:10:11",
+ "quote_time": "2026-11-27T11:20:14",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
   "@C7H": {
-   "price": 4.6575,
-   "change": 0.0925,
+   "price": 4.655,
+   "change": 0.09,
    "time": null
   },
   "@C7Z": {
-   "price": 4.9275,
-   "change": 0.0825,
+   "price": 4.925,
+   "change": 0.08,
    "time": null
   },
   "@C8Z": {
@@ -22,8 +22,8 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.7275,
-   "change": 0.2875,
+   "price": 12.7225,
+   "change": 0.2825,
    "time": null
   },
   "@S7X": {
@@ -39,7 +39,7 @@
   "@C6Z": {
    "price": 4.495,
    "change": 0.0975,
-   "time": "2026-11-27T11:01:20"
+   "time": "2026-11-27T11:16:19"
   }
  },
  "dtn": {
@@ -69,7 +69,7 @@
     "label": "Nov",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.88,
+    "cash": 11.87,
     "basis": -0.85
    },
    {
@@ -113,7 +113,7 @@
     "label": "Nov",
     "commodity": "Soybeans",
     "symbol": "@S7F",
-    "cash": 11.88,
+    "cash": 11.87,
     "basis": -0.85
    },
    {
@@ -134,11 +134,11 @@
  },
  "extra_futures_source": "agsist",
  "backup_notes": [
-  "board adm-hoopestonil: priced 1:33:30.045540 ago",
-  "board nexus-denisonia: priced 1:33:30.155566 ago",
-  "board chsherman-glenwood: priced 1:33:30.494075 ago",
-  "board farmerscooperative-mccooljunction: priced 1:33:30.599270 ago",
-  "board premiercooperative1-dewey: priced 1:33:30.722287 ago",
+  "board adm-hoopestonil: priced 1:43:32.316850 ago",
+  "board nexus-denisonia: priced 1:43:32.418726 ago",
+  "board chsherman-glenwood: priced 1:43:32.525990 ago",
+  "board farmerscooperative-mccooljunction: priced 1:43:32.643306 ago",
+  "board premiercooperative1-dewey: priced 1:43:32.745768 ago",
   "yahoo ZCZ26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
@@ -158,8 +158,8 @@
    "time": null
   },
   "@C7Z": {
-   "price": 4.9275,
-   "change": 0.0825,
+   "price": 4.925,
+   "change": 0.08,
    "time": null
   },
   "@C8Z": {
@@ -178,13 +178,13 @@
    "time": null
   },
   "@S7F": {
-   "price": 12.7275,
-   "change": 0.2875,
+   "price": 12.7225,
+   "change": 0.2825,
    "time": null
   },
   "@C7H": {
-   "price": 4.6575,
-   "change": 0.0925,
+   "price": 4.655,
+   "change": 0.09,
    "time": null
   }
  }
