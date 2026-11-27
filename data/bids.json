@@ -1,8 +1,8 @@
 {
- "checked": "2026-11-27T19:40:10Z",
- "updated": "2026-11-27T19:40:10Z",
+ "checked": "2026-11-27T19:50:11Z",
+ "updated": "2026-11-27T19:50:11Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-27T13:40:10",
+ "quote_time": "2026-11-27T13:50:11",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
@@ -39,7 +39,7 @@
   "@C6Z": {
    "price": 4.4675,
    "change": 0.07,
-   "time": "2026-11-27T13:31:21"
+   "time": "2026-11-27T13:46:08"
   }
  },
  "dtn": {
@@ -134,11 +134,11 @@
  },
  "extra_futures_source": "agsist",
  "backup_notes": [
-  "board adm-hoopestonil: priced 4:03:27.669193 ago",
-  "board nexus-denisonia: priced 4:03:27.741595 ago",
-  "board chsherman-glenwood: priced 4:03:27.795454 ago",
-  "board farmerscooperative-mccooljunction: priced 4:03:27.849909 ago",
-  "board premiercooperative1-dewey: priced 4:03:27.910364 ago",
+  "board adm-hoopestonil: priced 4:13:28.837880 ago",
+  "board nexus-denisonia: priced 4:13:28.875909 ago",
+  "board chsherman-glenwood: priced 4:13:28.912416 ago",
+  "board farmerscooperative-mccooljunction: priced 4:13:28.955073 ago",
+  "board premiercooperative1-dewey: priced 4:13:28.997370 ago",
   "yahoo ZCZ26.CBT: HTTP Error 429: Too Many Requests"
  ],
  "futures_sources": {
