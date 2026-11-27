@@ -1,8 +1,8 @@
 {
- "checked": "2026-11-27T00:40:11Z",
- "updated": "2026-11-26T08:20:12Z",
+ "checked": "2026-11-27T00:50:11Z",
+ "updated": "2026-11-27T00:50:11Z",
  "source": "https://www.flashgrains.com/index.cfm?show=11&mid=3",
- "quote_time": "2026-11-26T18:40:11",
+ "quote_time": "2026-11-26T18:50:11",
  "quote_time_source": "run",
  "dtn_as_of": null,
  "futures": {
@@ -28,7 +28,7 @@
   },
   "@S7X": {
    "price": 11.84,
-   "change": -0.005,
+   "change": -0.0175,
    "time": null
   },
   "@S8X": {
@@ -161,7 +161,7 @@
   },
   "@S7X": {
    "price": 11.84,
-   "change": -0.005,
+   "change": -0.0175,
    "time": null
   },
   "@S8X": {
